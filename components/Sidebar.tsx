@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, FileText, Share2, Bell, PenLine, BookOpen, LogOut, BookMarked, X } from "lucide-react";
+import { Search, FileText, Share2, Bell, PenLine, BookOpen, BookText, Gavel, Languages, LogOut, BookMarked, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -12,6 +12,9 @@ const navItems = [
   { label: "Court Watch",    href: "/dashboard/court-watch",    icon: Bell },
   { label: "Draft Studio",   href: "/dashboard/draft-studio",   icon: PenLine },
   { label: "Library",        href: "/dashboard/library",        icon: BookOpen },
+  { label: "Digest",         href: "/dashboard/digest",          icon: BookText },
+  { label: "Legislation",    href: "/dashboard/legislation",     icon: Gavel },
+  { label: "Dictionary",     href: "/dashboard/dictionary",      icon: Languages },
 ];
 
 interface SidebarProps {

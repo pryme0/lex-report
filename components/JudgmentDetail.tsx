@@ -1,12 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowLeft, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "@/contexts/DashboardContext";
 import { tcls } from "@/lib/types";
+import { CaseCitator } from "./CaseCitator";
+
+type DetailTab = "overview" | "citator";
 
 export function JudgmentDetail() {
   const { selectedCase, setSelectedCase, viewGraph, showToast } = useDashboard();
+  const [tab, setTab] = useState<DetailTab>("overview");
   if (!selectedCase) return null;
 
   const item = selectedCase;
@@ -32,6 +37,18 @@ export function JudgmentDetail() {
         <span className={cn("treatment-pill", t)}>{item.treatment}</span>
       </div>
 
+      <div className="jd-tabs">
+        <button className={cn("jd-tab", tab === "overview" && "active")} onClick={() => setTab("overview")}>
+          Overview
+        </button>
+        <button className={cn("jd-tab", tab === "citator" && "active")} onClick={() => setTab("citator")}>
+          Citator
+        </button>
+      </div>
+
+      {tab === "citator" ? (
+        <CaseCitator item={item} />
+      ) : (
       <div className="judgment-cols">
         <div className="judgment-body">
           <div className="judgment-section">
@@ -61,20 +78,33 @@ export function JudgmentDetail() {
             <dt>Posture</dt><dd>{item.posture}</dd>
             <dt>Strength</dt><dd>{item.strength}%</dd>
           </dl>
-          <div className="aside-section-label">Authorities considered</div>
+          <div className="aside-section-label">Cases cited</div>
           <div className="authority-links">
-            {item.authorities.map(a => (
+            {item.citedCases.map(c => (
               <button
-                key={a}
+                key={c.title}
                 className="authority-link-btn"
-                onClick={() => showToast(`Opened authority trail: ${a}.`)}
+                onClick={() => showToast(`Opened authority trail: ${c.title}.`)}
               >
-                {a}
+                {c.title}
+              </button>
+            ))}
+          </div>
+          <div className="aside-section-label">Statutes considered</div>
+          <div className="authority-links">
+            {item.citedStatutes.map(s => (
+              <button
+                key={s.title}
+                className="authority-link-btn"
+                onClick={() => showToast(`Opened statute: ${s.title}${s.section ? `, ${s.section}` : ""}.`)}
+              >
+                {s.title}{s.section ? `, ${s.section}` : ""}
               </button>
             ))}
           </div>
         </aside>
       </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,35 @@
 export type Treatment = "Followed" | "Distinguished" | "Overruled" | "Questioned";
 
+// caseId is only set when the cited case exists as a CaseItem in this archive.
+export type CitedCase = {
+  title: string;
+  caseId?: string;
+};
+
+export type CitedStatute = {
+  title: string;
+  section?: string;
+};
+
+export type AppealOutcome = "Affirmed" | "Reversed" | "Remitted";
+
+// This case's own appeal trail — how it moved through the court hierarchy to reach this decision.
+export type DirectHistoryEntry = {
+  court: string;
+  outcome: AppealOutcome;
+  citation: string;
+  year: number;
+};
+
+// caseId is only set when the citing case exists as a CaseItem in this archive.
+export type CitingCase = {
+  caseId?: string;
+  title: string;
+  citation: string;
+  treatment: Treatment;
+  year: number;
+};
+
 export type CaseItem = {
   id: string;
   title: string;
@@ -8,6 +38,8 @@ export type CaseItem = {
   year: number;
   judges: string;
   area: string;
+  // Hierarchical subject classification for the Digest, e.g. "Banking & Secured Credit → Floating Charges".
+  digestArea: string;
   posture: string;
   ratio: string;
   treatment: Treatment;
@@ -16,7 +48,10 @@ export type CaseItem = {
   facts: string;
   holding: string;
   issues: string[];
-  authorities: string[];
+  citedCases: CitedCase[];
+  citedStatutes: CitedStatute[];
+  directHistory: DirectHistoryEntry[];
+  citingCases: CitingCase[];
 };
 
 export const tcls: Record<Treatment, string> = {
@@ -25,3 +60,33 @@ export const tcls: Record<Treatment, string> = {
   Questioned: "questioned",
   Overruled: "overruled",
 };
+
+export type StatuteSection = {
+  number: string;
+  heading: string;
+  text: string;
+};
+
+export type Statute = {
+  id: string;
+  title: string;
+  shortTitle: string;
+  year: number;
+  sections: StatuteSection[];
+};
+
+export type DictionaryEntry = {
+  id: string;
+  term: string;
+  kind: "term" | "maxim";
+  definition: string;
+  appliedIn: string[]; // CaseItem ids
+};
+
+export type Standing = "Good Law" | "Cautionary" | "Bad Law";
+
+export function deriveStanding(citingCases: CitingCase[]): Standing {
+  if (citingCases.some(c => c.treatment === "Overruled")) return "Bad Law";
+  if (citingCases.some(c => c.treatment === "Distinguished" || c.treatment === "Questioned")) return "Cautionary";
+  return "Good Law";
+}
