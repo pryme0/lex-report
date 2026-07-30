@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "@/contexts/DashboardContext";
-import { tcls } from "@/lib/types";
+import { tcls, type CaseItem } from "@/lib/types";
+import { fetchCaseDetail } from "@/lib/api";
 import { CaseCitator } from "./CaseCitator";
 
 type DetailTab = "overview" | "citator";
@@ -12,9 +13,39 @@ type DetailTab = "overview" | "citator";
 export function JudgmentDetail() {
   const { selectedCase, setSelectedCase, viewGraph, showToast } = useDashboard();
   const [tab, setTab] = useState<DetailTab>("overview");
+  const [detail, setDetail] = useState<CaseItem | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedCase) return;
+    // selectedCase comes from a list fetch (summary only) — load the full
+    // detail + citator data before rendering facts/holding/citations.
+    let cancelled = false;
+    setLoading(true);
+    setDetail(null);
+    fetchCaseDetail(selectedCase.id)
+      .then((full) => {
+        if (!cancelled) setDetail(full);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCase]);
+
   if (!selectedCase) return null;
 
-  const item = selectedCase;
+  if (loading || !detail) {
+    return (
+      <div className="page">
+        <p className="citator-empty">Loading judgment…</p>
+      </div>
+    );
+  }
+
+  const item = detail;
   const t = tcls[item.treatment];
 
   return (
@@ -66,7 +97,7 @@ export function JudgmentDetail() {
           <div className="judgment-section">
             <h3>Issues for determination</h3>
             <div className="issue-tags">
-              {item.issues.map(i => <span className="issue-tag" key={i}>{i}</span>)}
+              {(item.issues ?? []).map(i => <span className="issue-tag" key={i}>{i}</span>)}
             </div>
           </div>
         </div>
@@ -80,7 +111,7 @@ export function JudgmentDetail() {
           </dl>
           <div className="aside-section-label">Cases cited</div>
           <div className="authority-links">
-            {item.citedCases.map(c => (
+            {(item.citedCases ?? []).map(c => (
               <button
                 key={c.title}
                 className="authority-link-btn"
@@ -92,7 +123,7 @@ export function JudgmentDetail() {
           </div>
           <div className="aside-section-label">Statutes considered</div>
           <div className="authority-links">
-            {item.citedStatutes.map(s => (
+            {(item.citedStatutes ?? []).map(s => (
               <button
                 key={s.title}
                 className="authority-link-btn"

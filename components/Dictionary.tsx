@@ -1,18 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "@/contexts/DashboardContext";
-import { cases } from "@/lib/data";
-import { dictionaryEntries } from "@/lib/dictionary-data";
+import {
+  fetchDictionaryEntries,
+  fetchDictionaryEntry,
+  placeholderCase,
+  type DictionaryEntryDetail,
+} from "@/lib/api";
 import type { DictionaryEntry } from "@/lib/types";
 
 type KindFilter = "all" | "term" | "maxim";
+type EntrySummary = Omit<DictionaryEntry, "appliedIn">;
 
-function EntryDetail({ entry, onBack }: { entry: DictionaryEntry; onBack: () => void }) {
+function EntryDetail({ entry, onBack }: { entry: DictionaryEntryDetail; onBack: () => void }) {
   const { setSelectedCase } = useDashboard();
-  const appliedCases = cases.filter(c => entry.appliedIn.includes(c.id));
 
   return (
     <div className="page">
@@ -32,13 +36,17 @@ function EntryDetail({ entry, onBack }: { entry: DictionaryEntry; onBack: () => 
       </div>
 
       <div className="aside-section-label" style={{ marginTop: 0 }}>Applied in</div>
-      {appliedCases.length === 0 ? (
+      {entry.appliedIn.length === 0 ? (
         <p className="citator-empty">No judgment in this archive has applied this {entry.kind} yet.</p>
       ) : (
         <div className="authority-links">
-          {appliedCases.map(c => (
-            <button className="authority-link-btn" key={c.id} onClick={() => setSelectedCase(c)}>
-              {c.title}
+          {entry.appliedIn.map(c => (
+            <button
+              className="authority-link-btn"
+              key={c.caseCode}
+              onClick={() => setSelectedCase(placeholderCase(c.caseCode, c.caseTitle))}
+            >
+              {c.caseTitle}
             </button>
           ))}
         </div>
@@ -48,21 +56,30 @@ function EntryDetail({ entry, onBack }: { entry: DictionaryEntry; onBack: () => 
 }
 
 export function Dictionary() {
-  const [active, setActive] = useState<DictionaryEntry | null>(null);
+  const { showToast } = useDashboard();
+  const [active, setActive] = useState<DictionaryEntryDetail | null>(null);
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState<KindFilter>("all");
+  const [entries, setEntries] = useState<EntrySummary[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = useMemo(() => {
-    return dictionaryEntries
-      .filter(e => kind === "all" || e.kind === kind)
-      .filter(e => e.term.toLowerCase().includes(query.toLowerCase()))
-      .sort((a, b) => a.term.localeCompare(b.term));
+  useEffect(() => {
+    setLoading(true);
+    fetchDictionaryEntries({ search: query || undefined, kind: kind === "all" ? undefined : kind })
+      .then(setEntries)
+      .catch(() => showToast("Could not load the dictionary."))
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, kind]);
 
-  const letters = useMemo(() => {
-    const set = new Set(filtered.map(e => e.term[0].toUpperCase()));
-    return Array.from(set).sort();
-  }, [filtered]);
+  const sorted = [...entries].sort((a, b) => a.term.localeCompare(b.term));
+  const letters = Array.from(new Set(sorted.map(e => e.term[0].toUpperCase()))).sort();
+
+  function open(id: string) {
+    fetchDictionaryEntry(id)
+      .then(setActive)
+      .catch(() => showToast("Could not load that entry."));
+  }
 
   if (active) return <EntryDetail entry={active} onBack={() => setActive(null)} />;
 
@@ -97,29 +114,33 @@ export function Dictionary() {
         ))}
       </div>
 
-      <div className="toc-layout">
-        <div className="toc-jump">
-          {letters.map(l => (
-            <a key={l} href={`#dict-${l}`} className="toc-jump-letter">{l}</a>
-          ))}
+      {loading ? (
+        <p className="citator-empty">Loading dictionary…</p>
+      ) : (
+        <div className="toc-layout">
+          <div className="toc-jump">
+            {letters.map(l => (
+              <a key={l} href={`#dict-${l}`} className="toc-jump-letter">{l}</a>
+            ))}
+          </div>
+          <div className="toc-list">
+            {sorted.map((e, i) => {
+              const letter = e.term[0].toUpperCase();
+              const isFirstOfLetter = i === 0 || sorted[i - 1].term[0].toUpperCase() !== letter;
+              return (
+                <div key={e.id}>
+                  {isFirstOfLetter && <div className="toc-letter-heading" id={`dict-${letter}`}>{letter}</div>}
+                  <button className="toc-row" onClick={() => open(e.id)}>
+                    <span className="toc-row-title">{e.term}</span>
+                    <span className="toc-row-cite">{e.kind === "maxim" ? "Maxim" : "Term"}</span>
+                  </button>
+                </div>
+              );
+            })}
+            {sorted.length === 0 && <p className="citator-empty" style={{ padding: 16 }}>No matching entries.</p>}
+          </div>
         </div>
-        <div className="toc-list">
-          {filtered.map((e, i) => {
-            const letter = e.term[0].toUpperCase();
-            const isFirstOfLetter = i === 0 || filtered[i - 1].term[0].toUpperCase() !== letter;
-            return (
-              <div key={e.id}>
-                {isFirstOfLetter && <div className="toc-letter-heading" id={`dict-${letter}`}>{letter}</div>}
-                <button className="toc-row" onClick={() => setActive(e)}>
-                  <span className="toc-row-title">{e.term}</span>
-                  <span className="toc-row-cite">{e.kind === "maxim" ? "Maxim" : "Term"}</span>
-                </button>
-              </div>
-            );
-          })}
-          {filtered.length === 0 && <p className="citator-empty" style={{ padding: 16 }}>No matching entries.</p>}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

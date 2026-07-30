@@ -39,19 +39,23 @@ export type CaseItem = {
   judges: string;
   area: string;
   // Hierarchical subject classification for the Digest, e.g. "Banking & Secured Credit → Floating Charges".
-  digestArea: string;
+  // Optional: list/summary fetches from the API don't populate this — the Digest
+  // reads its grouped structure directly from /digest instead.
+  digestArea?: string;
   posture: string;
   ratio: string;
   treatment: Treatment;
   strength: number;
   readTime: string;
-  facts: string;
-  holding: string;
-  issues: string[];
-  citedCases: CitedCase[];
-  citedStatutes: CitedStatute[];
-  directHistory: DirectHistoryEntry[];
-  citingCases: CitingCase[];
+  // The fields below are only populated on a full detail fetch (GET /cases/:code
+  // merged with GET /cases/:code/citator) — list/summary fetches leave them undefined.
+  facts?: string;
+  holding?: string;
+  issues?: string[];
+  citedCases?: CitedCase[];
+  citedStatutes?: CitedStatute[];
+  directHistory?: DirectHistoryEntry[];
+  citingCases?: CitingCase[];
 };
 
 export const tcls: Record<Treatment, string> = {
@@ -65,6 +69,9 @@ export type StatuteSection = {
   number: string;
   heading: string;
   text: string;
+  // Populated by the API (server computes the section-range match) — absent
+  // when this type is used for the static mock dataset.
+  interpretingCases?: { caseCode: string; caseTitle: string }[];
 };
 
 export type Statute = {

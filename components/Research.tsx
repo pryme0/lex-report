@@ -1,13 +1,26 @@
 "use client";
 
-import { Search, Filter, ArrowRight, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Search, Filter, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { CaseEntry } from "./CaseEntry";
 import { useDashboard } from "@/contexts/DashboardContext";
-import { cases, alerts } from "@/lib/data";
+import { alerts } from "@/lib/data";
+import { fetchCases } from "@/lib/api";
+import type { CaseItem } from "@/lib/types";
 
 export function Research() {
-  const { showToast, viewGraph } = useDashboard();
+  const { showToast } = useDashboard();
+  const [cases, setCases] = useState<CaseItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCases()
+      .then(setCases)
+      .catch(() => showToast("Could not load cases from the archive."))
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="page">
@@ -35,7 +48,11 @@ export function Research() {
             </button>
           </div>
           <div className="case-list">
-            {cases.map(item => <CaseEntry key={item.id} item={item} />)}
+            {loading ? (
+              <p className="citator-empty">Loading cases…</p>
+            ) : (
+              cases.map(item => <CaseEntry key={item.id} item={item} />)
+            )}
           </div>
         </div>
 

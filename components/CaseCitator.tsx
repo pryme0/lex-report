@@ -16,7 +16,9 @@ const standingNote: Record<Standing, string> = {
 };
 
 export function CaseCitator({ item }: { item: CaseItem }) {
-  const standing = deriveStanding(item.citingCases);
+  const directHistory = item.directHistory ?? [];
+  const citingCases = item.citingCases ?? [];
+  const standing = deriveStanding(citingCases);
 
   return (
     <div className="citator">
@@ -27,11 +29,11 @@ export function CaseCitator({ item }: { item: CaseItem }) {
 
       <div className="citator-section">
         <div className="aside-section-label" style={{ marginTop: 0 }}>Direct history</div>
-        {item.directHistory.length === 0 ? (
+        {directHistory.length === 0 ? (
           <p className="citator-empty">No prior appeal history on record — this is the first-instance decision.</p>
         ) : (
           <ol className="citator-history">
-            {item.directHistory.map(h => (
+            {directHistory.map(h => (
               <li className="citator-history-row" key={h.citation}>
                 <span className="citator-history-court">{h.court} · {h.year}</span>
                 <span className={cn("history-outcome", h.outcome.toLowerCase())}>{h.outcome}</span>
@@ -45,17 +47,17 @@ export function CaseCitator({ item }: { item: CaseItem }) {
       <div className="citator-section">
         <div className="citator-section-header">
           <div className="aside-section-label" style={{ margin: 0 }}>Citing treatment</div>
-          {item.citingCases.length > 0 && (
+          {citingCases.length > 0 && (
             <span className="citator-count">
-              {item.citingCases.length} case{item.citingCases.length === 1 ? "" : "s"}
+              {citingCases.length} case{citingCases.length === 1 ? "" : "s"}
             </span>
           )}
         </div>
-        {item.citingCases.length === 0 ? (
+        {citingCases.length === 0 ? (
           <p className="citator-empty">No later case has cited this judgment yet.</p>
         ) : (
           <div className="citator-citing-list">
-            {item.citingCases.map(c => (
+            {citingCases.map(c => (
               <div className="citator-citing-row" key={c.citation}>
                 <div>
                   <div className="citator-citing-title">{c.title}</div>
