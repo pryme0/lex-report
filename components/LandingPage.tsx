@@ -2,9 +2,77 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { coverageData, reportQueue } from "@/lib/data";
+import { catalogApi, reportsApi } from "@/lib/api";
+import type { ArchiveFilters, Coverage } from "@/lib/api";
+import { useApiQuery } from "@/lib/api/hooks";
+
+function formatCount(n: number): string {
+  return n.toLocaleString();
+}
+
+function statsFromArchive(coverage: Coverage[], filters: ArchiveFilters | null) {
+  const judgmentTotal = coverage.reduce((sum, row) => sum + (parseInt(row.count, 10) || 0), 0);
+
+  let yearMin: number | null = filters?.years.min ?? null;
+  let yearMax: number | null = filters?.years.max ?? null;
+
+  if (yearMin === null || yearMax === null) {
+    for (const row of coverage) {
+      const match = row.years.match(/(\d{4})\s*[-–]\s*(\d{4})/);
+      if (!match) continue;
+      const from = parseInt(match[1], 10);
+      const to = parseInt(match[2], 10);
+      if (yearMin === null || from < yearMin) yearMin = from;
+      if (yearMax === null || to > yearMax) yearMax = to;
+    }
+  }
+
+  const courtCount = filters?.courts.length ?? coverage.filter((r) => parseInt(r.count, 10) > 0).length;
+
+  return {
+    judgmentTotal,
+    yearMin,
+    yearMax,
+    courtCount,
+  };
+}
 
 export function LandingPage() {
+  const coverageQuery = useApiQuery("catalog:coverage", () => catalogApi.coverage());
+  const filtersQuery = useApiQuery("catalog:filters", () => catalogApi.filters());
+  const queueQuery = useApiQuery("reports:queue:4", () => reportsApi.queue(4));
+
+  const coverageRows = coverageQuery.data ?? [];
+  const reportQueue = queueQuery.data ?? [];
+  const showCoverage = !coverageQuery.error && coverageRows.length > 0;
+  const showQueue = !queueQuery.error && reportQueue.length > 0;
+
+  const archiveReady = !coverageQuery.error && coverageRows.length > 0;
+  const stats = archiveReady
+    ? statsFromArchive(coverageRows, filtersQuery.error ? null : filtersQuery.data)
+    : null;
+
+  const statItems = stats
+    ? [
+        {
+          num: formatCount(stats.judgmentTotal),
+          desc: "Verified judgments",
+        },
+        stats.yearMin !== null && stats.yearMax !== null
+          ? {
+              num: `${stats.yearMax - stats.yearMin} yrs`,
+              desc: `Coverage: ${stats.yearMin} – ${stats.yearMax}`,
+            }
+          : null,
+        stats.courtCount > 0
+          ? { num: `${stats.courtCount} courts`, desc: "From Supreme Court to NICN" }
+          : null,
+        showQueue
+          ? { num: "Daily", desc: "Editorial updates" }
+          : { num: "Live", desc: "Archive-backed catalogue" },
+      ].filter(Boolean) as { num: string; desc: string }[]
+    : [];
+
   return (
     <div className="landing">
       <nav className="l-nav">
@@ -61,26 +129,42 @@ export function LandingPage() {
             <div className="rp-grid">
               <div className="rp-panel">
                 <div className="rp-panel-label">Incoming courts</div>
-                {reportQueue.map(({ court, topic, status }) => (
-                  <div className="rp-court-row" key={topic}>
-                    <div className="rp-court-ico">{court}</div>
-                    <div>
-                      <div className="rp-court-name">{topic}</div>
-                      <div className="rp-court-status">{status}</div>
+                {showQueue ? (
+                  reportQueue.map(({ court, topic, status }) => (
+                    <div className="rp-court-row" key={topic}>
+                      <div className="rp-court-ico">{court}</div>
+                      <div>
+                        <div className="rp-court-name">{topic}</div>
+                        <div className="rp-court-status">{status}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p style={{ fontSize: "0.78rem", color: "var(--color-muted)", margin: 0 }}>
+                    {queueQuery.loading ? "Loading desk…" : "Desk updates unavailable."}
+                  </p>
+                )}
               </div>
               <div className="rp-panel">
                 <div className="rp-panel-label">Citation treatment</div>
-                {[["Followed", 92], ["Distinguished", 75], ["Limited", 58], ["Overruled", 24]].map(([label, pct]) => (
-                  <div className="rp-bar" key={label as string}>
-                    <div className="rp-bar-track">
-                      <div className="rp-bar-fill" style={{ width: `${pct}%` }} />
-                    </div>
-                    <div className="rp-bar-label">{label}</div>
-                  </div>
-                ))}
+                {!filtersQuery.error && filtersQuery.data ? (
+                  filtersQuery.data.treatments.slice(0, 4).map(({ value, count }) => {
+                    const max = Math.max(...filtersQuery.data!.treatments.map((t) => t.count), 1);
+                    const pct = Math.round((count / max) * 100);
+                    return (
+                      <div className="rp-bar" key={value}>
+                        <div className="rp-bar-track">
+                          <div className="rp-bar-fill" style={{ width: `${pct}%` }} />
+                        </div>
+                        <div className="rp-bar-label">{value}</div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p style={{ fontSize: "0.78rem", color: "var(--color-muted)", margin: 0 }}>
+                    {filtersQuery.loading ? "Loading treatments…" : "Treatment breakdown unavailable."}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -89,17 +173,22 @@ export function LandingPage() {
 
       <div className="l-stats">
         <div className="l-stats-inner">
-          {[
-            { num: "47,000+", desc: "Verified judgments" },
-            { num: "136 yrs", desc: "Coverage: 1890 – 2026" },
-            { num: "6 courts", desc: "From Supreme Court to NICN" },
-            { num: "Daily",    desc: "Editorial updates" },
-          ].map(({ num, desc }) => (
-            <div className="l-stat" key={desc}>
-              <div className="l-stat-num">{num}</div>
-              <div className="l-stat-desc">{desc}</div>
+          {statItems.length > 0 ? (
+            statItems.map(({ num, desc }) => (
+              <div className="l-stat" key={desc}>
+                <div className="l-stat-num">{num}</div>
+                <div className="l-stat-desc">{desc}</div>
+              </div>
+            ))
+          ) : (
+            <div className="l-stat l-stat-unavailable">
+              <div className="l-stat-desc">
+                {coverageQuery.loading || filtersQuery.loading
+                  ? "Loading archive statistics…"
+                  : "Archive statistics unavailable."}
+              </div>
             </div>
-          ))}
+          )}
         </div>
       </div>
 
@@ -144,13 +233,21 @@ export function LandingPage() {
             <span className="l-cov-label">Years covered</span>
             <span className="l-cov-label">Judgments</span>
           </div>
-          {coverageData.map(({ court, years, count }) => (
-            <div className="l-cov-row" key={court}>
-              <span className="l-cov-court">{court}</span>
-              <span className="l-cov-years">{years}</span>
-              <span className="l-cov-count">{count}</span>
+          {showCoverage ? (
+            coverageRows.map(({ id, court, years, count }) => (
+              <div className="l-cov-row" key={id}>
+                <span className="l-cov-court">{court}</span>
+                <span className="l-cov-years">{years}</span>
+                <span className="l-cov-count">{count}</span>
+              </div>
+            ))
+          ) : (
+            <div className="l-cov-row">
+              <span className="l-cov-court" style={{ color: "var(--color-muted)" }}>
+                {coverageQuery.loading ? "Loading coverage…" : "Coverage catalogue unavailable."}
+              </span>
             </div>
-          ))}
+          )}
         </div>
       </section>
 

@@ -1,5 +1,29 @@
 import type { Metadata } from "next";
+import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
+// Loaded after globals so each area's rules win where they overlap.
+import "./styles/primitives.css";
+import "./styles/judgment.css";
+import "./styles/search.css";
+import "./styles/corpora.css";
+import "./styles/admin.css";
+import "./styles/workspace.css";
+
+// Self-hosted by Next so the fonts are not a render-blocking third-party request.
+const plexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-plex-sans",
+});
+
+const sourceSerif = Source_Serif_4({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-source-serif",
+});
 
 export const metadata: Metadata = {
   title: "LexReport — Nigerian Law Intelligence",
@@ -8,15 +32,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" className={`${plexSans.variable} ${sourceSerif.variable}`}>
       <body>{children}</body>
     </html>
   );

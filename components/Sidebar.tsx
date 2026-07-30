@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, FileText, Share2, Bell, PenLine, BookOpen, BookText, Gavel, Languages, LogOut, BookMarked, X } from "lucide-react";
+import { Search, FileText, Share2, Bell, PenLine, BookOpen, BookText, Gavel, Languages, LogOut, BookMarked, Scale, SlidersHorizontal, X } from "lucide-react";
+import { catalogApi, usersApi } from "@/lib/api";
+import { useApiQuery } from "@/lib/api/hooks";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -14,6 +16,7 @@ const navItems = [
   { label: "Library",        href: "/dashboard/library",        icon: BookOpen },
   { label: "Digest",         href: "/dashboard/digest",          icon: BookText },
   { label: "Legislation",    href: "/dashboard/legislation",     icon: Gavel },
+  { label: "Practice & Forms", href: "/dashboard/practice",      icon: Scale },
   { label: "Dictionary",     href: "/dashboard/dictionary",      icon: Languages },
 ];
 
@@ -25,6 +28,12 @@ interface SidebarProps {
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const profileQuery = useApiQuery("users:profile", () => usersApi.profile());
+  const profile = profileQuery.data;
+  const filtersQuery = useApiQuery("catalog:filters", () => catalogApi.filters());
+  const years = filtersQuery.data?.years;
+  const coverageSpan =
+    years?.min && years?.max ? `${years.min} – ${years.max}` : "—";
 
   function logout() {
     sessionStorage.removeItem("lr-auth");
@@ -62,6 +71,16 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
         <div className="nav-divider" />
 
+        {profile?.editor && (
+          <Link
+            href="/dashboard/admin"
+            className={cn("nav-item", isActive("/dashboard/admin") && "active")}
+            onClick={onClose}
+          >
+            <SlidersHorizontal size={16} /> Editorial
+          </Link>
+        )}
+
         <Link
           href="/dashboard/profile"
           className={cn("nav-item", pathname === "/dashboard/profile" && "active")}
@@ -77,13 +96,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <div className="sidebar-footer">
         <div className="coverage-chip">
           <div className="coverage-label">Coverage span</div>
-          <div className="coverage-range">1890 – 2026</div>
+          <div className="coverage-range">{coverageSpan}</div>
         </div>
         <Link href="/dashboard/profile" className="user-chip" onClick={onClose}>
-          <div className="user-avatar">AO</div>
+          <div className="user-avatar">{profile?.initials ?? "···"}</div>
           <div>
-            <span className="user-name">Adanna Okafor</span>
-            <span className="user-role">Firm administrator</span>
+            <span className="user-name">{profile?.name ?? "Loading…"}</span>
+            <span className="user-role">{profile?.accountRole ?? "—"}</span>
           </div>
         </Link>
       </div>

@@ -1,0 +1,390 @@
+﻿/* Library, Draft Studio, citation graph and landing page. */
+
+.danger-text {
+  color: var(--color-danger, #9a3244);
+}
+
+.lib-folder-card {
+  position: relative;
+}
+
+.lib-folder-card-open {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 16px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  border-radius: var(--radius);
+}
+
+.lib-folder-card-open:focus-visible {
+  outline: 2px solid var(--color-g-600, #1d4ed8);
+  outline-offset: 2px;
+}
+
+.lib-rename-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.matter-card {
+  position: relative;
+}
+
+.matter-card-open {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.matter-card-open:focus-visible,
+.firm-card:focus-visible {
+  outline: 2px solid var(--color-g-600, #1d4ed8);
+  outline-offset: 2px;
+}
+
+.firm-card {
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.save-to-folder-menu {
+  display: grid;
+  gap: 8px;
+}
+
+.save-to-folder-create {
+  margin-top: 4px;
+}
+
+.save-to-folder-inline {
+  display: grid;
+  gap: 8px;
+}
+
+.save-to-folder-inline-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Draft Studio */
+
+.studio-outline-summary {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  background: var(--color-g-50);
+  border: 1px solid var(--color-g-100);
+  border-radius: var(--radius-sm);
+  color: var(--color-body);
+}
+
+.tab-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.studio-drafts-wrap {
+  position: relative;
+}
+
+.studio-drafts-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 280px;
+  max-width: 360px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+  padding: 6px;
+}
+
+.studio-drafts-note {
+  margin: 0;
+  padding: 10px;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
+.studio-draft-row {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  border-radius: 7px;
+}
+
+.studio-draft-row.current {
+  background: var(--color-g-50);
+}
+
+.studio-draft-open {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  border-radius: 7px;
+}
+
+.studio-draft-open:hover {
+  background: var(--color-g-50);
+}
+
+.studio-draft-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.studio-draft-meta {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+}
+
+/* Citation graph */
+
+.cg-selector-wrap {
+  position: relative;
+}
+
+.cg-selector-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 320px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--color-paper);
+  border: 1px solid var(--color-border, var(--color-line));
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 20;
+}
+
+.cg-selector-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.cg-selector-option[aria-selected="true"],
+.cg-selector-option:hover {
+  background: var(--color-g-50);
+}
+
+.cg-selector-option-title {
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--color-body);
+}
+
+.cg-selector-option-cite {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  margin-top: 2px;
+}
+
+.cg-node-btn {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.cg-node-btn:focus-visible,
+.cg-node-btn.focused {
+  outline: 2px solid var(--color-g-600, #1d4ed8);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(45, 124, 84, 0.25);
+}
+
+.cg-node-btn-center:focus-visible,
+.cg-node-btn-center.focused {
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.35);
+}
+
+/* Landing page */
+
+.l-stat-unavailable {
+  grid-column: 1 / -1;
+  border-right: none !important;
+  padding-left: 0 !important;
+}
+
+.l-stat-unavailable .l-stat-desc {
+  font-size: 0.875rem;
+}
+
+/* Profile */
+
+.profile-inline-error {
+  margin: 0 0 12px;
+  font-size: 0.82rem;
+  color: var(--color-danger, #9a3244);
+}
+
+.profile-status-region:not(:empty) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 720px) {
+  .studio-drafts-menu {
+    right: auto;
+    left: 0;
+    min-width: min(320px, calc(100vw - 32px));
+  }
+}
+
+/* ---------- Draft Studio toolbar ---------- */
+
+/* Tabs and draft controls share one bar. The tabs scroll; the controls never
+   wrap onto their own line, which previously left the matter selector stretched
+   across the full width of the page. */
+.studio-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-paper);
+  padding: 0 20px;
+  flex-shrink: 0;
+  min-height: 52px;
+}
+
+.studio-toolbar .studio-tabs {
+  border-bottom: none;
+  background: none;
+  padding: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.studio-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 8px 0;
+}
+
+.studio-toolbar-hint {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.studio-matter-select {
+  width: 210px;
+}
+
+.studio-toolbar-error {
+  margin: 0;
+  padding: 8px 20px;
+  font-size: 0.78rem;
+  color: var(--color-danger, #9a3244);
+  background: #fdf3f3;
+  border-bottom: 1px solid var(--color-line);
+}
+
+@media (max-width: 900px) {
+  .studio-toolbar {
+    flex-wrap: wrap;
+    gap: 0;
+    padding-bottom: 8px;
+  }
+  .studio-toolbar .studio-tabs { flex-basis: 100%; }
+  /* min-width:0 keeps the row inside the bar; the default `auto` lets its
+     content push it wider than the 100% basis. */
+  .studio-toolbar-actions { flex-basis: 100%; min-width: 0; flex-wrap: wrap; }
+  .studio-toolbar-hint { flex-basis: 100%; }
+  /* min-width:0 stops the native select from being sized by its longest option. */
+  .studio-matter-select { flex: 1 1 180px; width: auto; min-width: 0; max-width: 100%; }
+}
+
+/* ---------- Draft Studio empty states ---------- */
+
+.studio-sidebar-empty,
+.studio-sidebar-error {
+  margin: 0;
+  padding: 14px 14px 16px;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--color-muted);
+}
+
+.studio-sidebar-error {
+  color: var(--color-danger, #9a3244);
+}
+
+.studio-empty {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: 28px 24px;
+  border: 1px dashed var(--color-line-2);
+  border-radius: var(--radius);
+  background: var(--color-paper);
+}
+
+.studio-empty h4 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.studio-empty p {
+  max-width: 52ch;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--color-muted);
+}
+
+.studio-empty .btn {
+  margin-top: 4px;
+}

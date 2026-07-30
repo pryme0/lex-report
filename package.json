@@ -5,7 +5,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "smoke": "node scripts/smoke.mjs smoke",
+    "smoke:interactions": "node scripts/interactions.mjs",
+    "audit:layout": "node scripts/audit-layout.mjs",
+    "audit:shots": "node scripts/audit-shots.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
@@ -19,10 +25,14 @@
     "tailwindcss": "^4.1.7"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.6",
     "@tailwindcss/postcss": "^4.1.7",
     "@types/node": "^22.15.21",
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.2.12",
+    "playwright": "^1.62.0",
     "typescript": "^5.8.3"
   }
 }

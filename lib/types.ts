@@ -1,92 +1,43 @@
-export type Treatment = "Followed" | "Distinguished" | "Overruled" | "Questioned";
+/**
+ * Presentation-level types shared across the UI. Everything that describes an API payload
+ * lives in `lib/api/types.ts`; these are the vocabularies the styling depends on.
+ */
 
-// caseId is only set when the cited case exists as a CaseItem in this archive.
-export type CitedCase = {
-  title: string;
-  caseId?: string;
-};
-
-export type CitedStatute = {
-  title: string;
-  section?: string;
-};
-
-export type AppealOutcome = "Affirmed" | "Reversed" | "Remitted";
-
-// This case's own appeal trail — how it moved through the court hierarchy to reach this decision.
-export type DirectHistoryEntry = {
-  court: string;
-  outcome: AppealOutcome;
-  citation: string;
-  year: number;
-};
-
-// caseId is only set when the citing case exists as a CaseItem in this archive.
-export type CitingCase = {
-  caseId?: string;
-  title: string;
-  citation: string;
-  treatment: Treatment;
-  year: number;
-};
-
-export type CaseItem = {
-  id: string;
-  title: string;
-  citation: string;
-  court: string;
-  year: number;
-  judges: string;
-  area: string;
-  // Hierarchical subject classification for the Digest, e.g. "Banking & Secured Credit → Floating Charges".
-  digestArea: string;
-  posture: string;
-  ratio: string;
-  treatment: Treatment;
-  strength: number;
-  readTime: string;
-  facts: string;
-  holding: string;
-  issues: string[];
-  citedCases: CitedCase[];
-  citedStatutes: CitedStatute[];
-  directHistory: DirectHistoryEntry[];
-  citingCases: CitingCase[];
-};
+/**
+ * Mirrors the citator vocabulary the API emits. The distinctions matter: distinguishing is
+ * not damage to an authority, doubting is a warning, and only the last group unsettles it.
+ */
+export type Treatment =
+  | "Followed"
+  | "Applied"
+  | "Approved"
+  | "Considered"
+  | "Explained"
+  | "Referred to"
+  | "Distinguished"
+  | "Doubted"
+  | "Questioned"
+  | "Not followed"
+  | "Overruled in part"
+  | "Overruled"
+  | "Departed from"
+  | "Per incuriam";
 
 export const tcls: Record<Treatment, string> = {
   Followed: "followed",
+  Applied: "followed",
+  Approved: "followed",
+  Considered: "neutral",
+  Explained: "neutral",
+  "Referred to": "neutral",
   Distinguished: "distinguished",
+  Doubted: "questioned",
   Questioned: "questioned",
+  "Not followed": "questioned",
+  "Overruled in part": "questioned",
   Overruled: "overruled",
-};
-
-export type StatuteSection = {
-  number: string;
-  heading: string;
-  text: string;
-};
-
-export type Statute = {
-  id: string;
-  title: string;
-  shortTitle: string;
-  year: number;
-  sections: StatuteSection[];
-};
-
-export type DictionaryEntry = {
-  id: string;
-  term: string;
-  kind: "term" | "maxim";
-  definition: string;
-  appliedIn: string[]; // CaseItem ids
+  "Departed from": "overruled",
+  "Per incuriam": "overruled",
 };
 
 export type Standing = "Good Law" | "Cautionary" | "Bad Law";
-
-export function deriveStanding(citingCases: CitingCase[]): Standing {
-  if (citingCases.some(c => c.treatment === "Overruled")) return "Bad Law";
-  if (citingCases.some(c => c.treatment === "Distinguished" || c.treatment === "Questioned")) return "Cautionary";
-  return "Good Law";
-}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { DashboardProvider, useDashboard } from "@/contexts/DashboardContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -15,18 +15,33 @@ function Toast() {
     const t = setTimeout(clearToast, 3000);
     return () => clearTimeout(t);
   }, [toast, clearToast]);
-  if (!toast) return null;
+
+  // The live region stays mounted even when empty. A region that appears at the same
+  // moment as its text is not reliably announced by screen readers.
   return (
-    <div className="toast">
-      <div className="toast-dot"><Check size={10} strokeWidth={3} /></div>
-      {toast}
+    <div className="toast-region" role="status" aria-live="polite" aria-atomic="true">
+      {toast ? (
+        <div className="toast">
+          <div className="toast-dot" aria-hidden="true">
+            <Check size={10} strokeWidth={3} />
+          </div>
+          {toast}
+        </div>
+      ) : null}
     </div>
   );
 }
 
 function DashboardShell({ children }: { children: React.ReactNode }) {
-  const { selectedCase } = useDashboard();
+  const { selectedCaseId, closeCase } = useDashboard();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
+
+  // The judgment overlay replaces the routed page, so it has to give way when the user
+  // navigates — otherwise nav links change the URL while the screen appears frozen.
+  useEffect(() => {
+    closeCase();
+  }, [pathname, closeCase]);
 
   return (
     <div className="shell">
@@ -38,7 +53,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="workspace">
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
-        {selectedCase ? <JudgmentDetail /> : children}
+        {selectedCaseId ? <JudgmentDetail caseId={selectedCaseId} /> : children}
       </div>
       <Toast />
     </div>

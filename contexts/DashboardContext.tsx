@@ -1,14 +1,16 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { CaseItem } from "@/lib/types";
 
 interface DashboardContextValue {
-  selectedCase: CaseItem | null;
-  setSelectedCase: (c: CaseItem | null) => void;
-  graphCase: CaseItem | null;
-  viewGraph: (c: CaseItem) => void;
+  /** Archive id of the judgment shown in the detail overlay, or null for the page content. */
+  selectedCaseId: string | null;
+  openCase: (id: string) => void;
+  closeCase: () => void;
+  /** Archive id the citation graph page is centred on. */
+  graphCaseId: string | null;
+  viewGraph: (id: string) => void;
   toast: string;
   showToast: (m: string) => void;
   clearToast: () => void;
@@ -18,21 +20,38 @@ const DashboardContext = createContext<DashboardContextValue | null>(null);
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [selectedCase, setSelectedCase] = useState<CaseItem | null>(null);
-  const [graphCase, setGraphCase] = useState<CaseItem | null>(null);
+  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
+  const [graphCaseId, setGraphCaseId] = useState<string | null>(null);
   const [toast, setToast] = useState("");
 
-  const viewGraph = useCallback((c: CaseItem) => {
-    setGraphCase(c);
-    setSelectedCase(null);
-    router.push("/dashboard/citation-graph");
-  }, [router]);
+  const openCase = useCallback((id: string) => setSelectedCaseId(id), []);
+  const closeCase = useCallback(() => setSelectedCaseId(null), []);
+
+  const viewGraph = useCallback(
+    (id: string) => {
+      setGraphCaseId(id);
+      setSelectedCaseId(null);
+      router.push("/dashboard/citation-graph");
+    },
+    [router],
+  );
 
   const showToast = useCallback((m: string) => setToast(m), []);
   const clearToast = useCallback(() => setToast(""), []);
 
   return (
-    <DashboardContext.Provider value={{ selectedCase, setSelectedCase, graphCase, viewGraph, toast, showToast, clearToast }}>
+    <DashboardContext.Provider
+      value={{
+        selectedCaseId,
+        openCase,
+        closeCase,
+        graphCaseId,
+        viewGraph,
+        toast,
+        showToast,
+        clearToast,
+      }}
+    >
       {children}
     </DashboardContext.Provider>
   );

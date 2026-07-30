@@ -1,5 +1,11 @@
 node_modules/
 .next/
 .env*
+!.env.example
 *.local
 .DS_Store
+tsconfig.tsbuildinfo
+
+# Browser smoke-test and layout-audit output
+smoke/
+audit/

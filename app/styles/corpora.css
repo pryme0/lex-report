@@ -1,0 +1,394 @@
+﻿/* Legislation history, rules of court and court forms. */
+
+/* ─── Shared corpus chrome ─────────────────────────────────────────────── */
+.corpus-not-found {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 56px 24px;
+  text-align: center;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+}
+.corpus-not-found h2 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.corpus-not-found-msg {
+  max-width: 46ch;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-muted);
+}
+.corpus-not-found .btn { margin-top: 6px; }
+
+.corpus-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.corpus-meta-item {
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.corpus-meta-label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+  margin-bottom: 4px;
+}
+.corpus-meta-value { font-size: 0.82rem; color: var(--color-body); line-height: 1.5; }
+
+.corpus-long-title {
+  font-size: 0.88rem;
+  color: var(--color-muted);
+  line-height: 1.65;
+  margin-top: 8px;
+  max-width: 72ch;
+}
+
+.corpus-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.corpus-status-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 5px 13px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.corpus-status-badge.in-force {
+  background: var(--color-g-50);
+  color: var(--color-g-600);
+  border-color: var(--color-g-100);
+}
+.corpus-status-badge.repealed {
+  background: var(--color-rose-bg);
+  color: var(--color-rose);
+  border-color: var(--color-rose-bd);
+}
+.corpus-status-note { font-size: 0.82rem; color: var(--color-muted); line-height: 1.55; }
+
+.corpus-panel {
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-top: 16px;
+}
+.corpus-panel-title {
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-g-400);
+  margin-bottom: 12px;
+}
+
+.statute-list-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.statute-list-row-inner { flex: 1; min-width: 0; }
+.statute-list-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.statute-list-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid;
+}
+.statute-list-badge.in-force {
+  background: var(--color-g-50);
+  color: var(--color-g-500);
+  border-color: var(--color-g-100);
+}
+.statute-list-badge.repealed {
+  background: var(--color-rose-bg);
+  color: var(--color-rose);
+  border-color: var(--color-rose-bd);
+}
+.statute-list-jurisdiction {
+  color: var(--color-faint);
+}
+
+.statute-amendments { display: grid; gap: 8px; list-style: none; padding: 0; margin: 0; }
+.statute-amendment-row {
+  display: grid;
+  gap: 4px;
+  padding: 11px 13px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-panel);
+}
+.statute-amendment-year {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-g-500);
+}
+.statute-amendment-instrument {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.statute-amendment-desc { font-size: 0.8rem; color: var(--color-muted); line-height: 1.55; }
+.statute-amendment-meta {
+  font-size: 0.74rem;
+  color: var(--color-faint);
+  margin-top: 2px;
+}
+.statute-amendment-sections { font-size: 0.74rem; color: var(--color-body); }
+
+.statute-section-repealed {
+  opacity: 0.82;
+  border-color: var(--color-rose-bd);
+  background: var(--color-rose-bg);
+}
+.statute-section-repealed .statute-section-head h3 { text-decoration: line-through; color: var(--color-muted); }
+.statute-section-flag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--color-rose-bd);
+  background: var(--color-rose-bg);
+  color: var(--color-rose);
+  flex-shrink: 0;
+}
+.statute-section-note {
+  font-size: 0.8rem;
+  color: var(--color-amber);
+  background: var(--color-amber-bg);
+  border: 1px solid var(--color-amber-bd);
+  border-radius: var(--radius-sm);
+  padding: 8px 11px;
+  margin-bottom: 10px;
+  line-height: 1.55;
+}
+.statute-section-highlight {
+  outline: 2px solid var(--color-g-400);
+  outline-offset: 2px;
+}
+
+.statute-section-link {
+  font-size: 0.72rem;
+  color: var(--color-g-500);
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.statute-section:hover .statute-section-link { opacity: 1; }
+
+/* ─── Practice & forms ───────────────────────────────────────────────────── */
+.practice-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.practice-tab {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--color-line-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-body);
+  background: var(--color-bg);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.practice-tab:hover { background: var(--color-g-50); border-color: var(--color-g-200); color: var(--color-g-600); }
+.practice-tab.active {
+  background: var(--color-g-600);
+  border-color: var(--color-g-600);
+  color: #fff;
+}
+
+.practice-list { display: grid; gap: 8px; }
+.practice-list-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.practice-list-row:hover { background: var(--color-g-50); border-color: var(--color-g-100); }
+.practice-list-title { font-size: 0.9rem; font-weight: 600; color: var(--color-ink); }
+.practice-list-meta { font-size: 0.75rem; color: var(--color-muted); margin-top: 3px; }
+.practice-list-desc {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  margin-top: 6px;
+  line-height: 1.55;
+  max-width: 62ch;
+}
+.practice-kind-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--color-line-2);
+  background: var(--color-panel);
+  color: var(--color-muted);
+  flex-shrink: 0;
+}
+.practice-kind-badge.rules {
+  background: var(--color-blue-bg);
+  color: var(--color-blue);
+  border-color: var(--color-blue-bd);
+}
+.practice-kind-badge.practice-direction {
+  background: var(--color-amber-bg);
+  color: var(--color-amber);
+  border-color: var(--color-amber-bd);
+}
+
+.practice-provisions { display: grid; gap: 12px; margin-top: 4px; }
+.practice-provision {
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+.practice-provision-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.practice-provision-number {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-g-500);
+  flex-shrink: 0;
+}
+.practice-provision-head h3 {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.practice-provision-text { font-size: 0.85rem; color: var(--color-body); line-height: 1.75; }
+
+.practice-forms-grid { display: grid; gap: 8px; margin-top: 8px; }
+.practice-form-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 11px 14px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.practice-form-row:hover { background: var(--color-g-50); border-color: var(--color-g-100); }
+.practice-form-code {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-g-500);
+  flex-shrink: 0;
+}
+.practice-form-title { font-size: 0.84rem; font-weight: 600; color: var(--color-ink); }
+.practice-form-desc { font-size: 0.76rem; color: var(--color-muted); margin-top: 2px; }
+
+.form-content-wrap {
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-top: 14px;
+}
+.form-content-pre {
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.8rem;
+  line-height: 1.65;
+  color: var(--color-ink-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+/* ─── Dictionary source link ─────────────────────────────────────────────── */
+.dict-source { margin-top: 14px; }
+.dict-source-link { margin-top: 6px; }
+
+/* ---------- labelled facet groups ---------- */
+
+/* Independent facets need their own label; run together in one chip row they
+   read as a single set with two conflicting selections. */
+.facet-groups {
+  display: grid;
+  gap: 10px;
+}
+
+.facet-group {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.facet-group-label {
+  flex: 0 0 52px;
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+
+/* .filters carries a rule and inset for use beneath the search bar; neither
+   applies once the chips are grouped under their own label. */
+.facet-group .filters {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  margin-top: 0;
+  border-top: none;
+}
+
+@media (max-width: 640px) {
+  .facet-group { gap: 6px; }
+  .facet-group-label { flex-basis: 100%; }
+}
