@@ -731,6 +731,11 @@ dl, dd { margin: 0; }
 .form-check { display: flex; align-items: center; gap: 7px; font-size: 0.8rem; color: var(--color-muted); cursor: pointer; }
 .form-check input { accent-color: var(--color-g-600); }
 .form-note { padding: 10px 12px; background: var(--color-g-50); border: 1px solid var(--color-g-100); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--color-g-600); }
+.form-error { padding: 10px 12px; background: var(--color-rose-bg); border: 1px solid var(--color-rose-bd); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--color-rose); }
+.form-hint { font-size: 0.72rem; color: var(--color-muted); margin-top: 4px; }
+.form-footer { text-align: center; font-size: 0.85rem; color: var(--color-muted); padding-top: 8px; }
+.form-link { color: var(--color-g-500); font-weight: 500; transition: color 0.12s; }
+.form-link:hover { color: var(--color-g-400); text-decoration: underline; }
 .login-aside { background: linear-gradient(160deg, var(--color-g-800) 0%, var(--color-g-950) 100%); padding: 52px; display: flex; flex-direction: column; justify-content: center; gap: 28px; }
 .login-aside h2 { font-family: var(--font-display); font-size: clamp(1.9rem,3.8vw,3.4rem); font-weight: 500; color: rgba(255,255,255,0.92); line-height: 1.06; letter-spacing: -0.015em; max-width: 520px; }
 .login-stat { border-left: 3px solid var(--color-g-400); padding-left: 16px; }

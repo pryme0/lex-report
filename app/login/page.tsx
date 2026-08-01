@@ -3,16 +3,63 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001/api";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [note, setNote] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [resetNote, setResetNote] = useState("");
 
-  function submit(e: FormEvent<HTMLFormElement>) {
+  async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    sessionStorage.setItem("lr-auth", "1");
-    router.push("/dashboard");
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/signin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Sign in failed");
+        setLoading(false);
+        return;
+      }
+
+      sessionStorage.setItem("lr-auth", "1");
+      router.push("/dashboard");
+    } catch {
+      setError("Network error. Please try again.");
+      setLoading(false);
+    }
+  }
+
+  async function handleForgotPassword() {
+    if (!email) {
+      setError("Please enter your email address first");
+      return;
+    }
+
+    try {
+      await fetch(`${API_BASE}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      setResetNote(`If an account exists for ${email}, a password reset link has been sent.`);
+    } catch {
+      setResetNote("Unable to send reset email. Please try again.");
+    }
   }
 
   return (
@@ -30,31 +77,65 @@ export default function LoginPage() {
         </div>
         <form className="login-form" onSubmit={submit}>
           <h1>Log in</h1>
+          {error && <div className="form-error">{error}</div>}
           <div className="form-field">
             <label className="form-label" htmlFor="email">Email</label>
-            <input id="email" className="form-input" type="email" defaultValue="partner@lawfirm.ng" required />
+            <input
+              id="email"
+              className="form-input"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
           </div>
           <div className="form-field">
             <label className="form-label" htmlFor="password">Password</label>
-            <input id="password" className="form-input" type="password" defaultValue="lexreport" required />
+            <input
+              id="password"
+              className="form-input"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
           </div>
           <div className="form-row">
             <label className="form-check">
               <input type="checkbox" defaultChecked /> Remember this device
             </label>
-            <button type="button" className="btn btn-link" onClick={() => setNote("Reset instructions sent to partner@lawfirm.ng.")}>
+            <button
+              type="button"
+              className="btn btn-link"
+              onClick={handleForgotPassword}
+            >
               Forgot password?
             </button>
           </div>
-          {note && <div className="form-note">{note}</div>}
-          <button className="btn btn-primary" type="submit" style={{ height: 44 }}>
-            Log in to workspace
+          {resetNote && <div className="form-note">{resetNote}</div>}
+          <button
+            className="btn btn-primary"
+            type="submit"
+            style={{ height: 44 }}
+            disabled={loading}
+          >
+            {loading ? <Loader2 className="animate-spin" size={18} /> : "Log in"}
           </button>
+          <div className="form-footer">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="form-link">
+              Sign up
+            </Link>
+          </div>
         </form>
       </div>
       <div className="login-aside">
         <div>
-          <p className="l-hero-eyebrow" style={{ color: "rgba(255,255,255,0.38)", marginBottom: 14 }}>Role-aware access</p>
+          <p className="l-hero-eyebrow" style={{ color: "rgba(255,255,255,0.38)", marginBottom: 14 }}>
+            Role-aware access
+          </p>
           <h2>Partner, associate, researcher, editor, and client-reader permissions.</h2>
         </div>
         <div className="login-stat">
