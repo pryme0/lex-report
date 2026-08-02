@@ -1180,7 +1180,7 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
   }
 
   async function handleAddIssue() {
-    const result = await createIssue.mutate({ text: "", submission: "" });
+    const result = await createIssue.mutate({ text: "New issue", submission: "" });
     if (result) {
       applyDraft(result);
       const newIssue = result.issues[result.issues.length - 1];
