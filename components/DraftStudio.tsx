@@ -318,14 +318,15 @@ function ArgumentsTab({
             >
               <div className="issue-card-head">
                 <div className="issue-num display">{String(idx + 1).padStart(2, "0")}</div>
-                <input
+                <AutoSizeTextarea
                   className="issue-text-input"
                   placeholder="State the issue for determination…"
                   value={edit.text}
-                  onChange={(e) => onIssueEdit(issue.id, { text: e.target.value })}
+                  onChange={(v) => onIssueEdit(issue.id, { text: v })}
                   onBlur={() => onSaveIssue(issue.id)}
                   onClick={(e) => e.stopPropagation()}
                   disabled={pending}
+                  minRows={1}
                 />
                 <div className="issue-head-actions" onClick={(e) => e.stopPropagation()}>
                   <button
