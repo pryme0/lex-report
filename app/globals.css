@@ -853,8 +853,25 @@ dl, dd { margin: 0; }
   border-right: 1px solid var(--color-line); background: var(--color-paper);
   display: flex; flex-direction: column; overflow: hidden;
 }
+.studio-search-box {
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+  border-bottom: 1px solid var(--color-line); flex-shrink: 0;
+}
+.studio-search-icon { color: var(--color-faint); flex-shrink: 0; }
+.studio-search-input {
+  flex: 1; border: none; background: transparent; font-size: 0.825rem;
+  color: var(--color-body); outline: none;
+}
+.studio-search-input::placeholder { color: var(--color-faint); }
+.studio-search-spinner {
+  width: 14px; height: 14px; border: 2px solid var(--color-line);
+  border-top-color: var(--color-g-500); border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .studio-sidebar-label {
-  padding: 12px 14px 10px;
+  padding: 10px 14px 8px;
   font-size: 0.63rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--color-faint); border-bottom: 1px solid var(--color-line); flex-shrink: 0;
 }
@@ -954,7 +971,12 @@ dl, dd { margin: 0; }
 .brief-heading-block { text-align: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 2px solid var(--color-ink); }
 .brief-court-line { font-size: 0.9rem; font-weight: 600; color: var(--color-ink); margin-bottom: 4px; letter-spacing: 0.04em; }
 .brief-suit-line { font-size: 0.875rem; font-weight: 600; color: var(--color-ink); margin-top: 10px; }
-.brief-inline-input { border: none; border-bottom: 1px dashed var(--color-line-2); background: transparent; font-family: var(--font-display); font-size: inherit; font-weight: inherit; color: var(--color-ink); outline: none; text-align: center; min-width: 60px; padding: 0 4px; }
+/* Auto-sizing input */
+.auto-size-input-wrapper { display: inline-block; position: relative; }
+.auto-size-input-measure { visibility: hidden; white-space: pre; position: absolute; left: 0; top: 0; pointer-events: none; }
+.auto-size-textarea { overflow: hidden; resize: none; }
+
+.brief-inline-input { border: none; border-bottom: 1px dashed var(--color-line-2); background: transparent; font-family: var(--font-display); font-size: inherit; font-weight: inherit; color: var(--color-ink); outline: none; text-align: center; min-width: 60px; max-width: 100%; padding: 0 4px; }
 .brief-inline-input::placeholder { color: var(--color-faint); }
 .brief-inline-input:focus { border-bottom-color: var(--color-g-400); }
 .brief-parties-block { margin: 20px 0; text-align: center; }

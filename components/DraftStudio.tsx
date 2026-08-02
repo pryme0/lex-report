@@ -3,14 +3,16 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Plus, ChevronDown, ChevronRight, Trash2,
-  ArrowUp, ArrowDown, FileText, Download, AlignLeft, List,
+  ArrowUp, ArrowDown, FileText, Download, List, Search,
 } from "lucide-react";
+import { AutoSizeInput, AutoSizeTextarea } from "@/components/AutoSizeInput";
 import { cn } from "@/lib/utils";
 import { casesApi, draftsApi, mattersApi, ApiError } from "@/lib/api";
 import type {
   Brief,
   BundleDetails,
   CaseIndexItem,
+  CaseSummary,
   DraftIssue,
   DraftWorkspace,
   Matter,
@@ -105,143 +107,121 @@ function isSavedCase(c: ResolvedCase): c is SavedCase {
   return "treatment" in c && !("unresolved" in c);
 }
 
-// ─── Notepad ──────────────────────────────────────────────────────────────────
-
-function Notepad({
-  c,
-  note,
-  onChange,
-  onBlur,
-  disabled,
-}: {
-  c: SavedCase;
-  note: string;
-  onChange: (v: string) => void;
-  onBlur: () => void;
-  disabled?: boolean;
-}) {
-  const words = note.trim() ? note.trim().split(/\s+/).length : 0;
-  return (
-    <div className="notepad">
-      <div className="notepad-header">
-        <div className="notepad-case-label">Research note</div>
-        <div className="notepad-case-title">{c.title}</div>
-        <div className="notepad-case-cite">{c.citation}</div>
-        <div className="notepad-meta">{c.savedAt ? `Saved ${c.savedAt}` : ""}</div>
-      </div>
-      <textarea
-        className="notepad-body"
-        placeholder="Add your notes — key passages, relevance to the matter, points to raise in submissions…"
-        value={note}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
-        disabled={disabled}
-      />
-      <div className="notepad-footer">
-        {words > 0 ? `${words} word${words === 1 ? "" : "s"}` : "No notes yet"}
-      </div>
-    </div>
-  );
-}
-
 // ─── Cases sidebar ────────────────────────────────────────────────────────────
 
 function CasesSidebar({
   cases,
-  notes,
-  noteDrafts,
-  onNoteChange,
-  onNoteBlur,
-  expandedNote,
-  setExpandedNote,
   onAddToIssue,
   onAddToBundle,
   bundleOrder,
   activeIssueId,
   matterLinked,
   pending,
-  noteError,
 }: {
   cases: SavedCase[];
-  notes: Record<string, string>;
-  noteDrafts: Record<string, string>;
-  onNoteChange: (id: string, v: string) => void;
-  onNoteBlur: (id: string) => void;
-  expandedNote: string | null;
-  setExpandedNote: (id: string | null) => void;
   onAddToIssue: (caseId: string) => void;
   onAddToBundle: (caseId: string) => void;
   bundleOrder: string[];
   activeIssueId: string | null;
   matterLinked: boolean;
   pending?: boolean;
-  noteError?: string | null;
 }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<CaseSummary[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSearch = useCallback((q: string) => {
+    setSearchQuery(q);
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (!q.trim()) {
+      setSearchResults(null);
+      return;
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const result = await casesApi.search({ q, limit: 10 });
+        setSearchResults(result.data);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+  }, []);
+
+  const displayCases = searchResults ?? cases;
+  const isSearching = searchQuery.trim().length > 0;
+
   return (
     <aside className="studio-sidebar">
-      <div className="studio-sidebar-label">Saved cases · {cases.length}</div>
-      {noteError && (
-        <p className="studio-sidebar-error" role="alert">
-          {noteError}
-        </p>
-      )}
+      <div className="studio-search-box">
+        <Search size={14} className="studio-search-icon" />
+        <input
+          type="text"
+          className="studio-search-input"
+          placeholder="Search cases..."
+          value={searchQuery}
+          onChange={(e) => handleSearch(e.target.value)}
+        />
+        {searching && <span className="studio-search-spinner" />}
+      </div>
+
+      <div className="studio-sidebar-label">
+        {isSearching ? `Results · ${displayCases.length}` : `Saved cases · ${cases.length}`}
+      </div>
+
       <div className="studio-case-list">
-        {cases.length === 0 ? (
+        {displayCases.length === 0 ? (
           <div className="studio-sidebar-empty">
-            {matterLinked
-              ? "This matter has no saved authorities yet. Save cases to it from Research."
-              : "Link a matter above to load its saved authorities."}
+            {isSearching
+              ? "No cases found. Try a different search."
+              : matterLinked
+              ? "No saved authorities yet."
+              : "Link a matter to load saved authorities, or search above."}
           </div>
         ) : (
-          cases.map((c) => {
-            const open = expandedNote === c.id;
+          displayCases.map((c) => {
+            const caseId = c.id;
+            const title = c.title;
+            const inBundle = bundleOrder.includes(caseId);
             return (
-              <div className={cn("studio-case-item", open && "open")} key={c.id}>
-                <div className="studio-case-row">
-                  <div className="studio-case-info">
-                    <div className="studio-case-name">{c.title}</div>
-                    <div className="studio-case-cite">{c.citation}</div>
-                    <div className="studio-case-meta">
+              <div className="studio-case-item" key={caseId}>
+                <div className="studio-case-info">
+                  <div className="studio-case-name">{title}</div>
+                  <div className="studio-case-cite">{c.citation}</div>
+                  <div className="studio-case-meta">
+                    {"treatment" in c && (
                       <span className={cn("treatment-pill", tcls[c.treatment])}>{c.treatment}</span>
-                      {!bundleOrder.includes(c.id) && (
-                        <button
-                          className="btn btn-xs studio-add-auth"
-                          onClick={() => onAddToBundle(c.id)}
-                          title="Add to bundle"
-                          disabled={pending}
-                        >
-                          + Add to bundle
-                        </button>
-                      )}
-                      {activeIssueId && (
-                        <button
-                          className="btn btn-xs studio-add-auth"
-                          onClick={() => onAddToIssue(c.id)}
-                          title="Add to active issue"
-                          disabled={pending}
-                        >
-                          + Add to issue
-                        </button>
-                      )}
-                    </div>
+                    )}
+                    {!inBundle && (
+                      <button
+                        className="btn btn-xs studio-add-auth"
+                        onClick={() => onAddToBundle(caseId)}
+                        title="Add to bundle"
+                        disabled={pending}
+                      >
+                        + Bundle
+                      </button>
+                    )}
+                    {activeIssueId && (
+                      <button
+                        className="btn btn-xs studio-add-auth"
+                        onClick={() => onAddToIssue(caseId)}
+                        title="Add to active issue"
+                        disabled={pending}
+                      >
+                        + Issue
+                      </button>
+                    )}
                   </div>
-                  <button
-                    className={cn("studio-note-toggle", open && "open")}
-                    onClick={() => setExpandedNote(open ? null : c.id)}
-                    title={open ? "Collapse note" : "Open note"}
-                  >
-                    <AlignLeft size={13} />
-                  </button>
                 </div>
-                {open && (
-                  <Notepad
-                    c={c}
-                    note={noteDrafts[c.id] ?? notes[c.id] ?? c.note ?? ""}
-                    onChange={(v) => onNoteChange(c.id, v)}
-                    onBlur={() => onNoteBlur(c.id)}
-                    disabled={pending}
-                  />
-                )}
               </div>
             );
           })
@@ -708,61 +688,66 @@ function BriefTab({
         <div className="brief-heading-block">
           <div className="brief-court-line">
             IN THE{" "}
-            <input
+            <AutoSizeInput
               className="brief-inline-input"
               value={brief.court}
-              onChange={(e) => patch("court", e.target.value)}
+              onChange={(v) => patch("court", v)}
               onBlur={onBriefBlur}
               placeholder="COURT NAME"
               disabled={pending}
+              minWidth={100}
             />
             {" "} OF NIGERIA
           </div>
           <div className="brief-court-line">
             HOLDEN AT{" "}
-            <input
+            <AutoSizeInput
               className="brief-inline-input"
               value={brief.location}
-              onChange={(e) => patch("location", e.target.value)}
+              onChange={(v) => patch("location", v)}
               onBlur={onBriefBlur}
               placeholder="LOCATION"
               disabled={pending}
+              minWidth={80}
             />
           </div>
           <div className="brief-suit-line">
             SUIT NO:{" "}
-            <input
+            <AutoSizeInput
               className="brief-inline-input"
               value={brief.suitNo}
-              onChange={(e) => patch("suitNo", e.target.value)}
+              onChange={(v) => patch("suitNo", v)}
               onBlur={onBriefBlur}
               placeholder="SC/0000/0000"
               disabled={pending}
+              minWidth={100}
             />
           </div>
         </div>
 
         <div className="brief-parties-block">
           <div className="brief-party-row">
-            <input
+            <AutoSizeInput
               className="brief-party-input"
               value={brief.appellant}
-              onChange={(e) => patch("appellant", e.target.value)}
+              onChange={(v) => patch("appellant", v)}
               onBlur={onBriefBlur}
               placeholder="APPELLANT / CLAIMANT"
               disabled={pending}
+              minWidth={200}
             />
             <span className="brief-party-role">…APPELLANT</span>
           </div>
           <div className="brief-party-and">AND</div>
           <div className="brief-party-row">
-            <input
+            <AutoSizeInput
               className="brief-party-input"
               value={brief.respondent}
-              onChange={(e) => patch("respondent", e.target.value)}
+              onChange={(v) => patch("respondent", v)}
               onBlur={onBriefBlur}
               placeholder="RESPONDENT / DEFENDANT"
               disabled={pending}
+              minWidth={200}
             />
             <span className="brief-party-role">…RESPONDENT</span>
           </div>
@@ -772,13 +757,13 @@ function BriefTab({
 
         <div className="brief-section">
           <div className="brief-section-heading">INTRODUCTION</div>
-          <textarea
+          <AutoSizeTextarea
             className="brief-textarea"
             value={brief.intro}
-            onChange={(e) => patch("intro", e.target.value)}
+            onChange={(v) => patch("intro", v)}
             onBlur={onBriefBlur}
             placeholder="Set out the nature of the proceedings, the relief sought, and a brief summary of the facts…"
-            rows={5}
+            minRows={3}
             disabled={pending}
           />
         </div>
@@ -822,26 +807,26 @@ function BriefTab({
 
         <div className="brief-section">
           <div className="brief-section-heading">CONCLUSION</div>
-          <textarea
+          <AutoSizeTextarea
             className="brief-textarea"
             value={brief.conclusion}
-            onChange={(e) => patch("conclusion", e.target.value)}
+            onChange={(v) => patch("conclusion", v)}
             onBlur={onBriefBlur}
             placeholder="Summarise your arguments and reiterate the relief sought…"
-            rows={4}
+            minRows={2}
             disabled={pending}
           />
         </div>
 
         <div className="brief-section">
           <div className="brief-section-heading">RELIEF SOUGHT</div>
-          <textarea
+          <AutoSizeTextarea
             className="brief-textarea"
             value={brief.relief}
-            onChange={(e) => patch("relief", e.target.value)}
+            onChange={(v) => patch("relief", v)}
             onBlur={onBriefBlur}
             placeholder="State precisely the orders you are inviting the court to make…"
-            rows={4}
+            minRows={2}
             disabled={pending}
           />
         </div>
@@ -866,7 +851,6 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
   const [booting, setBooting] = useState(true);
 
   const [tab, setTab] = useState<StudioTab>("arguments");
-  const [expandedNote, setExpandedNote] = useState<string | null>(null);
   const [activeIssueId, setActiveIssueId] = useState<string | null>(null);
   const [expandedIssues, setExpandedIssues] = useState<Record<string, boolean>>({});
   const [issueEdits, setIssueEdits] = useState<Record<string, IssueEdit>>({});
@@ -975,9 +959,6 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
 
   const createDraft = useApiMutation((body: { matterId?: string }) => draftsApi.create(body));
   const removeDraftMut = useApiMutation((id: string) => draftsApi.remove(id));
-  const updateNote = useApiMutation((caseId: string, note: string) =>
-    draftsApi.updateNote(draftId!, caseId, note),
-  );
   const createIssue = useApiMutation((body: { text: string; submission?: string }) =>
     draftsApi.createIssue(draftId!, body),
   );
@@ -1008,7 +989,6 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
 
   const pending =
     createDraft.pending ||
-    updateNote.pending ||
     createIssue.pending ||
     updateIssueMut.pending ||
     deleteIssueMut.pending ||
@@ -1025,7 +1005,6 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
     setExpandedIssues({});
     setActiveIssueId(null);
     setNoteDrafts({});
-    setExpandedNote(null);
     setIssueEdits(
       Object.fromEntries(
         workspace.issues.map((issue) => [
@@ -1357,25 +1336,6 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
     }
   }
 
-  async function handleNoteBlur(caseId: string) {
-    if (!draft) return;
-    const savedNote = draft.notes[caseId] ?? "";
-    const matterCase = draft.cases.find((c) => c.id === caseId);
-    const baseline = savedNote || matterCase?.note || "";
-    const note = noteDrafts[caseId] ?? baseline;
-    if (note === savedNote) return;
-    const result = await updateNote.mutate(caseId, note);
-    if (result) {
-      applyDraft(result);
-      setNoteDrafts((prev) => {
-        const next = { ...prev };
-        delete next[caseId];
-        return next;
-      });
-      onAction("Note saved.");
-    }
-  }
-
   async function handleExportBundle() {
     const result = await exportBundleMut.mutate();
     if (result) {
@@ -1563,19 +1523,12 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
       <div className="studio-body">
         <CasesSidebar
           cases={draft.cases}
-          notes={draft.notes}
-          noteDrafts={noteDrafts}
-          onNoteChange={(id, v) => setNoteDrafts((prev) => ({ ...prev, [id]: v }))}
-          onNoteBlur={handleNoteBlur}
-          expandedNote={expandedNote}
-          setExpandedNote={setExpandedNote}
           onAddToIssue={handleAddToIssue}
           onAddToBundle={handleAddToBundle}
           bundleOrder={draft.bundleOrder}
           activeIssueId={tab === "arguments" ? activeIssueId : null}
           matterLinked={Boolean(draft.matterId)}
           pending={pending}
-          noteError={updateNote.error}
         />
 
         <div className="studio-main">
