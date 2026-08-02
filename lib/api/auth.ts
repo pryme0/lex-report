@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { api, getErrorMessage } from "./axios";
+import { api, getErrorMessage, setTokens, clearTokens, isAuthenticated } from "./axios";
 
 export interface User {
   id: string;
@@ -59,18 +59,25 @@ export function useSignup() {
   });
 }
 
+interface SigninResponse {
+  message: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
 export function useSignin() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: SigninData) => {
-      const response = await api.post<{ message: string }>("/auth/signin", data);
+      const response = await api.post<SigninResponse>("/auth/signin", data);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user"] });
+    onSuccess: (data) => {
+      setTokens(data.accessToken, data.refreshToken);
       sessionStorage.setItem("lr-auth", "1");
+      queryClient.invalidateQueries({ queryKey: ["user"] });
       router.push("/dashboard");
     },
     onError: (error) => {
@@ -85,15 +92,21 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: async () => {
-      await api.post("/auth/logout");
+      try {
+        await api.post("/auth/logout");
+      } catch {
+        // Ignore errors - we're logging out anyway
+      }
     },
     onSuccess: () => {
+      clearTokens();
       queryClient.clear();
-      sessionStorage.removeItem("lr-auth");
       router.push("/login");
     },
   });
 }
+
+export { isAuthenticated };
 
 export function useForgotPassword() {
   return useMutation({

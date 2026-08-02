@@ -1,4 +1,5 @@
 import { API_BASE_URL, API_USER_ID } from "./config";
+import { getAccessToken } from "./axios";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -39,11 +40,14 @@ async function readError(response: Response): Promise<string> {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
 
+  const token = getAccessToken();
+
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       ...init,
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(API_USER_ID ? { "x-user-id": API_USER_ID } : {}),
         ...init?.headers,
       },
