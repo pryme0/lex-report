@@ -2,66 +2,43 @@
 
 import { FormEvent, useState, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, CheckCircle } from "lucide-react";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:3001/api";
+import { useResetPassword } from "@/lib/api/auth";
+import { getErrorMessage } from "@/lib/api/axios";
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const token = searchParams.get("token");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [validationError, setValidationError] = useState("");
+
+  const resetPassword = useResetPassword();
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError("");
+    setValidationError("");
 
     if (!token) {
-      setError("No reset token provided");
+      setValidationError("No reset token provided");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setValidationError("Passwords do not match");
       return;
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setValidationError("Password must be at least 8 characters");
       return;
     }
 
-    setLoading(true);
-
-    try {
-      const res = await fetch(`${API_BASE}/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Password reset failed");
-        setLoading(false);
-        return;
-      }
-
-      setSuccess(true);
-      setTimeout(() => router.push("/login"), 3000);
-    } catch {
-      setError("Network error. Please try again.");
-      setLoading(false);
-    }
+    resetPassword.mutate({ token, password });
   }
 
-  if (success) {
+  if (resetPassword.isSuccess) {
     return (
       <div className="login-page">
         <div className="login-panel">
@@ -127,6 +104,8 @@ function ResetPasswordContent() {
     );
   }
 
+  const error = validationError || (resetPassword.error ? getErrorMessage(resetPassword.error) : "");
+
   return (
     <div className="login-page">
       <div className="login-panel">
@@ -173,9 +152,9 @@ function ResetPasswordContent() {
             className="btn btn-primary"
             type="submit"
             style={{ height: 44 }}
-            disabled={loading}
+            disabled={resetPassword.isPending}
           >
-            {loading ? <Loader2 className="animate-spin" size={18} /> : "Reset password"}
+            {resetPassword.isPending ? <Loader2 className="animate-spin" size={18} /> : "Reset password"}
           </button>
         </form>
       </div>

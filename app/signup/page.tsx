@@ -3,57 +3,36 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Loader2, CheckCircle } from "lucide-react";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:3001/api";
+import { useSignup } from "@/lib/api/auth";
+import { getErrorMessage } from "@/lib/api/axios";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [validationError, setValidationError] = useState("");
+
+  const signup = useSignup();
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError("");
+    setValidationError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setValidationError("Passwords do not match");
       return;
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setValidationError("Password must be at least 8 characters");
       return;
     }
 
-    setLoading(true);
-
-    try {
-      const res = await fetch(`${API_BASE}/auth/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Sign up failed");
-        setLoading(false);
-        return;
-      }
-
-      setSuccess(true);
-    } catch {
-      setError("Network error. Please try again.");
-      setLoading(false);
-    }
+    signup.mutate({ name, email, password });
   }
 
-  if (success) {
+  if (signup.isSuccess) {
     return (
       <div className="login-page">
         <div className="login-panel">
@@ -90,6 +69,8 @@ export default function SignupPage() {
       </div>
     );
   }
+
+  const error = validationError || (signup.error ? getErrorMessage(signup.error) : "");
 
   return (
     <div className="login-page">
@@ -161,9 +142,9 @@ export default function SignupPage() {
             className="btn btn-primary"
             type="submit"
             style={{ height: 44 }}
-            disabled={loading}
+            disabled={signup.isPending}
           >
-            {loading ? <Loader2 className="animate-spin" size={18} /> : "Create account"}
+            {signup.isPending ? <Loader2 className="animate-spin" size={18} /> : "Create account"}
           </button>
           <div className="form-footer">
             Already have an account?{" "}

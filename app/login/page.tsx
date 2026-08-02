@@ -2,64 +2,35 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:3001/api";
+import { useSignin, useForgotPassword } from "@/lib/api/auth";
+import { getErrorMessage } from "@/lib/api/axios";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const [resetNote, setResetNote] = useState("");
+
+  const signin = useSignin();
+  const forgotPassword = useForgotPassword();
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      const res = await fetch(`${API_BASE}/auth/signin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Sign in failed");
-        setLoading(false);
-        return;
-      }
-
-      sessionStorage.setItem("lr-auth", "1");
-      router.push("/dashboard");
-    } catch {
-      setError("Network error. Please try again.");
-      setLoading(false);
-    }
+    signin.mutate({ email, password });
   }
 
   async function handleForgotPassword() {
     if (!email) {
-      setError("Please enter your email address first");
       return;
     }
-
-    try {
-      await fetch(`${API_BASE}/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      setResetNote(`If an account exists for ${email}, a password reset link has been sent.`);
-    } catch {
-      setResetNote("Unable to send reset email. Please try again.");
-    }
+    forgotPassword.mutate(email, {
+      onSuccess: () => {
+        setResetNote(`If an account exists for ${email}, a password reset link has been sent.`);
+      },
+      onError: () => {
+        setResetNote("Unable to send reset email. Please try again.");
+      },
+    });
   }
 
   return (
@@ -77,7 +48,7 @@ export default function LoginPage() {
         </div>
         <form className="login-form" onSubmit={submit}>
           <h1>Log in</h1>
-          {error && <div className="form-error">{error}</div>}
+          {signin.error && <div className="form-error">{getErrorMessage(signin.error)}</div>}
           <div className="form-field">
             <label className="form-label" htmlFor="email">Email</label>
             <input
@@ -110,6 +81,7 @@ export default function LoginPage() {
               type="button"
               className="btn btn-link"
               onClick={handleForgotPassword}
+              disabled={forgotPassword.isPending}
             >
               Forgot password?
             </button>
@@ -119,9 +91,9 @@ export default function LoginPage() {
             className="btn btn-primary"
             type="submit"
             style={{ height: 44 }}
-            disabled={loading}
+            disabled={signin.isPending}
           >
-            {loading ? <Loader2 className="animate-spin" size={18} /> : "Log in"}
+            {signin.isPending ? <Loader2 className="animate-spin" size={18} /> : "Log in"}
           </button>
           <div className="form-footer">
             Don&apos;t have an account?{" "}
