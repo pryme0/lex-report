@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Plus, ChevronDown, ChevronRight, Trash2,
-  ArrowUp, ArrowDown, FileText, Download, List, Search,
+  ArrowUp, ArrowDown, Download, List, Search,
 } from "lucide-react";
 import { AutoSizeInput, AutoSizeTextarea } from "@/components/AutoSizeInput";
 import { cn } from "@/lib/utils";
@@ -248,9 +248,6 @@ function ArgumentsTab({
   onRemoveAuthority,
   activeIssueId,
   setActiveIssueId,
-  onGenerateOutline,
-  onRegenerateOutline,
-  outlineSummary,
   pending,
   error,
 }: {
@@ -268,9 +265,6 @@ function ArgumentsTab({
   onRemoveAuthority: (issueId: string, caseId: string) => void;
   activeIssueId: string | null;
   setActiveIssueId: (id: string | null) => void;
-  onGenerateOutline: () => void;
-  onRegenerateOutline: () => void;
-  outlineSummary?: string | null;
   pending?: boolean;
   error?: string | null;
 }) {
@@ -284,7 +278,6 @@ function ArgumentsTab({
     <div className="tab-content">
       <div className="tab-section-header">
         <div>
-          <div className="label">Step 1 of 3</div>
           <h3 className="studio-section-title">Issues for determination</h3>
         </div>
         <button className="btn btn-secondary btn-sm" onClick={onAddIssue} disabled={pending}>
@@ -292,7 +285,7 @@ function ArgumentsTab({
         </button>
       </div>
       <p className="studio-hint">
-        State each issue, add authorities from your saved cases, then write your submissions. Click an issue to make it active — then click "Add to issue" on a saved case in the sidebar.
+        State each issue, attach supporting authorities, then write your submissions.
       </p>
       {error && (
         <p className="studio-hint" style={{ color: "var(--danger, #c0392b)" }} role="alert">
@@ -304,11 +297,10 @@ function ArgumentsTab({
         <div className="studio-empty">
           <h4>No issues yet</h4>
           <p>
-            Start by stating the first issue for determination, or generate a skeleton from the
-            authorities saved to this matter.
+            Start by stating the legal questions the court must determine.
           </p>
           <button className="btn btn-primary btn-sm" onClick={onAddIssue} disabled={pending}>
-            <Plus size={12} /> Add the first issue
+            <Plus size={12} /> Add first issue
           </button>
         </div>
       )}
@@ -462,37 +454,6 @@ function ArgumentsTab({
         })}
       </div>
 
-      {issues.length > 0 && (
-        <div className="tab-actions">
-          {outlineSummary && (
-            <p className="studio-outline-summary" role="status" aria-live="polite">
-              {outlineSummary}
-            </p>
-          )}
-          <p className="studio-hint" style={{ marginBottom: 8 }}>
-            Generate adds any missing issues from your authorities without changing what you have written.
-            Regenerate replaces every issue and submission.
-          </p>
-          <div className="tab-actions-row">
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={onGenerateOutline}
-              disabled={pending}
-            >
-              Generate missing issues <FileText size={14} />
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={onRegenerateOutline}
-              disabled={pending}
-            >
-              Regenerate all issues
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -534,15 +495,14 @@ function BundleTab({
     <div className="tab-content">
       <div className="tab-section-header">
         <div>
-          <div className="label">Step 2 of 3</div>
           <h3 className="studio-section-title">Court bundle</h3>
         </div>
         <button className="btn btn-primary btn-sm" onClick={onExport} disabled={pending}>
-          <Download size={12} /> Export bundle
+          <Download size={12} /> Export
         </button>
       </div>
       <p className="studio-hint">
-        Arrange your cases in the order you want them to appear in the bundle. Fill in the suit details — these will appear on the bundle cover.
+        Arrange cases in order. Details appear on the cover page.
       </p>
       {error && (
         <p className="studio-hint" style={{ color: "var(--danger, #c0392b)" }} role="alert">
@@ -555,15 +515,69 @@ function BundleTab({
         </p>
       )}
 
-      <div className="bundle-grid">
-        <div className="bundle-details-panel">
-          <div className="studio-subsection-title">Suit details</div>
+      <div className="bundle-section">
+        <div className="bundle-section-header">
+          <div className="studio-subsection-title">Cases · {ordered.length}</div>
+          {savedCases.length > 0 && (
+            <button className="btn btn-ghost btn-sm" onClick={onAddAll} disabled={pending}>
+              <Plus size={12} /> Add all saved
+            </button>
+          )}
+        </div>
+        {ordered.length === 0 ? (
+          <div className="bundle-empty">
+            No cases yet. Search and add from the sidebar.
+          </div>
+        ) : (
+          <div className="bundle-list">
+            {ordered.map((c, idx) => (
+              <div className="bundle-item" key={c.id}>
+                <div className="bundle-item-num">{idx + 1}</div>
+                <div className="bundle-item-info">
+                  <div className="bundle-item-title">{c.title}</div>
+                  <div className="bundle-item-cite">{c.citation}</div>
+                </div>
+                <div className="bundle-item-actions">
+                  <button
+                    className="icon-btn"
+                    onClick={() => onMove(c.id, -1)}
+                    disabled={idx === 0 || pending}
+                    title="Move up"
+                  >
+                    <ArrowUp size={13} />
+                  </button>
+                  <button
+                    className="icon-btn"
+                    onClick={() => onMove(c.id, 1)}
+                    disabled={idx === ordered.length - 1 || pending}
+                    title="Move down"
+                  >
+                    <ArrowDown size={13} />
+                  </button>
+                  <button
+                    className="icon-btn danger"
+                    onClick={() => onRemove(c.id)}
+                    disabled={pending}
+                    title="Remove"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="bundle-section">
+        <div className="studio-subsection-title">Cover details</div>
+        <div className="bundle-details-grid">
           {([
             ["court", "Court"],
             ["location", "Holden at"],
             ["suitNo", "Suit number"],
-            ["appellant", "Appellant / Claimant"],
-            ["respondent", "Respondent / Defendant"],
+            ["appellant", "Appellant"],
+            ["respondent", "Respondent"],
           ] as [keyof BundleDetails, string][]).map(([key, label]) => (
             <div className="bundle-field" key={key}>
               <label className="form-label">{label}</label>
@@ -577,64 +591,6 @@ function BundleTab({
               />
             </div>
           ))}
-        </div>
-
-        <div className="bundle-cases-panel">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
-            <div className="studio-subsection-title" style={{ margin: 0 }}>Cases · {ordered.length}</div>
-            {savedCases.length > 0 && (
-              <button className="btn btn-secondary btn-sm" onClick={onAddAll} disabled={pending}>
-                <Plus size={12} /> Add all matter authorities
-              </button>
-            )}
-          </div>
-          {ordered.length === 0 ? (
-            <div className="bundle-empty">
-              No cases in bundle. Add cases from the sidebar or use &ldquo;Add all matter authorities&rdquo;.
-            </div>
-          ) : (
-            <div className="bundle-list">
-              {ordered.map((c, idx) => (
-                <div className="bundle-item" key={c.id}>
-                  <div className="bundle-item-num display">{idx + 1}</div>
-                  <div className="bundle-item-info">
-                    <div className="bundle-item-title">
-                      {c.title}
-                      {"unresolved" in c && c.unresolved && (
-                        <span style={{ marginLeft: 8, fontSize: "0.85em", opacity: 0.7 }}>
-                          (unresolved authority)
-                        </span>
-                      )}
-                    </div>
-                    <div className="bundle-item-cite">{c.citation}</div>
-                  </div>
-                  <div className="bundle-item-actions">
-                    <button
-                      className="icon-btn"
-                      onClick={() => onMove(c.id, -1)}
-                      disabled={idx === 0 || pending}
-                    >
-                      <ArrowUp size={13} />
-                    </button>
-                    <button
-                      className="icon-btn"
-                      onClick={() => onMove(c.id, 1)}
-                      disabled={idx === ordered.length - 1 || pending}
-                    >
-                      <ArrowDown size={13} />
-                    </button>
-                    <button
-                      className="icon-btn danger"
-                      onClick={() => onRemove(c.id)}
-                      disabled={pending}
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -668,15 +624,14 @@ function BriefTab({
     <div className="tab-content">
       <div className="tab-section-header">
         <div>
-          <div className="label">Step 3 of 3</div>
           <h3 className="studio-section-title">Written address</h3>
         </div>
         <button className="btn btn-primary btn-sm" onClick={onExport} disabled={pending}>
-          <Download size={12} /> Export brief
+          <Download size={12} /> Export
         </button>
       </div>
       <p className="studio-hint">
-        Your issues and authorities from the Arguments tab are carried over. Fill in the parties, write your arguments, and export a formatted written address.
+        Preview and export your written address. Issues from the Arguments tab appear below.
       </p>
       {error && (
         <p className="studio-hint" style={{ color: "var(--danger, #c0392b)" }} role="alert">
@@ -861,7 +816,6 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
   const [pendingAbandon, setPendingAbandon] = useState<
     { kind: "new-draft" } | { kind: "link-matter"; matterId: string } | null
   >(null);
-  const [outlineSummary, setOutlineSummary] = useState<string | null>(null);
   const [draftsOpen, setDraftsOpen] = useState(false);
   const draftsTriggerRef = useRef<HTMLButtonElement>(null);
   const draftsMenuRef = useDismissable<HTMLDivElement>(draftsOpen, () => setDraftsOpen(false), draftsTriggerRef);
@@ -981,9 +935,6 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
   const updateBriefMut = useApiMutation((body: Partial<Brief>) =>
     draftsApi.updateBrief(draftId!, body),
   );
-  const generateOutlineMut = useApiMutation((regenerate: boolean) =>
-    draftsApi.generateOutline(draftId!, regenerate),
-  );
   const exportBundleMut = useApiMutation(() => draftsApi.exportBundle(draftId!));
   const exportBriefMut = useApiMutation(() => draftsApi.exportBrief(draftId!));
 
@@ -996,7 +947,6 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
     updateBundleOrderMut.pending ||
     updateBundleDetailsMut.pending ||
     updateBriefMut.pending ||
-    generateOutlineMut.pending ||
     exportBundleMut.pending ||
     exportBriefMut.pending ||
     removeDraftMut.pending;
@@ -1209,47 +1159,6 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
     await handleAddAuthority(activeIssueId, caseId);
   }
 
-  async function handleGenerateOutline(regenerate = false) {
-    const result = await generateOutlineMut.mutate(regenerate);
-    if (result) {
-      applyDraft(result);
-      setIssueEdits(
-        Object.fromEntries(
-          result.issues.map((issue) => [
-            issue.id,
-            { text: issue.text, submission: issue.submission },
-          ]),
-        ),
-      );
-      const added = result.addedIssueIds.length;
-      const preserved = result.preservedIssueIds.length;
-      const summary =
-        added === 0
-          ? `No new issues added — ${preserved} existing issue${preserved !== 1 ? "s" : ""} kept unchanged.`
-          : `${added} issue${added !== 1 ? "s" : ""} added, ${preserved} kept from your edits.`;
-      setOutlineSummary(summary);
-      onAction(regenerate ? "Outline regenerated." : "Missing issues generated.");
-    }
-  }
-
-  function requestRegenerateOutline() {
-    setConfirm({
-      title: "Regenerate all issues?",
-      body: (
-        <>
-          Every issue and submission on this draft will be deleted and replaced with a freshly generated
-          outline. Your written address and bundle order are not affected, but issue text cannot be recovered.
-        </>
-      ),
-      confirmLabel: "Regenerate outline",
-      destructive: true,
-      onConfirm: async () => {
-        setConfirm(null);
-        await handleGenerateOutline(true);
-      },
-    });
-  }
-
   async function handleMoveBundle(id: string, dir: -1 | 1) {
     if (!draft) return;
     const idx = draft.bundleOrder.indexOf(id);
@@ -1398,7 +1307,7 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
         body={confirm?.body ?? ""}
         confirmLabel={confirm?.confirmLabel}
         destructive={confirm?.destructive}
-        busy={removeDraftMut.pending || generateOutlineMut.pending}
+        busy={removeDraftMut.pending}
         onConfirm={() => void confirm?.onConfirm()}
         onCancel={() => setConfirm(null)}
       />
@@ -1550,16 +1459,12 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
               onRemoveAuthority={handleRemoveAuthority}
               activeIssueId={activeIssueId}
               setActiveIssueId={setActiveIssueId}
-              onGenerateOutline={() => void handleGenerateOutline(false)}
-              onRegenerateOutline={requestRegenerateOutline}
-              outlineSummary={outlineSummary}
               pending={pending}
               error={
                 createIssue.error ??
                 updateIssueMut.error ??
                 deleteIssueMut.error ??
                 addAuthorityMut.error ??
-                generateOutlineMut.error ??
                 caseIndexQuery.error
               }
             />
