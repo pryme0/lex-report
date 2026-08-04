@@ -13,7 +13,6 @@ const pageTitles: Record<string, string> = {
   "/dashboard":                "Research",
   "/dashboard/reports":        "Reports",
   "/dashboard/citation-graph": "Citation Graph",
-  "/dashboard/court-watch":    "Court Watch",
   "/dashboard/draft-studio":   "Draft Studio",
   "/dashboard/library":        "Library",
   "/dashboard/digest":         "Digest",
