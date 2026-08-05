@@ -20,8 +20,8 @@ const pageTitles: Record<string, string> = {
   "/dashboard/legislation":    "Legislation",
   "/dashboard/practice":       "Practice & Forms",
   "/dashboard/dictionary":     "Dictionary",
+  "/dashboard/secondary-sources": "Journals & Commentary",
   "/dashboard/profile":        "Profile",
-  "/dashboard/admin":          "Editorial",
 };
 
 /** Nested routes such as /dashboard/legislation/cama-2020 keep their section's title. */
@@ -65,7 +65,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   const exportableCaseId = selectedCaseId ?? permalinkCaseId;
 
   const exportCase = useApiMutation((caseId: string) =>
-    exportsApi.researchBundle({ caseIds: [caseId] }),
+    exportsApi.researchBundle({ caseIds: [caseId], format: "pdf" }),
   );
 
   const openPalette = useCallback(() => setPaletteOpen(true), []);

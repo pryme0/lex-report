@@ -54,7 +54,7 @@ export function counselBySide(counsel: Counsel[]) {
 
 export type JudgmentBlock =
   | { kind: "heading"; text: string }
-  | { kind: "judge"; judge: string; text: string }
+  | { kind: "judge"; judge: string; text: string; isLead: boolean }
   | { kind: "numbered"; number: string; text: string }
   | { kind: "paragraph"; text: string };
 
@@ -76,6 +76,7 @@ export function parseJudgmentText(fullText: string): JudgmentBlock[] {
           kind: "judge",
           judge: leadHeading[1].trim(),
           text: leadHeading[2],
+          isLead: true,
         };
       }
 
@@ -86,7 +87,12 @@ export function parseJudgmentText(fullText: string): JudgmentBlock[] {
 
       const concurrence = block.match(/^([A-Z][\w\s,.]+\sJ\.?S\.?C\.?):\s*(.+)$/);
       if (concurrence) {
-        return { kind: "judge", judge: concurrence[1].trim(), text: concurrence[2].trim() };
+        return {
+          kind: "judge",
+          judge: concurrence[1].trim(),
+          text: concurrence[2].trim(),
+          isLead: false,
+        };
       }
 
       if (block.length < 80 && block === block.toUpperCase() && /[A-Z]/.test(block)) {
@@ -95,4 +101,13 @@ export function parseJudgmentText(fullText: string): JudgmentBlock[] {
 
       return { kind: "paragraph", text: block };
     });
+}
+
+/** A slug safe for use as an element id / URL fragment. */
+export function judgeAnchorId(judge: string, index: number): string {
+  const slug = judge
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `opinion-${index}-${slug}`;
 }

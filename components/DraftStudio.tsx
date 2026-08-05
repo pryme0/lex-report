@@ -936,8 +936,8 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
   const updateBriefMut = useApiMutation((body: Partial<Brief>) =>
     draftsApi.updateBrief(draftId!, body),
   );
-  const exportBundleMut = useApiMutation(() => draftsApi.exportBundle(draftId!));
-  const exportBriefMut = useApiMutation(() => draftsApi.exportBrief(draftId!));
+  const exportBundleMut = useApiMutation(() => draftsApi.exportBundle(draftId!, "pdf"));
+  const exportBriefMut = useApiMutation(() => draftsApi.exportBrief(draftId!, "pdf"));
 
   const pending =
     createDraft.pending ||

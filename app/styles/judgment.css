@@ -155,6 +155,85 @@
   padding: 28px 32px;
 }
 
+.judgment-text-layout {
+  display: block;
+}
+
+.judgment-text-layout.has-outline {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 68ch);
+  gap: 40px;
+  align-items: start;
+  justify-content: center;
+}
+
+.judgment-outline {
+  position: sticky;
+  top: 24px;
+  padding-top: 4px;
+}
+
+.judgment-outline-label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+  margin-bottom: 10px;
+}
+
+.judgment-outline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+  border-left: 1px solid var(--color-line);
+}
+
+.judgment-outline-link {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 0 8px 14px;
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+  text-decoration: none;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.judgment-outline-link:hover {
+  border-left-color: var(--color-g-500);
+  background: var(--color-panel);
+}
+
+.judgment-outline-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-body);
+  line-height: 1.3;
+}
+
+.judgment-outline-badge {
+  display: inline-block;
+  width: fit-content;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+
+.judgment-outline-badge.is-lead {
+  color: var(--color-g-700);
+  background: var(--color-g-50);
+  border-color: var(--color-g-200);
+}
+
 .judgment-text {
   max-width: 68ch;
   margin: 0 auto;
@@ -162,6 +241,10 @@
   font-size: 1.02rem;
   line-height: 1.82;
   color: var(--color-ink-2);
+}
+
+.judgment-text-layout.has-outline .judgment-text {
+  margin: 0;
 }
 
 .judgment-text-heading {
@@ -177,7 +260,20 @@
 }
 
 .judgment-text-judge-block {
-  margin: 22px 0 12px;
+  display: grid;
+  gap: 8px;
+  margin: 32px 0 16px;
+  padding: 14px 0 14px 16px;
+  border-left: 3px solid var(--color-line-2);
+  scroll-margin-top: 24px;
+}
+
+.judgment-text-judge-block.is-lead {
+  border-left-color: var(--color-g-500);
+}
+
+.judgment-text-judge-block .judgment-outline-badge {
+  justify-self: start;
 }
 
 .judgment-text-judge {
@@ -194,18 +290,47 @@
   margin: 0 0 1.05em;
   text-align: justify;
   hyphens: auto;
+  scroll-margin-top: 24px;
 }
 
 .judgment-text-para--numbered {
   display: block;
-  padding-left: 2em;
-  text-indent: -2em;
+  padding-left: 2.2em;
+  text-indent: -2.2em;
 }
 
 .judgment-para-num {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font: inherit;
   font-weight: 600;
   color: var(--color-g-700);
   margin-right: 0.35em;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.judgment-para-num:hover,
+.judgment-para-num:focus-visible {
+  text-decoration: underline;
+  text-decoration-color: var(--color-g-400);
+}
+
+.judgment-para-num-icon {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.judgment-para-num:hover .judgment-para-num-icon,
+.judgment-para-num:focus-visible .judgment-para-num-icon {
+  opacity: 1;
+}
+
+.judgment-print-only {
+  display: none;
 }
 
 .judgment-print-header {
@@ -341,6 +466,20 @@
   background: var(--color-paper);
 }
 
+@media (max-width: 960px) {
+  .judgment-text-layout.has-outline {
+    display: block;
+  }
+
+  .judgment-text-layout.has-outline .judgment-text {
+    margin: 0 auto;
+  }
+
+  .judgment-outline {
+    display: none;
+  }
+}
+
 @media (max-width: 720px) {
   .judgment-reading-panel {
     padding: 20px 18px;
@@ -446,11 +585,23 @@
     color: #000;
   }
 
+  .judgment-text-layout.has-outline {
+    display: block;
+  }
+
   .judgment-text {
     max-width: none;
     font-size: 11pt;
     line-height: 1.65;
     color: #000;
+  }
+
+  .judgment-print-only {
+    display: inline;
+  }
+
+  .judgment-text-judge-block {
+    border-left-color: #999;
   }
 
   .judgment-text-para {
