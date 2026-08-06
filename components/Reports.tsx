@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { BATCH_STATUSES, reportsApi } from "@/lib/api";
+import { BATCH_STATUSES, reportsApi, usersApi } from "@/lib/api";
 import type { CaseSummary, Paginated, ReportBatch } from "@/lib/api";
 import { useApiMutation, useApiQuery } from "@/lib/api/hooks";
 import { useDashboard } from "@/contexts/DashboardContext";
@@ -34,12 +34,15 @@ export function Reports() {
   const [batchForm, setBatchForm] = useState<BatchForm>(EMPTY_BATCH_FORM);
   const [formErrors, setFormErrors] = useState<FieldErrors>(emptyErrors());
 
+  const profileQuery = useApiQuery("users:profile", () => usersApi.profile());
+  const isEditor = profileQuery.data?.editor ?? false;
+
   const publishedQuery = useApiQuery(`reports:published:${publishedPage}`, () =>
     reportsApi.published({ limit: 20, page: publishedPage }),
   );
 
   const batchesQuery = useApiQuery(
-    `reports:batches:${batchPage}:${statusFilter}`,
+    isEditor ? `reports:batches:${batchPage}:${statusFilter}` : null,
     () =>
       reportsApi.batches({
         limit: 20,
@@ -77,16 +80,18 @@ export function Reports() {
           <p className="label">Law reports</p>
           <h2>Editorial workflow</h2>
         </div>
-        <button
-          type="button"
-          className="btn btn-secondary btn-sm"
-          onClick={() => setShowBatchForm((open) => !open)}
-        >
-          <Plus size={12} /> New batch
-        </button>
+        {isEditor && (
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => setShowBatchForm((open) => !open)}
+          >
+            <Plus size={12} /> New batch
+          </button>
+        )}
       </div>
 
-      {showBatchForm && (
+      {isEditor && showBatchForm && (
         <form className="admin-form admin-inline-form" onSubmit={handleCreateBatch}>
           <FormBanner errors={formErrors} />
           <div className="admin-form-grid">
@@ -130,101 +135,103 @@ export function Reports() {
         </form>
       )}
 
-      <div className="reports-section">
-        <div className="reports-section-head">
-          <div>
-            <p className="label">Editorial</p>
-            <h3 className="reports-section-title">Batch queue</h3>
-          </div>
-          <div className="admin-filter-tabs" role="tablist" aria-label="Batch status filter">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={!statusFilter}
-              className={`admin-filter-tab${!statusFilter ? " active" : ""}`}
-              onClick={() => {
-                setStatusFilter("");
-                setBatchPage(1);
-              }}
-            >
-              All
-            </button>
-            {BATCH_STATUSES.map((s) => (
+      {isEditor && (
+        <div className="reports-section">
+          <div className="reports-section-head">
+            <div>
+              <p className="label">Editorial</p>
+              <h3 className="reports-section-title">Batch queue</h3>
+            </div>
+            <div className="admin-filter-tabs" role="tablist" aria-label="Batch status filter">
               <button
-                key={s}
                 type="button"
                 role="tab"
-                aria-selected={statusFilter === s}
-                className={`admin-filter-tab${statusFilter === s ? " active" : ""}`}
+                aria-selected={!statusFilter}
+                className={`admin-filter-tab${!statusFilter ? " active" : ""}`}
                 onClick={() => {
-                  setStatusFilter(s);
+                  setStatusFilter("");
                   setBatchPage(1);
                 }}
               >
-                {s}
+                All
               </button>
-            ))}
+              {BATCH_STATUSES.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  role="tab"
+                  aria-selected={statusFilter === s}
+                  className={`admin-filter-tab${statusFilter === s ? " active" : ""}`}
+                  onClick={() => {
+                    setStatusFilter(s);
+                    setBatchPage(1);
+                  }}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <AsyncSection
-          query={batchesQuery}
-          loadingLabel="Loading batches…"
-          emptyMessage="No batches match this filter."
-          isEmpty={(d: Paginated<ReportBatch>) => d.data.length === 0}
-        >
-          {(data) => (
-            <>
-              <div className="reports-batch-grid">
-                {data.data.map((batch) => (
-                  <Link
-                    key={batch.id}
-                    href={`/dashboard/reports/${batch.id}`}
-                    className="reports-batch-card"
-                  >
-                    <div className="reports-batch-card-head">
-                      <span className="reports-batch-topic">
-                        {batch.topic || "Untitled batch"}
-                      </span>
-                      <span
-                        className={`admin-pill reports-status-${batch.status.replace(/\s+/g, "-").toLowerCase()}`}
-                      >
-                        {batch.status}
-                      </span>
-                    </div>
-                    <p className="reports-batch-card-meta">
-                      {batch.court || "—"} · {batch.caseIds.length} judgment
-                      {batch.caseIds.length === 1 ? "" : "s"}
-                      {batch.assignee ? ` · ${batch.assignee}` : ""}
-                    </p>
-                  </Link>
-                ))}
-              </div>
-              {data.meta.totalPages > 1 && (
-                <div className="admin-pagination">
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    disabled={data.meta.page <= 1}
-                    onClick={() => setBatchPage((p) => p - 1)}
-                  >
-                    Previous
-                  </button>
-                  <span>
-                    Page {data.meta.page} of {data.meta.totalPages}
-                  </span>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    disabled={data.meta.page >= data.meta.totalPages}
-                    onClick={() => setBatchPage((p) => p + 1)}
-                  >
-                    Next
-                  </button>
+          <AsyncSection
+            query={batchesQuery}
+            loadingLabel="Loading batches…"
+            emptyMessage="No batches match this filter."
+            isEmpty={(d: Paginated<ReportBatch>) => d.data.length === 0}
+          >
+            {(data) => (
+              <>
+                <div className="reports-batch-grid">
+                  {data.data.map((batch) => (
+                    <Link
+                      key={batch.id}
+                      href={`/dashboard/reports/${batch.id}`}
+                      className="reports-batch-card"
+                    >
+                      <div className="reports-batch-card-head">
+                        <span className="reports-batch-topic">
+                          {batch.topic || "Untitled batch"}
+                        </span>
+                        <span
+                          className={`admin-pill reports-status-${batch.status.replace(/\s+/g, "-").toLowerCase()}`}
+                        >
+                          {batch.status}
+                        </span>
+                      </div>
+                      <p className="reports-batch-card-meta">
+                        {batch.court || "—"} · {batch.caseIds.length} judgment
+                        {batch.caseIds.length === 1 ? "" : "s"}
+                        {batch.assignee ? ` · ${batch.assignee}` : ""}
+                      </p>
+                    </Link>
+                  ))}
                 </div>
-              )}
-            </>
-          )}
-        </AsyncSection>
-      </div>
+                {data.meta.totalPages > 1 && (
+                  <div className="admin-pagination">
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      disabled={data.meta.page <= 1}
+                      onClick={() => setBatchPage((p) => p - 1)}
+                    >
+                      Previous
+                    </button>
+                    <span>
+                      Page {data.meta.page} of {data.meta.totalPages}
+                    </span>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      disabled={data.meta.page >= data.meta.totalPages}
+                      onClick={() => setBatchPage((p) => p + 1)}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </AsyncSection>
+        </div>
+      )}
 
       <div className="reports-section">
         <div className="page-header" style={{ marginBottom: 10 }}>

@@ -1,5 +1,5 @@
-import { API_BASE_URL, API_USER_ID } from "./config";
-import { getAccessToken } from "./axios";
+import { API_BASE_URL } from "./config";
+import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "./axios";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -9,6 +9,47 @@ export class ApiError extends Error {
     this.name = "ApiError";
     this.status = status;
   }
+}
+
+function signOutAndRedirect() {
+  clearTokens();
+  if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+    window.location.href = "/login";
+  }
+}
+
+// Concurrent requests that all hit a 401 at once should trigger one refresh, not one each.
+let refreshPromise: Promise<string | null> | null = null;
+
+function refreshAccessToken(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) return null;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!response.ok) return null;
+
+      const data = (await response.json()) as {
+        accessToken: string;
+        refreshToken: string;
+      };
+      setTokens(data.accessToken, data.refreshToken);
+      return data.accessToken;
+    } catch {
+      return null;
+    }
+  })().finally(() => {
+    refreshPromise = null;
+  });
+
+  return refreshPromise;
 }
 
 type QueryValue = string | number | boolean | undefined | null;
@@ -37,7 +78,11 @@ async function readError(response: Response): Promise<string> {
   return response.statusText || `Request failed with status ${response.status}`;
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function request<T>(
+  path: string,
+  init?: RequestInit,
+  isRetry = false,
+): Promise<T> {
   let response: Response;
 
   const token = getAccessToken();
@@ -48,7 +93,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(API_USER_ID ? { "x-user-id": API_USER_ID } : {}),
         ...init?.headers,
       },
       cache: "no-store",
@@ -58,6 +102,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       "Cannot reach the LexReport API. Check that the server is running.",
       0,
     );
+  }
+
+  if (response.status === 401 && !isRetry) {
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      return request<T>(path, init, true);
+    }
+    signOutAndRedirect();
+    throw new ApiError("Your session has expired. Please sign in again.", 401);
   }
 
   if (!response.ok) {

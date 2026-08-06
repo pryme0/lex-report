@@ -134,6 +134,19 @@ dl, dd { margin: 0; }
 }
 .sidebar-close:hover { background: rgba(255,255,255,0.12); color: #fff; }
 
+/* Pin button — toggles the hover-collapsible rail open. Desktop only; see the
+   (hover: hover) block below for when it's actually shown. */
+.sidebar-pin {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 28px; height: 28px; flex-shrink: 0;
+  border-radius: 4px; border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+}
+.sidebar-pin:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
 .sidebar-nav {
   flex: 1; padding: 8px;
   display: flex; flex-direction: column; gap: 1px;
@@ -188,6 +201,81 @@ dl, dd { margin: 0; }
 }
 .user-name { display: block; font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.88); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .user-role { display: block; font-size: 0.68rem; color: rgba(255,255,255,0.42); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ─── Collapsible rail (desktop with a real pointer only) ───────────────────
+   Collapsed to a narrow icon rail by default. Hovering expands it as a
+   floating overlay (position: fixed) so it never reflows page content;
+   pinning it keeps it expanded and reserves real grid space instead.
+   Devices without hover (touch) or narrower viewports keep the sidebar at
+   its normal full width — the existing mobile drawer rules already own
+   ≤1080px, so this block only ever applies above that. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1081px) {
+  .shell { grid-template-columns: 64px 1fr; }
+
+  .sidebar {
+    width: 64px;
+    transition: width 0.18s ease;
+  }
+
+  .sidebar.expanded {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 248px;
+    box-shadow: 4px 0 28px rgba(6, 15, 9, 0.3);
+    z-index: 45;
+  }
+
+  .sidebar-brand-name,
+  .nav-label,
+  .user-name,
+  .user-role {
+    opacity: 0;
+    width: 0;
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: opacity 0.12s ease;
+  }
+
+  .sidebar.expanded .sidebar-brand-name,
+  .sidebar.expanded .nav-label,
+  .sidebar.expanded .user-name,
+  .sidebar.expanded .user-role {
+    opacity: 1;
+    width: auto;
+  }
+
+  .sidebar.expanded .user-name,
+  .sidebar.expanded .user-role {
+    display: block;
+  }
+
+  .sidebar:not(.expanded) .sidebar-top {
+    justify-content: center;
+  }
+
+  .sidebar:not(.expanded) .sidebar-brand {
+    gap: 0;
+  }
+
+  .sidebar:not(.expanded) .nav-item,
+  .sidebar:not(.expanded) .user-chip {
+    justify-content: center;
+  }
+
+  .coverage-chip {
+    display: none;
+  }
+
+  .sidebar.expanded .coverage-chip {
+    display: block;
+  }
+
+  .sidebar.expanded .sidebar-pin {
+    display: flex;
+  }
+}
 
 /* Sidebar overlay — shown on mobile when sidebar is open */
 .sidebar-overlay {

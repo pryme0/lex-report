@@ -7,7 +7,7 @@ Next.js 15 (App Router) client for the LexReport law reporting platform.
 The client reads everything from the LexReport API, so start the server first.
 
 ```bash
-# in ../lex-report-server
+# in ../lex-report-server — needs a Postgres DATABASE_URL, see its .env.example
 npm install
 npx prisma migrate dev
 npx prisma db seed
@@ -21,15 +21,14 @@ cp .env.example .env.local
 npm run dev            # http://localhost:3000
 ```
 
-Log in with any credentials — authentication is a client-side placeholder and is not part of the
-API yet.
+Sign up (or sign in as a seeded user, e.g. the partner account from `prisma/seed.ts`) — the API
+enforces real JWT authentication; there is no placeholder login.
 
 ## Configuration
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:3001/api` | Base URL of the API, including the `/api` prefix |
-| `NEXT_PUBLIC_API_USER_ID` | _(unset)_ | Sent as `x-user-id`. The API falls back to a seeded demo user when it is absent |
 
 ## How data flows
 

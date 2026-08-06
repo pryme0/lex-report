@@ -1,7 +1,6 @@
 import { buildQuery, http } from "./client";
 import type {
   ActivityItem,
-  AdminCase,
   ArchiveFilters,
   AuthorityMap,
   Brief,
@@ -18,6 +17,9 @@ import type {
   Coverage,
   DictionaryEntry,
   DictionaryEntryDetail,
+  SecondarySource,
+  SecondarySourceDetail,
+  SecondarySourceKind,
   DigestStatuteEntry,
   DigestSubjectArea,
   DraftSummary,
@@ -89,10 +91,16 @@ export const practiceApi = {
   ) => http.get<PracticeInstrument[]>(`/practice/instruments${buildQuery(params)}`),
   instrument: (id: string) =>
     http.get<PracticeInstrumentDetail>(`/practice/instruments/${encodeURIComponent(id)}`),
+  exportInstrument: (id: string, format: "text" | "pdf" = "text") =>
+    http.get<ExportFile>(
+      `/practice/instruments/${encodeURIComponent(id)}/export?format=${format}`,
+    ),
   forms: (params: { court?: string; jurisdiction?: string } = {}) =>
     http.get<CourtForm[]>(`/practice/forms${buildQuery(params)}`),
   form: (id: string) =>
     http.get<CourtFormDetail>(`/practice/forms/${encodeURIComponent(id)}`),
+  exportForm: (id: string, format: "text" | "pdf" = "text") =>
+    http.get<ExportFile>(`/practice/forms/${encodeURIComponent(id)}/export?format=${format}`),
 };
 
 export const researchApi = {
@@ -121,6 +129,14 @@ export const dictionaryApi = {
     http.get<DictionaryEntry[]>(`/dictionary${buildQuery(params)}`),
   detail: (id: string) =>
     http.get<DictionaryEntryDetail>(`/dictionary/${encodeURIComponent(id)}`),
+};
+
+export const secondarySourcesApi = {
+  list: (
+    params: { q?: string; kind?: "all" | SecondarySourceKind; practiceArea?: string } = {},
+  ) => http.get<SecondarySource[]>(`/secondary-sources${buildQuery(params)}`),
+  detail: (id: string) =>
+    http.get<SecondarySourceDetail>(`/secondary-sources/${encodeURIComponent(id)}`),
 };
 
 export const libraryApi = {
@@ -246,14 +262,18 @@ export const draftsApi = {
       `/drafts/${encodeURIComponent(id)}/generate-outline`,
       { regenerate },
     ),
-  exportBundle: (id: string) =>
-    http.post<ExportFile>(`/drafts/${encodeURIComponent(id)}/export/bundle`),
-  exportBrief: (id: string) =>
-    http.post<ExportFile>(`/drafts/${encodeURIComponent(id)}/export/brief`),
+  exportBundle: (id: string, format: "text" | "pdf" = "text") =>
+    http.post<ExportFile>(
+      `/drafts/${encodeURIComponent(id)}/export/bundle?format=${format}`,
+    ),
+  exportBrief: (id: string, format: "text" | "pdf" = "text") =>
+    http.post<ExportFile>(
+      `/drafts/${encodeURIComponent(id)}/export/brief?format=${format}`,
+    ),
 };
 
 export const exportsApi = {
-  researchBundle: (body: { caseIds?: string[]; matterId?: string }) =>
+  researchBundle: (body: { caseIds?: string[]; matterId?: string; format?: "text" | "pdf" }) =>
     http.post<ExportFile>("/exports/research-bundle", body),
 };
 
@@ -296,93 +316,6 @@ export const reportsApi = {
     http.delete<{ deleted: boolean }>(`/reports/batches/${encodeURIComponent(id)}`),
 };
 
-/**
- * Editorial write endpoints. These require the acting user to be flagged as editorial
- * staff; everyone else gets a 403.
- */
-export const adminApi = {
-  cases: (
-    params: {
-      q?: string;
-      published?: boolean;
-      verified?: boolean;
-      court?: string;
-      year?: number;
-      page?: number;
-      limit?: number;
-    } = {},
-  ) => http.get<Paginated<AdminCase>>(`/admin/cases${buildQuery(params)}`),
-  case: (id: string) => http.get<AdminCase>(`/admin/cases/${encodeURIComponent(id)}`),
-  createCase: (body: Record<string, unknown>) => http.post<AdminCase>("/admin/cases", body),
-  updateCase: (id: string, body: Record<string, unknown>) =>
-    http.patch<AdminCase>(`/admin/cases/${encodeURIComponent(id)}`, body),
-  publishCase: (id: string) =>
-    http.post<AdminCase>(`/admin/cases/${encodeURIComponent(id)}/publish`),
-  unpublishCase: (id: string) =>
-    http.post<AdminCase>(`/admin/cases/${encodeURIComponent(id)}/unpublish`),
-  deleteCase: (id: string) =>
-    http.delete<{ deleted: boolean }>(`/admin/cases/${encodeURIComponent(id)}`),
-
-  createStatute: (body: Record<string, unknown>) =>
-    http.post<StatuteDetail>("/admin/statutes", body),
-  updateStatute: (id: string, body: Record<string, unknown>) =>
-    http.patch<StatuteDetail>(`/admin/statutes/${encodeURIComponent(id)}`, body),
-  deleteStatute: (id: string) =>
-    http.delete<{ deleted: boolean }>(`/admin/statutes/${encodeURIComponent(id)}`),
-  createSection: (statuteId: string, body: Record<string, unknown>) =>
-    http.post<StatuteDetail>(
-      `/admin/statutes/${encodeURIComponent(statuteId)}/sections`,
-      body,
-    ),
-  updateSection: (statuteId: string, sectionId: string, body: Record<string, unknown>) =>
-    http.patch<StatuteDetail>(
-      `/admin/statutes/${encodeURIComponent(statuteId)}/sections/${encodeURIComponent(sectionId)}`,
-      body,
-    ),
-  deleteSection: (statuteId: string, sectionId: string) =>
-    http.delete<{ deleted: boolean }>(
-      `/admin/statutes/${encodeURIComponent(statuteId)}/sections/${encodeURIComponent(sectionId)}`,
-    ),
-  createAmendment: (statuteId: string, body: Record<string, unknown>) =>
-    http.post<StatuteDetail>(
-      `/admin/statutes/${encodeURIComponent(statuteId)}/amendments`,
-      body,
-    ),
-  deleteAmendment: (statuteId: string, amendmentId: string) =>
-    http.delete<{ deleted: boolean }>(
-      `/admin/statutes/${encodeURIComponent(statuteId)}/amendments/${encodeURIComponent(amendmentId)}`,
-    ),
-
-  createDictionaryEntry: (body: Record<string, unknown>) =>
-    http.post<DictionaryEntryDetail>("/admin/dictionary", body),
-  updateDictionaryEntry: (id: string, body: Record<string, unknown>) =>
-    http.patch<DictionaryEntryDetail>(`/admin/dictionary/${encodeURIComponent(id)}`, body),
-  deleteDictionaryEntry: (id: string) =>
-    http.delete<{ deleted: boolean }>(`/admin/dictionary/${encodeURIComponent(id)}`),
-
-  createInstrument: (body: Record<string, unknown>) =>
-    http.post<PracticeInstrumentDetail>("/admin/practice/instruments", body),
-  updateInstrument: (id: string, body: Record<string, unknown>) =>
-    http.patch<PracticeInstrumentDetail>(
-      `/admin/practice/instruments/${encodeURIComponent(id)}`,
-      body,
-    ),
-  deleteInstrument: (id: string) =>
-    http.delete<{ deleted: boolean }>(
-      `/admin/practice/instruments/${encodeURIComponent(id)}`,
-    ),
-  createForm: (body: Record<string, unknown>) =>
-    http.post<CourtFormDetail>("/admin/practice/forms", body),
-  updateForm: (id: string, body: Record<string, unknown>) =>
-    http.patch<CourtFormDetail>(`/admin/practice/forms/${encodeURIComponent(id)}`, body),
-  deleteForm: (id: string) =>
-    http.delete<{ deleted: boolean }>(`/admin/practice/forms/${encodeURIComponent(id)}`),
-
-  /** Case counts are derived from the archive, so only the year span is settable. */
-  setCoverage: (court: string, body: { years: string; sortOrder?: number }) =>
-    http.put<Coverage>(`/admin/coverage/${encodeURIComponent(court)}`, body),
-};
-
 export const catalogApi = {
   coverage: () => http.get<Coverage[]>("/catalog/coverage"),
   /** Filter options derived from the archive, so they never offer an empty facet. */
@@ -398,6 +331,7 @@ export const usersApi = {
     http.patch<ResearchPreference[]>("/users/me/preferences", { preferences }),
   activity: () => http.get<ActivityItem[]>("/users/me/activity"),
   subscription: () => http.get<Subscription>("/billing/subscription"),
+  logout: () => http.post<{ message: string }>("/auth/logout"),
 };
 
 export { ApiError } from "./client";

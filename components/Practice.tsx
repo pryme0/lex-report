@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { practiceApi } from "@/lib/api";
 import type {
@@ -13,7 +13,9 @@ import type {
   PracticeInstrumentDetail,
   PracticeInstrumentKind,
 } from "@/lib/api";
-import { useApiQuery } from "@/lib/api/hooks";
+import { useApiMutation, useApiQuery } from "@/lib/api/hooks";
+import { useDashboard } from "@/contexts/DashboardContext";
+import { downloadExport } from "@/lib/download";
 import { AsyncSection } from "./AsyncState";
 
 function CorpusNotFound({ label, backHref, backLabel }: { label: string; backHref: string; backLabel: string }) {
@@ -293,6 +295,22 @@ export function Practice() {
   );
 }
 
+function DetailActions({
+  onDownload,
+  downloading,
+}: {
+  onDownload: () => void;
+  downloading: boolean;
+}) {
+  return (
+    <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+      <button className="btn btn-secondary btn-sm" onClick={onDownload} disabled={downloading}>
+        <Download size={13} /> {downloading ? "Preparing…" : "Download"}
+      </button>
+    </div>
+  );
+}
+
 function InstrumentDetailContent({
   instrument,
   forms,
@@ -301,11 +319,27 @@ function InstrumentDetailContent({
   forms: CourtForm[];
 }) {
   const router = useRouter();
+  const { showToast } = useDashboard();
   const attachedForms = forms.filter((f) => f.instrumentId === instrument.id);
+
+  const exportMutation = useApiMutation(() => practiceApi.exportInstrument(instrument.id, "pdf"));
+
+  async function handleDownload() {
+    const file = await exportMutation.mutate();
+    if (file) {
+      downloadExport(file);
+      showToast(`${file.filename} downloaded.`);
+    } else if (exportMutation.error) {
+      showToast(exportMutation.error);
+    }
+  }
 
   return (
     <>
-      <div className="judgment-header">
+      <div
+        className="judgment-header"
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}
+      >
         <div>
           <div className="judgment-court-label">
             {instrument.court} · {instrument.year}
@@ -319,6 +353,7 @@ function InstrumentDetailContent({
             <p className="corpus-long-title">{instrument.description}</p>
           )}
         </div>
+        <DetailActions onDownload={handleDownload} downloading={exportMutation.pending} />
       </div>
 
       {attachedForms.length > 0 && (
@@ -392,10 +427,26 @@ export function PracticeInstrumentDetail({ instrumentId }: { instrumentId: strin
 
 function FormDetailContent({ form }: { form: CourtFormDetail }) {
   const router = useRouter();
+  const { showToast } = useDashboard();
+
+  const exportMutation = useApiMutation(() => practiceApi.exportForm(form.id, "pdf"));
+
+  async function handleDownload() {
+    const file = await exportMutation.mutate();
+    if (file) {
+      downloadExport(file);
+      showToast(`${file.filename} downloaded.`);
+    } else if (exportMutation.error) {
+      showToast(exportMutation.error);
+    }
+  }
 
   return (
     <>
-      <div className="judgment-header">
+      <div
+        className="judgment-header"
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}
+      >
         <div>
           <div className="judgment-court-label">
             {form.code} · {form.court}
@@ -403,6 +454,7 @@ function FormDetailContent({ form }: { form: CourtFormDetail }) {
           <h2 className="judgment-title">{form.title}</h2>
           {form.description && <p className="corpus-long-title">{form.description}</p>}
         </div>
+        <DetailActions onDownload={handleDownload} downloading={exportMutation.pending} />
       </div>
 
       {form.instrumentId && (

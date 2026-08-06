@@ -362,6 +362,24 @@ export type DictionaryEntryDetail = DictionaryEntry & {
   appliedCases: CaseSummary[];
 };
 
+export type SecondarySourceKind = "journal-article" | "textbook-excerpt" | "commentary";
+
+export type SecondarySource = {
+  id: string;
+  title: string;
+  kind: SecondarySourceKind;
+  author: string;
+  publication: string;
+  year: number;
+  practiceArea?: string | null;
+  citation?: string | null;
+  abstract: string;
+};
+
+export type SecondarySourceDetail = SecondarySource & {
+  excerpt: string;
+};
+
 export type SavedCase = {
   id: string;
   title: string;
@@ -470,6 +488,7 @@ export type GeneratedOutline = DraftWorkspace & {
 export type ExportFile = {
   format: string;
   filename: string;
+  mimeType: string;
   content: string;
 };
 
@@ -544,3 +563,16 @@ export type Coverage = {
 
 /** A judgment as editorial staff see it — including ones not yet published. */
 export type AdminCase = CaseDetail & { published: boolean };
+
+export type ApiKey = {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  active: boolean;
+  createdAt: string;
+  lastUsedAt?: string | null;
+  revokedAt?: string | null;
+};
+
+/** Only returned once, at creation — the plaintext key is never retrievable again. */
+export type CreatedApiKey = ApiKey & { key: string };
