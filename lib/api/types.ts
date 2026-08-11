@@ -31,6 +31,8 @@ export type CaseSummary = {
   jurisdiction: string;
   /** Court-assigned citation, independent of any law reporter. */
   neutralCitation?: string | null;
+  /** Unique LexReport series placement assigned to this judgment. */
+  report?: ReportPlacement | null;
   /** Matched passage with `<b>` marks, present only on relevance-ranked search hits. */
   snippet?: string;
 };
@@ -87,7 +89,6 @@ export type CaseDetail = CaseSummary & {
   suitNo?: string | null;
   appellant?: string | null;
   respondent?: string | null;
-  report?: ReportPlacement | null;
   counsel: Counsel[];
   issues: string[];
   citedCases: CitedCaseRef[];
@@ -501,6 +502,7 @@ export type Subscription = {
 export type UserProfile = {
   id: string;
   initials: string;
+  avatarUrl?: string | null;
   name: string;
   role: string;
   email: string;
@@ -513,6 +515,15 @@ export type UserProfile = {
 };
 
 export type ResearchPreference = { label: string; enabled: boolean };
+
+export type UserSession = {
+  id: string;
+  userAgent: string | null;
+  ipAddress: string | null;
+  createdAt: string;
+  lastSeenAt: string;
+  current: boolean;
+};
 
 export type ActivityItem = {
   id: string;

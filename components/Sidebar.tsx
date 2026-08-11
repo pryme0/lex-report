@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, FileText, Share2, PenLine, BookOpen, BookText, Gavel, Languages, LogOut, BookMarked, Scale, GraduationCap, Pin, PinOff, X } from "lucide-react";
+import { Search, FileText, Share2, PenLine, BookOpen, BookText, Gavel, Languages, LogOut, BookMarked, Scale, GraduationCap, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { catalogApi, usersApi } from "@/lib/api";
 import { useApiQuery } from "@/lib/api/hooks";
 import { clearTokens } from "@/lib/api/axios";
 import { cn } from "@/lib/utils";
-
-const PIN_STORAGE_KEY = "lr-sidebar-pinned";
 
 const navItems = [
   { label: "Research",       href: "/dashboard",                icon: Search },
@@ -27,35 +25,38 @@ const navItems = [
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
+  peeking: boolean;
+  onPeekChange: (peeking: boolean) => void;
 }
 
-export function Sidebar({ open, onClose }: SidebarProps) {
+export function Sidebar({
+  open,
+  onClose,
+  collapsed,
+  onToggleCollapsed,
+  peeking,
+  onPeekChange,
+}: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  // `collapsed` is the at-rest preference (explicit toggle, or auto-collapsed for a
+  // detail view); `peeking` is "mouse is over the rail right now". Whether the sidebar is
+  // actually wide on screen is the OR of the two — never a state the toggle has to fight
+  // to force, which is what caused the old collapse-then-instantly-reopen bug: clicking
+  // collapse while still hovering used to try to visually shrink the sidebar out from
+  // under the cursor, and the browser's own hit-test recompute on that reflow immediately
+  // re-fired hover and undid it. With a plain OR, clicking collapse while hovering simply
+  // leaves it open (correct — the pointer is still on it) and it shrinks the moment the
+  // mouse actually leaves, exactly like the admin app's sidebar.
+  const expanded = !collapsed || peeking;
   const profileQuery = useApiQuery("users:profile", () => usersApi.profile());
   const profile = profileQuery.data;
   const filtersQuery = useApiQuery("catalog:filters", () => catalogApi.filters());
   const years = filtersQuery.data?.years;
   const coverageSpan =
     years?.min && years?.max ? `${years.min} – ${years.max}` : "—";
-
-  // Collapsed to a rail by default; hovering expands it, leaving collapses it again,
-  // unless the user has pinned it open (persisted so it survives reloads).
-  const [pinned, setPinned] = useState(false);
-  const [hovering, setHovering] = useState(false);
-  const expanded = pinned || hovering;
-
-  useEffect(() => {
-    setPinned(localStorage.getItem(PIN_STORAGE_KEY) === "1");
-  }, []);
-
-  function togglePin() {
-    setPinned((prev) => {
-      const next = !prev;
-      localStorage.setItem(PIN_STORAGE_KEY, next ? "1" : "0");
-      return next;
-    });
-  }
 
   async function logout() {
     try {
@@ -67,6 +68,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     router.push("/login");
   }
 
+  // A pending hover must never override a collapse-state transition. In particular,
+  // opening a detail view auto-collapses the sidebar; retaining `peeking=true` from
+  // the previously expanded sidebar would keep both it and the shell full width.
+  useEffect(() => {
+    onPeekChange(false);
+  }, [collapsed, onPeekChange]);
+
   function isActive(href: string) {
     if (href === "/dashboard") return pathname === "/dashboard";
     return pathname.startsWith(href);
@@ -74,9 +82,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   return (
     <aside
-      className={cn("sidebar", open && "open", expanded && "expanded")}
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
+      className={cn("sidebar", open && "open", !expanded && "rail")}
+      onMouseEnter={() => {
+        if (collapsed) onPeekChange(true);
+      }}
+      onMouseLeave={() => onPeekChange(false)}
     >
       <div className="sidebar-top">
         <Link href="/dashboard" className="sidebar-brand" onClick={onClose}>
@@ -85,12 +95,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </Link>
         <button
           className="sidebar-pin"
-          onClick={togglePin}
-          aria-label={pinned ? "Unpin sidebar" : "Pin sidebar open"}
-          aria-pressed={pinned}
-          title={pinned ? "Unpin sidebar" : "Pin sidebar open"}
+          onClick={onToggleCollapsed}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!collapsed}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {pinned ? <PinOff size={14} /> : <Pin size={14} />}
+          {collapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
         </button>
         <button className="sidebar-close" onClick={onClose} aria-label="Close menu">
           <X size={16} />

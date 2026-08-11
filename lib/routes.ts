@@ -11,6 +11,17 @@ export const routes = {
   reportBatch: (id: string) => `/dashboard/reports/${encodeURIComponent(id)}`,
 };
 
+const DETAIL_ROUTES = [
+  /^\/dashboard\/cases\/[^/]+/,
+  /^\/dashboard\/reports\/[^/]+/,
+  /^\/dashboard\/legislation\/[^/]+/,
+  /^\/dashboard\/practice\/(?:forms|instruments)\/[^/]+/,
+];
+
+export function isDetailRoute(pathname: string): boolean {
+  return DETAIL_ROUTES.some((route) => route.test(pathname));
+}
+
 /**
  * Citations record sections as printed — "s 68", "ss 222-224", "s 12(1)(a)". Only a
  * label naming exactly one section can be resolved to a section page; a range or an

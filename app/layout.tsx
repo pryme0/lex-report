@@ -9,6 +9,11 @@ import "./styles/search.css";
 import "./styles/corpora.css";
 import "./styles/admin.css";
 import "./styles/workspace.css";
+import "./styles/landing.css";
+import "./styles/auth.css";
+// Cross-route responsive safeguards load last so desktop-focused feature styles
+// cannot accidentally reintroduce horizontal overflow on small screens.
+import "./styles/responsive.css";
 
 // Self-hosted by Next so the fonts are not a render-blocking third-party request.
 const plexSans = IBM_Plex_Sans({

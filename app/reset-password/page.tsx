@@ -1,185 +1,83 @@
 "use client";
 
-import { FormEvent, useState, Suspense } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Loader2, CheckCircle } from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle, Eye, EyeOff, Loader2, LockKeyhole } from "lucide-react";
+import { AuthFormHeading, AuthSecurityNote, AuthShell } from "@/components/AuthShell";
 import { useResetPassword } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/axios";
 
 function ResetPasswordContent() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const token = useSearchParams().get("token");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState("");
-
   const resetPassword = useResetPassword();
 
-  async function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setValidationError("");
-
-    if (!token) {
-      setValidationError("No reset token provided");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setValidationError("Passwords do not match");
-      return;
-    }
-
-    if (password.length < 8) {
-      setValidationError("Password must be at least 8 characters");
-      return;
-    }
-
+    if (!token) return setValidationError("No reset token provided");
+    if (password !== confirmPassword) return setValidationError("Passwords do not match");
+    if (password.length < 8) return setValidationError("Password must be at least 8 characters");
     resetPassword.mutate({ token, password });
   }
 
   if (resetPassword.isSuccess) {
     return (
-      <div className="login-page">
-        <div className="login-panel">
-          <Link href="/" className="btn btn-link" style={{ alignSelf: "flex-start" }}>
-            <ArrowLeft size={13} /> Back to site
-          </Link>
-          <div className="login-brand">
-            <div className="sidebar-mark">Lr</div>
-            <div>
-              <div className="login-brand-name">LexReport</div>
-              <div className="login-brand-sub">Secure legal intelligence workspace</div>
-            </div>
-          </div>
-          <div className="login-form" style={{ textAlign: "center" }}>
-            <CheckCircle size={64} style={{ color: "var(--color-success)", marginBottom: 24 }} />
-            <h1>Password reset!</h1>
-            <p style={{ color: "var(--color-text-secondary)", marginBottom: 24 }}>
-              Your password has been successfully reset. Redirecting to login...
-            </p>
-            <Link href="/login" className="btn btn-primary" style={{ display: "inline-block", height: 44, lineHeight: "44px" }}>
-              Sign in now
-            </Link>
-          </div>
+      <AuthShell eyebrow="Account security" title={<>Your workspace<br />is secure again.</>} deck="Your research, saved authorities and matter history remain protected." statLabel="Security status" statValue="Password updated" statNote="You can now sign in">
+        <div className="login-form login-signin-form login-status-card">
+          <CheckCircle size={42} />
+          <AuthFormHeading eyebrow="Password updated" title="Reset complete." description="Your new password is active and your workspace is ready." />
+          <Link href="/login" className="btn btn-primary login-submit">Sign in now <ArrowRight size={15} /></Link>
         </div>
-        <div className="login-aside">
-          <div>
-            <p className="l-hero-eyebrow" style={{ color: "rgba(255,255,255,0.38)", marginBottom: 14 }}>
-              Account security
-            </p>
-            <h2>Your password has been updated. Keep your legal research secure.</h2>
-          </div>
-        </div>
-      </div>
+      </AuthShell>
     );
   }
 
   if (!token) {
     return (
-      <div className="login-page">
-        <div className="login-panel">
-          <Link href="/" className="btn btn-link" style={{ alignSelf: "flex-start" }}>
-            <ArrowLeft size={13} /> Back to site
-          </Link>
-          <div className="login-brand">
-            <div className="sidebar-mark">Lr</div>
-            <div>
-              <div className="login-brand-name">LexReport</div>
-              <div className="login-brand-sub">Secure legal intelligence workspace</div>
-            </div>
-          </div>
-          <div className="login-form" style={{ textAlign: "center" }}>
-            <h1>Invalid reset link</h1>
-            <p style={{ color: "var(--color-text-secondary)", marginBottom: 24 }}>
-              This password reset link is invalid or has expired.
-            </p>
-            <Link href="/login" className="btn btn-secondary" style={{ display: "inline-block", height: 44, lineHeight: "44px" }}>
-              Return to login
-            </Link>
-          </div>
+      <AuthShell eyebrow="Account security" title={<>Protected access<br />starts with a valid link.</>} deck="Reset links expire to prevent unauthorised access to legal research workspaces." statLabel="Security status" statValue="Link unavailable" statNote="Request a new reset email">
+        <div className="login-form login-signin-form login-status-card login-status-error">
+          <AlertCircle size={42} />
+          <AuthFormHeading eyebrow="Invalid link" title="Request a new link." description="This password reset link is invalid or has expired." />
+          <Link href="/login" className="btn btn-secondary login-submit">Return to login</Link>
         </div>
-        <div className="login-aside" />
-      </div>
+      </AuthShell>
     );
   }
 
   const error = validationError || (resetPassword.error ? getErrorMessage(resetPassword.error) : "");
-
   return (
-    <div className="login-page">
-      <div className="login-panel">
-        <Link href="/" className="btn btn-link" style={{ alignSelf: "flex-start" }}>
-          <ArrowLeft size={13} /> Back to site
-        </Link>
-        <div className="login-brand">
-          <div className="sidebar-mark">Lr</div>
-          <div>
-            <div className="login-brand-name">LexReport</div>
-            <div className="login-brand-sub">Secure legal intelligence workspace</div>
-          </div>
+    <AuthShell eyebrow="Account security" title={<>Protect the research<br />behind every matter.</>} deck="Choose a strong password to keep saved authorities, notes and client matters secure." statLabel="Secure access" statValue="Encrypted workspace" statNote="Role-aware authentication">
+      <form className="login-form login-signin-form" onSubmit={submit}>
+        <AuthFormHeading eyebrow="Account recovery" title="Choose a new password." description="Use at least eight characters and avoid a password used elsewhere." />
+        {error && <div className="form-error">{error}</div>}
+        <div className="form-field">
+          <label className="form-label" htmlFor="password">New password</label>
+          <div className="login-input-wrap"><LockKeyhole size={16} /><input id="password" className="form-input" type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Minimum 8 characters" required minLength={8} autoComplete="new-password" /></div>
         </div>
-        <form className="login-form" onSubmit={submit}>
-          <h1>Reset password</h1>
-          {error && <div className="form-error">{error}</div>}
-          <div className="form-field">
-            <label className="form-label" htmlFor="password">New password</label>
-            <input
-              id="password"
-              className="form-input"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              autoComplete="new-password"
-            />
-            <span className="form-hint">Minimum 8 characters</span>
-          </div>
-          <div className="form-field">
-            <label className="form-label" htmlFor="confirmPassword">Confirm new password</label>
-            <input
-              id="confirmPassword"
-              className="form-input"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-            />
-          </div>
-          <button
-            className="btn btn-primary"
-            type="submit"
-            style={{ height: 44 }}
-            disabled={resetPassword.isPending}
-          >
-            {resetPassword.isPending ? <Loader2 className="animate-spin" size={18} /> : "Reset password"}
-          </button>
-        </form>
-      </div>
-      <div className="login-aside">
-        <div>
-          <p className="l-hero-eyebrow" style={{ color: "rgba(255,255,255,0.38)", marginBottom: 14 }}>
-            Account security
-          </p>
-          <h2>Choose a strong password to protect your legal research workspace.</h2>
+        <div className="form-field">
+          <label className="form-label" htmlFor="confirmPassword">Confirm new password</label>
+          <div className="login-input-wrap"><LockKeyhole size={16} /><input id="confirmPassword" className="form-input" type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Repeat new password" required autoComplete="new-password" /><button type="button" className="login-password-toggle" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide passwords" : "Show passwords"}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div>
         </div>
-      </div>
-    </div>
+        <button className="btn btn-primary login-submit" type="submit" disabled={resetPassword.isPending}>{resetPassword.isPending ? <Loader2 className="animate-spin" size={18} /> : <>Update password <ArrowRight size={15} /></>}</button>
+        <AuthSecurityNote />
+      </form>
+    </AuthShell>
+  );
+}
+
+function ResetFallback() {
+  return (
+    <AuthShell eyebrow="Account security" title={<>Secure access to<br />your research desk.</>} deck="We are preparing the protected password reset flow." statLabel="Security status" statValue="Checking link" statNote="This takes only a moment">
+      <div className="login-form login-signin-form login-status-card"><Loader2 size={42} className="animate-spin" /><AuthFormHeading eyebrow="Please wait" title="Checking your link." description="We are validating this password reset request." /></div>
+    </AuthShell>
   );
 }
 
 export default function ResetPasswordPage() {
-  return (
-    <Suspense fallback={
-      <div className="login-page">
-        <div className="login-panel" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Loader2 size={48} className="animate-spin" />
-        </div>
-      </div>
-    }>
-      <ResetPasswordContent />
-    </Suspense>
-  );
+  return <Suspense fallback={<ResetFallback />}><ResetPasswordContent /></Suspense>;
 }

@@ -275,12 +275,21 @@ export function JudgmentDetail({
               <HeadnoteView item={item} />
             ) : (
               <div className="judgment-reading-panel">
-                <JudgmentText fullText={item.fullText} citation={judgmentCitation(item)} />
+                <JudgmentText
+                  fullText={item.fullText}
+                  citation={judgmentCitation(item)}
+                  title={item.title}
+                />
               </div>
             )}
 
             <div className="judgment-print-body" aria-hidden="true">
-              <JudgmentText fullText={item.fullText} citation={judgmentCitation(item)} />
+              <JudgmentText
+                fullText={item.fullText}
+                citation={judgmentCitation(item)}
+                title={item.title}
+                print
+              />
             </div>
           </>
         )}

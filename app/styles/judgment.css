@@ -149,10 +149,22 @@
 }
 
 .judgment-reading-panel {
+  position: relative;
   background: var(--color-paper);
   border: 1px solid var(--color-line);
-  border-radius: var(--radius);
-  padding: 28px 32px;
+  border-radius: var(--radius-lg);
+  padding: 34px 40px 44px;
+  box-shadow: 0 1px 2px rgba(15, 21, 16, 0.03), 0 12px 32px -24px rgba(15, 21, 16, 0.18);
+}
+
+.judgment-reading-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: linear-gradient(90deg, var(--color-g-600), var(--color-g-300) 55%, transparent);
+  opacity: 0.7;
 }
 
 .judgment-text-layout {
@@ -160,26 +172,37 @@
 }
 
 .judgment-text-layout.has-outline {
-  display: grid;
-  grid-template-columns: 200px minmax(0, 68ch);
-  gap: 40px;
-  align-items: start;
-  justify-content: center;
+  /* Flex, not grid: Chromium does not correctly re-engage position:sticky on a grid item once
+     it's nested this many levels deep inside auto-sized rows — verified directly (a sticky probe
+     stays pinned as a flex child in this exact tree, but tracks the scroll 1:1, i.e. not sticky
+     at all, as a grid item at this depth). Flex reproduces the same 216px-rail-plus-flexible-text
+     layout without hitting that limitation. align-items:flex-start (rather than flex's default
+     stretch) is part of what makes the difference — verified empirically, not just by spec
+     reasoning: a flex item's sticky range is bounded by the flex *container's* box regardless of
+     the item's own stretched/unstretched height, unlike a grid item's own cell. */
+  display: flex;
+  align-items: flex-start;
+  gap: 44px;
 }
 
-.judgment-outline {
+.judgment-outline-rail {
   position: sticky;
   top: 24px;
-  padding-top: 4px;
+  flex: 0 0 216px;
+}
+
+.judgment-reading-column {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .judgment-outline-label {
   font-size: 0.63rem;
   font-weight: 700;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
   color: var(--color-faint);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .judgment-outline-list {
@@ -187,146 +210,434 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 2px;
+  gap: 1px;
   border-left: 1px solid var(--color-line);
 }
 
 .judgment-outline-link {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 8px 0 8px 14px;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 7px 0 7px 15px;
   margin-left: -1px;
   border-left: 2px solid transparent;
   text-decoration: none;
-  transition: border-color 0.12s ease, background 0.12s ease;
+  transition: border-color 0.14s ease, background 0.14s ease, color 0.14s ease;
 }
 
 .judgment-outline-link:hover {
-  border-left-color: var(--color-g-500);
+  border-left-color: var(--color-g-300);
   background: var(--color-panel);
+}
+
+.judgment-outline-link.is-active {
+  border-left-color: var(--color-g-500);
+  background: var(--color-g-50);
+}
+
+.judgment-outline-link.is-active .judgment-outline-name {
+  color: var(--color-g-800);
+  font-weight: 600;
+}
+
+.judgment-outline-link.is-section .judgment-outline-name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-muted);
 }
 
 .judgment-outline-name {
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-body);
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
-.judgment-outline-badge {
+.judgment-badge {
   display: inline-block;
   width: fit-content;
-  font-size: 0.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-muted);
   background: var(--color-panel);
   border: 1px solid var(--color-line);
   border-radius: 999px;
-  padding: 2px 7px;
+  padding: 2px 8px;
+  line-height: 1.5;
 }
 
-.judgment-outline-badge.is-lead {
+.judgment-badge.is-lead {
   color: var(--color-g-700);
   background: var(--color-g-50);
   border-color: var(--color-g-200);
 }
 
+.judgment-badge.is-dissenting {
+  color: var(--color-rose);
+  background: var(--color-rose-bg);
+  border-color: var(--color-rose-bd);
+}
+
+.judgment-reading-column {
+  min-width: 0;
+  display: grid;
+  gap: 20px;
+}
+
+.judgment-reading-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.judgment-reading-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+  white-space: nowrap;
+}
+
+.judgment-reading-progress {
+  position: relative;
+  flex: 1;
+  max-width: 220px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--color-line);
+  overflow: hidden;
+}
+
+.judgment-reading-progress-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--color-g-500);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 0.1s linear;
+}
+
+.judgment-size-control {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  padding: 2px;
+  background: var(--color-bg);
+  flex-shrink: 0;
+}
+
+.judgment-size-btn {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 22px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.judgment-size-btn:hover:not(:disabled) {
+  background: var(--color-panel);
+  color: var(--color-g-700);
+}
+
+.judgment-size-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.judgment-size-value {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  padding: 0 2px;
+}
+
 .judgment-text {
-  max-width: 68ch;
+  max-width: 88ch;
   margin: 0 auto;
   font-family: var(--font-display);
-  font-size: 1.02rem;
-  line-height: 1.82;
+  font-size: 1.04rem;
+  line-height: 1.8;
   color: var(--color-ink-2);
+  text-rendering: optimizeLegibility;
+}
+
+.judgment-text[data-text-size="sm"] {
+  font-size: 0.95rem;
+  line-height: 1.76;
+}
+
+.judgment-text[data-text-size="md"] {
+  font-size: 1.04rem;
+  line-height: 1.8;
+}
+
+.judgment-text[data-text-size="lg"] {
+  font-size: 1.14rem;
+  line-height: 1.84;
+}
+
+.judgment-text[data-text-size="xl"] {
+  font-size: 1.26rem;
+  line-height: 1.86;
 }
 
 .judgment-text-layout.has-outline .judgment-text {
   margin: 0;
 }
 
-.judgment-text-heading {
-  font-family: var(--font-display);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-g-600);
-  margin: 0 0 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--color-line);
-}
-
-.judgment-text-judge-block {
-  display: grid;
-  gap: 8px;
-  margin: 32px 0 16px;
-  padding: 14px 0 14px 16px;
-  border-left: 3px solid var(--color-line-2);
+.judgment-heading {
+  font-family: var(--font-sans);
+  color: var(--color-g-700);
   scroll-margin-top: 24px;
 }
 
-.judgment-text-judge-block.is-lead {
-  border-left-color: var(--color-g-500);
+.judgment-heading--h1,
+.judgment-heading--h2 {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  margin: 44px 0 20px;
 }
 
-.judgment-text-judge-block .judgment-outline-badge {
-  justify-self: start;
+.judgment-heading--h1::after,
+.judgment-heading--h2::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-line-2), transparent);
 }
 
-.judgment-text-judge {
+.judgment-heading--h3,
+.judgment-heading--h4 {
   font-family: var(--font-display);
-  font-size: 0.92rem;
+  font-size: 1rem;
   font-weight: 600;
-  font-style: italic;
   color: var(--color-g-800);
-  margin: 0;
-  line-height: 1.45;
+  line-height: 1.4;
+  margin: 32px 0 12px;
 }
 
-.judgment-text-para {
-  margin: 0 0 1.05em;
+.judgment-text > .judgment-heading:first-child {
+  margin-top: 0;
+}
+
+.judgment-opinion {
+  display: grid;
+  gap: 6px;
+  margin: 44px 0 20px;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-line);
+  border-left: 3px solid var(--color-line-2);
+  background: linear-gradient(180deg, var(--color-bg), transparent);
+  scroll-margin-top: 24px;
+}
+
+.judgment-opinion.is-lead {
+  border-color: var(--color-g-200);
+  border-left-color: var(--color-g-500);
+  background: linear-gradient(180deg, var(--color-g-50), transparent);
+}
+
+.judgment-opinion.is-dissenting {
+  border-color: var(--color-rose-bd);
+  border-left-color: var(--color-rose);
+  background: linear-gradient(180deg, var(--color-rose-bg), transparent);
+}
+
+.judgment-text > .judgment-opinion:first-child {
+  margin-top: 0;
+}
+
+.judgment-opinion-judge {
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: var(--color-g-900);
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.judgment-opinion-note {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--color-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.judgment-coram {
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: var(--color-body);
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin: 0 0 22px;
+}
+
+.judgment-coram-label {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+  margin-bottom: 4px;
+}
+
+.judgment-para {
+  margin: 0 0 1.15em;
   text-align: justify;
+  text-justify: inter-word;
   hyphens: auto;
   scroll-margin-top: 24px;
 }
 
-.judgment-text-para--numbered {
-  display: block;
-  padding-left: 2.2em;
-  text-indent: -2.2em;
+.judgment-para--numbered {
+  position: relative;
+  padding-left: 3em;
 }
 
 .judgment-para-num {
+  position: absolute;
+  left: 0;
+  top: 0;
   display: inline-flex;
   align-items: baseline;
-  gap: 3px;
-  font: inherit;
+  justify-content: flex-end;
+  gap: 2px;
+  width: 2.3em;
+  font-family: var(--font-sans);
+  font-size: 0.76em;
   font-weight: 600;
-  color: var(--color-g-700);
-  margin-right: 0.35em;
+  font-variant-numeric: tabular-nums;
+  line-height: inherit;
+  color: var(--color-faint);
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
+  transition: color 0.12s ease;
 }
 
-.judgment-para-num:hover,
+.judgment-para--numbered:hover .judgment-para-num,
 .judgment-para-num:focus-visible {
-  text-decoration: underline;
-  text-decoration-color: var(--color-g-400);
+  color: var(--color-g-600);
 }
 
 .judgment-para-num-icon {
+  position: absolute;
+  right: -12px;
+  top: 0.45em;
   opacity: 0;
   transition: opacity 0.12s ease;
 }
 
-.judgment-para-num:hover .judgment-para-num-icon,
+.judgment-para--numbered:hover .judgment-para-num-icon,
 .judgment-para-num:focus-visible .judgment-para-num-icon {
   opacity: 1;
+}
+
+.judgment-para--numbered:target {
+  background: var(--color-g-50);
+  box-shadow: 0 0 0 8px var(--color-g-50);
+  border-radius: 2px;
+}
+
+.judgment-quote {
+  position: relative;
+  margin: 22px 0 26px;
+  padding: 4px 0 4px 24px;
+  border-left: 2px solid var(--color-g-200);
+  font-size: 0.95em;
+  color: var(--color-body);
+}
+
+.judgment-quote .judgment-para {
+  margin-bottom: 0.7em;
+}
+
+.judgment-quote .judgment-para:last-child {
+  margin-bottom: 0;
+}
+
+.judgment-quote-mark {
+  position: absolute;
+  left: -8px;
+  top: 0;
+  color: var(--color-g-200);
+  background: var(--color-paper);
+  padding: 2px 0;
+}
+
+.judgment-list {
+  margin: 0 0 1.2em;
+  padding-left: 1.4em;
+  display: grid;
+  gap: 6px;
+}
+
+.judgment-list li {
+  line-height: 1.7;
+}
+
+.judgment-rule {
+  border: none;
+  border-top: 1px solid var(--color-line);
+  margin: 32px 0;
+}
+
+.judgment-code {
+  font-family: ui-monospace, "SFMono-Regular", "Menlo", monospace;
+  font-size: 0.85em;
+  background: var(--color-panel);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+}
+
+.judgment-inline-link {
+  color: var(--color-g-600);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--color-g-200);
+}
+
+.judgment-inline-link:hover {
+  text-decoration-color: var(--color-g-500);
 }
 
 .judgment-print-only {
@@ -466,7 +777,7 @@
   background: var(--color-paper);
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1080px) {
   .judgment-text-layout.has-outline {
     display: block;
   }
@@ -475,23 +786,50 @@
     margin: 0 auto;
   }
 
-  .judgment-outline {
+  .judgment-outline-rail {
     display: none;
   }
 }
 
 @media (max-width: 720px) {
   .judgment-reading-panel {
-    padding: 20px 18px;
+    padding: 20px 18px 28px;
   }
 
-  .judgment-text {
-    font-size: 0.98rem;
+  .judgment-text[data-text-size="sm"] { font-size: 0.92rem; }
+  .judgment-text[data-text-size="md"] { font-size: 0.99rem; }
+  .judgment-text[data-text-size="lg"] { font-size: 1.08rem; }
+  .judgment-text[data-text-size="xl"] { font-size: 1.16rem; }
+
+  .judgment-para {
+    text-align: left;
+  }
+
+  .judgment-para--numbered {
+    padding-left: 2.4em;
+  }
+
+  .judgment-para-num {
+    width: 1.9em;
+  }
+
+  .judgment-opinion {
+    padding: 14px 16px;
+  }
+
+  .judgment-reading-progress {
+    max-width: 120px;
   }
 
   .judgment-toolbar-actions .btn span,
   .judgment-toolbar-actions .btn {
     font-size: 0.72rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .judgment-reading-progress-fill {
+    transition: none;
   }
 }
 
@@ -589,10 +927,11 @@
     display: block;
   }
 
-  .judgment-text {
+  .judgment-text,
+  .judgment-text[data-text-size="md"] {
     max-width: none;
     font-size: 11pt;
-    line-height: 1.65;
+    line-height: 1.6;
     color: #000;
   }
 
@@ -600,19 +939,73 @@
     display: inline;
   }
 
-  .judgment-text-judge-block {
-    border-left-color: #999;
+  .judgment-opinion {
+    border: none;
+    border-left: 1pt solid #999;
+    border-radius: 0;
+    background: transparent;
+    padding: 4pt 0 4pt 10pt;
+    margin: 18pt 0 10pt;
+    break-inside: avoid;
+    break-after: avoid;
   }
 
-  .judgment-text-para {
+  .judgment-opinion-judge {
+    font-size: 12pt;
+    color: #000;
+  }
+
+  .judgment-opinion-note,
+  .judgment-coram,
+  .judgment-coram-label {
+    color: #000;
+  }
+
+  .judgment-badge {
+    border-color: #bbb;
+    background: transparent;
+    color: #000;
+  }
+
+  .judgment-coram {
+    border: 1pt solid #ddd;
+    background: transparent;
+    padding: 6pt 8pt;
+  }
+
+  .judgment-para {
     text-align: left;
     orphans: 3;
     widows: 3;
   }
 
-  .judgment-text-heading {
+  .judgment-para--numbered:target {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .judgment-para-num {
+    color: #444;
+  }
+
+  .judgment-quote {
+    border-left-color: #999;
+    break-inside: avoid;
+  }
+
+  .judgment-heading {
     color: #000;
-    border-color: #ccc;
+    break-after: avoid;
+  }
+
+  .judgment-heading--h1::after,
+  .judgment-heading--h2::after {
+    background: #ccc;
+  }
+
+  .judgment-inline-link {
+    color: #000;
+    text-decoration: none;
   }
 
   .citator-appeal-step:not(:last-child)::before {

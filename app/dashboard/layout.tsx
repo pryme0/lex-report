@@ -7,6 +7,9 @@ import { DashboardProvider, useDashboard } from "@/contexts/DashboardContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Topbar } from "@/components/Topbar";
 import { JudgmentDetail } from "@/components/JudgmentDetail";
+import { isDetailRoute } from "@/lib/routes";
+import { useSidebarCollapse } from "@/lib/useSidebarCollapse";
+import { cn } from "@/lib/utils";
 
 function Toast() {
   const { toast, clearToast } = useDashboard();
@@ -37,6 +40,15 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
+  const detailKey = selectedCaseId
+    ? `case:${selectedCaseId}`
+    : isDetailRoute(pathname)
+      ? pathname
+      : null;
+  const { collapsed, toggle } = useSidebarCollapse(detailKey);
+  const [peeking, setPeeking] = useState(false);
+  const expanded = !collapsed || peeking;
+
   // The judgment overlay replaces the routed page, so it has to give way when the user
   // navigates — otherwise nav links change the URL while the screen appears frozen.
   useEffect(() => {
@@ -44,13 +56,20 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   }, [pathname, closeCase]);
 
   return (
-    <div className="shell">
+    <div className={cn("shell", !expanded && "shell-rail")}>
       <div
         className={`sidebar-overlay${sidebarOpen ? " open" : ""}`}
         onClick={() => setSidebarOpen(false)}
         aria-hidden="true"
       />
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        collapsed={collapsed}
+        onToggleCollapsed={toggle}
+        peeking={peeking}
+        onPeekChange={setPeeking}
+      />
       <div className="workspace">
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
         {selectedCaseId ? <JudgmentDetail caseId={selectedCaseId} /> : children}

@@ -1,0 +1,556 @@
+/* Shared responsive contract for every application route. */
+
+html,
+body {
+  max-width: 100%;
+}
+
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+}
+
+.workspace,
+.page,
+.page > *,
+.content-grid > *,
+.judgment-cols > *,
+.studio-body > *,
+.doc-editor-layout > *,
+.cg-network-wrap > * {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .page-header,
+  .admin-page-head,
+  .lib-view-header.flat,
+  .cg-header {
+    align-items: flex-start;
+  }
+
+  .page-header > :first-child,
+  .admin-page-head > :first-child,
+  .lib-view-header.flat > :first-child {
+    min-width: 0;
+  }
+
+  .page-header h2,
+  .admin-page-title,
+  .lib-view-title,
+  .judgment-title,
+  .matter-name,
+  .firm-card-name,
+  .practice-list-title,
+  .statute-amendment-instrument {
+    overflow-wrap: anywhere;
+  }
+
+  .studio-shell,
+  .lib-shell,
+  .cg-shell {
+    min-height: calc(100dvh - 58px);
+    height: auto;
+  }
+
+  .studio-body {
+    flex: none;
+    overflow: visible;
+  }
+
+  .studio-main,
+  .lib-content {
+    overflow: visible;
+  }
+
+  .doc-editor-layout {
+    min-height: calc(100dvh - 58px);
+  }
+
+  .admin-toolbar,
+  .admin-search,
+  .admin-filter-tabs {
+    max-width: none;
+  }
+
+  .admin-search {
+    flex-basis: 260px;
+  }
+
+  .admin-filter-tabs,
+  .practice-tabs,
+  .jd-tabs,
+  .cg-tabs,
+  .studio-tabs,
+  .lib-tab-bar {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-filter-tab,
+  .practice-tab,
+  .jd-tab,
+  .cg-tab,
+  .studio-tab {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --mobile-gutter: 14px;
+  }
+
+  body {
+    overflow-x: clip;
+  }
+
+  .topbar {
+    height: 56px;
+    padding-inline: var(--mobile-gutter);
+    gap: 10px;
+  }
+
+  .topbar-title {
+    max-width: min(48vw, 220px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.12rem;
+  }
+
+  .topbar-date {
+    display: none;
+  }
+
+  .topbar-actions {
+    gap: 5px;
+  }
+
+  .topbar-actions .btn {
+    min-width: 40px;
+    padding-inline: 10px;
+    justify-content: center;
+  }
+
+  .page,
+  .lib-view {
+    padding: 14px var(--mobile-gutter) 24px;
+    gap: 14px;
+  }
+
+  .page-header,
+  .admin-page-head,
+  .lib-view-header.flat,
+  .cg-header {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .page-header h2,
+  .lib-view-title {
+    font-size: 1.32rem;
+  }
+
+  .page-header > .btn,
+  .page-header > a.btn,
+  .admin-page-head > .btn,
+  .lib-view-header.flat > .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .metrics-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .metric-tile {
+    padding: 12px;
+  }
+
+  .metric-tile-value {
+    font-size: 1.55rem;
+  }
+
+  .search-bar,
+  .judgment-header,
+  .judgment-body,
+  .judgment-aside,
+  .judgment-front-matter,
+  .corpus-panel,
+  .practice-provision,
+  .form-content-wrap,
+  .admin-form-section,
+  .admin-inline-form,
+  .reports-batch-meta {
+    padding: 14px;
+  }
+
+  .case-entry {
+    padding: 14px 13px 13px 16px;
+  }
+
+  .case-entry-head,
+  .statute-list-row,
+  .practice-list-row,
+  .practice-form-row,
+  .reports-case-row,
+  .admin-provision-list li,
+  .citator-citing-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .statute-list-badges,
+  .practice-kind-badge,
+  .practice-form-code {
+    align-self: flex-start;
+  }
+
+  .case-title-btn h3 {
+    font-size: 1rem;
+    line-height: 1.28;
+  }
+
+  .case-actions,
+  .case-actions .save-menu-wrap {
+    width: 100%;
+  }
+
+  .case-actions > .btn,
+  .case-actions > a.btn,
+  .case-actions .save-menu-wrap > .btn {
+    min-width: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .save-menu,
+  .studio-drafts-menu,
+  .cg-selector-menu {
+    position: fixed;
+    left: var(--mobile-gutter);
+    right: var(--mobile-gutter);
+    top: auto;
+    bottom: calc(var(--mobile-gutter) + env(safe-area-inset-bottom));
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    max-height: min(55dvh, 420px);
+    overflow-y: auto;
+  }
+
+  .toast {
+    left: var(--mobile-gutter);
+    right: var(--mobile-gutter);
+    bottom: calc(var(--mobile-gutter) + env(safe-area-inset-bottom));
+    max-width: none;
+  }
+
+  .dialog-backdrop {
+    align-items: flex-end;
+    padding: var(--mobile-gutter);
+    padding-bottom: calc(var(--mobile-gutter) + env(safe-area-inset-bottom));
+  }
+
+  .dialog {
+    width: 100%;
+    max-height: calc(100dvh - 28px);
+    overflow-y: auto;
+    border-radius: 14px;
+    padding: 18px;
+  }
+
+  .dialog-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dialog-actions .btn {
+    justify-content: center;
+  }
+
+  .admin-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-bottom: 18px;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-nav-link {
+    flex: 0 0 auto;
+  }
+
+  .admin-toolbar {
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .admin-toolbar-note,
+  .admin-search,
+  .admin-filter-tabs {
+    flex: 1 0 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-table-wrap {
+    margin-inline: calc(-1 * var(--mobile-gutter));
+    border-inline: 0;
+    border-radius: 0;
+    overscroll-behavior-inline: contain;
+  }
+
+  .admin-table {
+    min-width: 560px;
+  }
+
+  .admin-form-actions,
+  .reports-status-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-form-actions .btn,
+  .reports-status-actions .btn,
+  .reports-add-case .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .reports-batch-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .reports-batch-card-head,
+  .matter-card-top,
+  .lib-case-row-main {
+    flex-wrap: wrap;
+  }
+
+  .reports-case-row .btn,
+  .admin-provision-list li .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .lib-tab-bar {
+    padding-inline: var(--mobile-gutter);
+  }
+
+  .lib-create-row,
+  .matter-cases-header {
+    align-items: stretch;
+  }
+
+  .lib-create-row .form-input,
+  .lib-create-row .btn,
+  .matter-cases-header .btn {
+    width: 100%;
+  }
+
+  .lib-case-row-main {
+    flex-direction: column;
+  }
+
+  .lib-case-row-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .matter-studio-link,
+  .matter-studio-btn {
+    margin-left: 0;
+  }
+
+  .profile-hero {
+    align-items: flex-start;
+  }
+
+  .profile-hero-fields,
+  .profile-field {
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+  }
+
+  .activity-row,
+  .watch-row,
+  .citator-history-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .activity-time,
+  .citator-history-court {
+    min-width: 0;
+  }
+
+  .studio-toolbar,
+  .cg-header {
+    padding-inline: var(--mobile-gutter);
+  }
+
+  .studio-toolbar-actions,
+  .studio-matter-select,
+  .cg-selector,
+  .cg-selector-wrap,
+  .cg-selector-btn {
+    width: 100%;
+  }
+
+  .studio-toolbar-actions .btn,
+  .cg-selector-btn {
+    justify-content: center;
+  }
+
+  .studio-main,
+  .doc-main,
+  .doc-template-selector {
+    padding: var(--mobile-gutter);
+  }
+
+  .studio-issue-row,
+  .issue-auth-row,
+  .bundle-item,
+  .doc-authority-item {
+    flex-wrap: wrap;
+  }
+
+  .doc-template-card,
+  .doc-case-header,
+  .doc-authority-item {
+    align-items: flex-start;
+  }
+
+  .doc-authority-cite {
+    width: 100%;
+  }
+
+  .cg-network-wrap {
+    height: auto;
+  }
+
+  .cg-network-canvas {
+    min-height: 420px;
+  }
+
+  .cg-detail-panel {
+    max-height: none;
+  }
+
+  .chain-summary-item,
+  .tl-stat {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .tl-stats {
+    flex-direction: column;
+  }
+
+  .tl-stat {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .tl-event {
+    grid-template-columns: 58px 20px minmax(0, 1fr);
+  }
+
+  .tl-event-date {
+    font-size: 0.64rem;
+    overflow-wrap: anywhere;
+  }
+
+  .tl-event-body {
+    padding-left: 10px;
+  }
+
+  .corpus-meta-grid,
+  .admin-form-grid,
+  .doc-header-fields,
+  .bundle-details-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .practice-tabs {
+    padding-bottom: 4px;
+  }
+
+  .practice-list-row,
+  .practice-form-row {
+    padding: 12px;
+  }
+
+  .form-content-pre {
+    font-size: 0.74rem;
+  }
+
+  .judgment-reading-bar,
+  .judgment-reading-meta {
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+
+  .judgment-reading-progress {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .judgment-toolbar-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .judgment-toolbar-actions .btn {
+    min-width: 0;
+    justify-content: center;
+  }
+
+  .judgment-para--numbered {
+    padding-left: 2.1em;
+  }
+
+  .judgment-quote {
+    padding-left: 16px;
+  }
+}
+
+@media (max-width: 390px) {
+  .metrics-row,
+  .case-actions,
+  .case-actions .save-menu-wrap,
+  .judgment-toolbar-actions,
+  .dialog-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .case-actions .save-menu-wrap {
+    display: grid;
+  }
+
+  .topbar-title {
+    max-width: 42vw;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) and (max-width: 900px) {
+  .dialog-backdrop {
+    align-items: center;
+  }
+
+  .dialog {
+    max-height: calc(100dvh - 20px);
+  }
+}

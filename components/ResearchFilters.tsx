@@ -33,21 +33,29 @@ interface ResearchFiltersProps {
   onToggleExpanded: () => void;
 }
 
+// "Unclassified" means an editor hasn't categorised the case yet — it's the absence of a
+// value, not a real practice area a researcher would filter to, so it's excluded here the same
+// way a blank value is. Filtering *to* "everything not yet classified" isn't a useful facet.
+const PLACEHOLDER_FACET_VALUES = new Set(["", "Unclassified"]);
+
 function facetValues(archive: ArchiveFilters, key: FacetKey) {
-  switch (key) {
-    case "court":
-      return archive.courts;
-    case "area":
-      return archive.practiceAreas;
-    case "digestArea":
-      return archive.digestAreas;
-    case "jurisdiction":
-      return archive.jurisdictions;
-    case "treatment":
-      return archive.treatments;
-    case "reportSeries":
-      return archive.reportSeries;
-  }
+  const raw = (() => {
+    switch (key) {
+      case "court":
+        return archive.courts;
+      case "area":
+        return archive.practiceAreas;
+      case "digestArea":
+        return archive.digestAreas;
+      case "jurisdiction":
+        return archive.jurisdictions;
+      case "treatment":
+        return archive.treatments;
+      case "reportSeries":
+        return archive.reportSeries;
+    }
+  })();
+  return raw.filter(({ value }) => !PLACEHOLDER_FACET_VALUES.has(value.trim()));
 }
 
 function activeFacetCount(filters: ResearchFilterState): number {
