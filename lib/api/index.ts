@@ -43,6 +43,7 @@ import type {
   StatuteListItem,
   Subscription,
   UserProfile,
+  UserSession,
 } from "./types";
 
 /** The API expects the literal strings "true"/"false" for its boolean filters. */
@@ -332,6 +333,24 @@ export const usersApi = {
   activity: () => http.get<ActivityItem[]>("/users/me/activity"),
   subscription: () => http.get<Subscription>("/billing/subscription"),
   logout: () => http.post<{ message: string }>("/auth/logout"),
+  uploadAvatar: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return http.postForm<UserProfile>("/users/me/avatar", form);
+  },
+  removeAvatar: () => http.delete<UserProfile>("/users/me/avatar"),
+  sessions: () => http.get<UserSession[]>("/users/me/sessions"),
+  revokeSession: (id: string) =>
+    http.delete<{ message: string }>(`/users/me/sessions/${encodeURIComponent(id)}`),
+  revokeOtherSessions: () =>
+    http.delete<{ revoked: number }>("/users/me/sessions/others"),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    http.post<{ message: string }>("/auth/change-password", {
+      currentPassword,
+      newPassword,
+    }),
+  deleteAccount: (password: string) =>
+    http.post<{ message: string }>("/auth/delete-account", { password }),
 };
 
 export { ApiError } from "./client";

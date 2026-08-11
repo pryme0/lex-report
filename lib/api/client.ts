@@ -86,12 +86,15 @@ async function request<T>(
   let response: Response;
 
   const token = getAccessToken();
+  // multipart uploads must keep the browser-generated boundary header.
+  const isFormData =
+    typeof FormData !== "undefined" && init?.body instanceof FormData;
 
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       ...init,
       headers: {
-        "Content-Type": "application/json",
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...init?.headers,
       },
@@ -153,4 +156,6 @@ export const http = {
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     }),
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+  postForm: <T>(path: string, form: FormData) =>
+    request<T>(path, { method: "POST", body: form }),
 };

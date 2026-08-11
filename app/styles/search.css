@@ -94,14 +94,29 @@
 }
 
 .research-filters-panel {
-  padding: 12px 14px 14px;
+  padding: 14px;
   display: grid;
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: start;
+  background: var(--color-panel);
+  border-top: 1px solid var(--color-line);
 }
 
 .research-filter-group {
   display: grid;
+  align-content: start;
   gap: 8px;
+  padding: 11px 12px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+}
+
+/* The year range selects act as their own filter, so let that group span the full row width
+   instead of being squeezed into one card among many same-sized ones. */
+.research-filter-group:has(.research-year-range) {
+  grid-column: 1 / -1;
 }
 
 .research-filter-heading {
@@ -132,7 +147,7 @@
 }
 
 .filter-pill-label {
-  max-width: 220px;
+  max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -515,5 +530,58 @@
 
   .search-palette-trigger span:not(kbd) {
     display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .search-palette-trigger {
+    flex: none;
+    width: 38px;
+    min-height: 38px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .search-palette-trigger kbd {
+    display: none;
+  }
+
+  .search-bar-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+    width: 100%;
+  }
+
+  .search-syntax-wrap,
+  .search-syntax-trigger,
+  .search-sort-select {
+    width: 100%;
+  }
+
+  .search-bar-actions > .btn-primary {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .search-syntax-panel {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    top: 72px;
+    width: auto;
+    max-height: calc(100vh - 88px);
+    overflow-y: auto;
+  }
+
+  .research-filters-bar {
+    padding-inline: 0;
+  }
+
+  .research-filters-quick {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
   }
 }

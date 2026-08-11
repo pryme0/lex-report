@@ -20,7 +20,7 @@ import {
 } from "@/lib/search/url-state";
 import { useDashboard } from "@/contexts/DashboardContext";
 import { cn } from "@/lib/utils";
-import { alerts } from "@/lib/data";
+import { tcls } from "@/lib/types";
 
 const DRAFT_STORAGE_KEY = "lr-draft-id";
 const ARCHIVE_ID = /^[A-Z]{2,4}-\d+$/;
@@ -112,6 +112,10 @@ function ResearchContent() {
   const authorityQuery = useApiQuery(
     `authority-map:${submittedQuery}`,
     () => researchApi.authorityMap({ q: submittedQuery || undefined }),
+  );
+
+  const recentQuery = useApiQuery("cases:recent:5", () =>
+    casesApi.search({ sort: "recent", limit: 5 }),
   );
 
   const patchState = useCallback((patch: Partial<ResearchUrlState>) => {
@@ -332,27 +336,43 @@ function ResearchContent() {
           <div className="insight-panel">
             <div className="insight-head">
               <div>
-                <p className="label">Court watch</p>
-                <h3>Sample alerts</h3>
+                <p className="label">Archive</p>
+                <h3>Recently added</h3>
               </div>
-              <Link href="/dashboard/court-watch" className="btn btn-link btn-sm">
+              <Link
+                href="/dashboard?sort=recent"
+                className="btn btn-link btn-sm"
+              >
                 View all
               </Link>
             </div>
-            <p className="insight-note">
-              Illustrative feed only — the Court Watch API is not connected yet.
-            </p>
-            <div className="alert-feed">
-              {alerts.map(({ court, topic, change, time }) => (
-                <div className="alert-row" key={`${court}::${topic}`}>
-                  <div className="alert-topic">{topic}</div>
-                  <div className="alert-change">{change}</div>
-                  <div className="alert-meta">
-                    {court} · {time} ago
-                  </div>
-                </div>
-              ))}
-            </div>
+            {recentQuery.loading && recentQuery.data === null ? (
+              <p className="insight-note">Loading recent additions…</p>
+            ) : recentQuery.error ? (
+              <ErrorState message={recentQuery.error} onRetry={recentQuery.refetch} />
+            ) : recentQuery.data && recentQuery.data.data.length > 0 ? (
+              <div className="alert-feed">
+                {recentQuery.data.data.map((item) => (
+                  <button
+                    type="button"
+                    key={item.id}
+                    className="alert-row alert-row-btn"
+                    onClick={() => openCase(item.id)}
+                  >
+                    <div className="alert-topic">{item.title}</div>
+                    <div className="alert-change">{item.citation}</div>
+                    <div className="alert-meta">
+                      <span className={cn("treatment-pill", tcls[item.treatment])}>
+                        {item.treatment}
+                      </span>{" "}
+                      · {item.court} · {item.year}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="insight-note">No recent additions to show.</p>
+            )}
           </div>
         </aside>
       </div>

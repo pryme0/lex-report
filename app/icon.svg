@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="7" fill="#1a4a2e" />
+  <text
+    x="50%"
+    y="52%"
+    dominant-baseline="central"
+    text-anchor="middle"
+    font-family="Georgia, 'Source Serif 4', serif"
+    font-size="16"
+    font-weight="700"
+    fill="#f4f1ea"
+  >Lr</text>
+</svg>

@@ -58,6 +58,7 @@ export function CaseEntry({ item }: { item: CaseSummary }) {
     saveTarget === "matter" ? matterTriggerRef : folderTriggerRef,
   );
   const t = tcls[item.treatment];
+  const citation = item.report?.seriesCitation ?? item.neutralCitation ?? item.citation;
 
   return (
     <div className={cn("case-entry", t)}>
@@ -70,15 +71,17 @@ export function CaseEntry({ item }: { item: CaseSummary }) {
       <button className="case-title-btn" onClick={() => openCase(item.id)}>
         <h3>{item.title}</h3>
       </button>
-      <div className="case-citation">{item.citation}</div>
+      <div className="case-citation">{citation}</div>
       {item.snippet ? (
         <p className="case-snippet">{renderSearchSnippet(item.snippet)}</p>
       ) : (
         <p className="case-ratio">{item.ratio}</p>
       )}
       <div className="case-meta">
-        <span className="case-tag">{item.area}</span>
-        <span className="case-tag">{item.posture}</span>
+        {item.area && item.area !== "Unclassified" && (
+          <span className="case-tag">{item.area}</span>
+        )}
+        {item.posture && <span className="case-tag">{item.posture}</span>}
         <span className="case-tag">
           <Clock size={10} /> {item.readTime}
         </span>
@@ -121,7 +124,7 @@ export function CaseEntry({ item }: { item: CaseSummary }) {
                 item={item}
                 onSaved={(m) => {
                   setSaveTarget(null);
-                  showToast(`${item.citation} saved to ${m.ref}.`);
+                  showToast(`${citation} saved to ${m.ref}.`);
                 }}
               />
             </div>
@@ -132,7 +135,7 @@ export function CaseEntry({ item }: { item: CaseSummary }) {
                 caseId={item.id}
                 onSaved={(f) => {
                   setSaveTarget(null);
-                  showToast(`${item.citation} saved to ${f.name}.`);
+                  showToast(`${citation} saved to ${f.name}.`);
                 }}
               />
             </div>

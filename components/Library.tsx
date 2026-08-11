@@ -25,6 +25,7 @@ import type {
   CollectionSuggestion,
 } from "@/lib/api";
 import { useApiQuery, useApiMutation } from "@/lib/api/hooks";
+import { useDashboard } from "@/contexts/DashboardContext";
 import { AsyncSection, ErrorState } from "@/components/AsyncState";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { FOLDER_COLORS } from "@/components/SaveToFolderMenu";
@@ -139,6 +140,7 @@ function CaseRow({
   onEditNote?: (note: string) => boolean | Promise<boolean>;
   removePending?: boolean;
 }) {
+  const { openCase } = useDashboard();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(c.note ?? "");
@@ -164,7 +166,13 @@ function CaseRow({
       <div className="lib-case-row-main">
         <div className="lib-case-row-info">
           <span className={cn("treatment-pill", tcls[c.treatment])}>{c.treatment}</span>
-          <div className="lib-case-row-title">{c.title}</div>
+          <button
+            type="button"
+            className="lib-case-row-title lib-case-row-title-btn"
+            onClick={() => openCase(c.id)}
+          >
+            {c.title}
+          </button>
           <div className="lib-case-row-cite">{c.citation}</div>
         </div>
         <div className="lib-case-row-actions">
@@ -1147,12 +1155,19 @@ function SuggestionRow({
   onReject: () => void;
   pending: boolean;
 }) {
+  const { openCase } = useDashboard();
   return (
     <div className="lib-case-row">
       <div className="lib-case-row-main">
         <div className="lib-case-row-info">
           <span className={cn("treatment-pill", tcls[s.case.treatment])}>{s.case.treatment}</span>
-          <div className="lib-case-row-title">{s.case.title}</div>
+          <button
+            type="button"
+            className="lib-case-row-title lib-case-row-title-btn"
+            onClick={() => openCase(s.case.id)}
+          >
+            {s.case.title}
+          </button>
           <div className="lib-case-row-cite">{s.case.citation}</div>
           {s.note && <div style={{ fontSize: "0.78rem", color: "var(--color-muted)", marginTop: 4 }}>{s.note}</div>}
           <div style={{ fontSize: "0.72rem", color: "var(--color-faint)", marginTop: 4 }}>
