@@ -2,7 +2,6 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Search, ArrowRight } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CaseEntry } from "./CaseEntry";
 import { ResearchFilters } from "./ResearchFilters";
