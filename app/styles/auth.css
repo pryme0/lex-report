@@ -77,6 +77,19 @@
 .login-extended-form .login-form-heading > span { margin-top: 7px; }
 .login-extended-form .login-input-wrap .form-input { height: 43px; }
 .login-password-grid { display: grid; gap: 11px; }
+
+@media (min-width: 1081px) {
+  .login-page-auth-extended {
+    grid-template-columns: minmax(560px, 640px) minmax(0, 1fr);
+  }
+  .login-page-signin .login-extended-form {
+    max-width: 500px;
+    padding-inline: 32px;
+  }
+  .login-extended-form .login-password-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .login-status-card { justify-items: center; align-self: center; text-align: center; }
 .login-status-card > svg:first-child { color: var(--color-g-500); }
 .login-status-card.login-status-error > svg:first-child { color: var(--color-rose); }

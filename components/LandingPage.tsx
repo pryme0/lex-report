@@ -6,6 +6,7 @@ import { ArrowRight, BadgeCheck, Landmark, Scale } from "lucide-react";
 import { catalogApi, reportsApi } from "@/lib/api";
 import type { ArchiveFilters, Coverage } from "@/lib/api";
 import { useApiQuery } from "@/lib/api/hooks";
+import { useAuthSession } from "@/lib/api/auth";
 import { LandingFinalCta, LandingSearchPreview, LandingStory } from "@/components/LandingSections";
 
 function formatCount(n: number): string {
@@ -40,6 +41,7 @@ function statsFromArchive(coverage: Coverage[], filters: ArchiveFilters | null) 
 }
 
 export function LandingPage() {
+  const session = useAuthSession();
   const coverageQuery = useApiQuery("catalog:coverage", () => catalogApi.coverage());
   const filtersQuery = useApiQuery("catalog:filters", () => catalogApi.filters());
   const queueQuery = useApiQuery("reports:queue:4", () => reportsApi.queue(4));
@@ -47,6 +49,8 @@ export function LandingPage() {
   const coverageRows = coverageQuery.data ?? [];
   const reportQueue = queueQuery.data ?? [];
   const showQueue = !queueQuery.error && reportQueue.length > 0;
+  const signedIn = session.isAuthenticated;
+  const deskHref = signedIn ? "/dashboard" : "/login";
 
   const archiveReady = !coverageQuery.error && coverageRows.length > 0;
   const stats = archiveReady
@@ -88,7 +92,9 @@ export function LandingPage() {
             <a href="#coverage">Coverage</a>
             <a href="#standards">Standards</a>
           </div>
-          <Link href="/login" className="l-nav-login">Log in</Link>
+          <Link href={deskHref} className="l-nav-login">
+            {signedIn ? "Research desk" : "Log in"}
+          </Link>
         </div>
       </nav>
 
@@ -104,8 +110,8 @@ export function LandingPage() {
               citation treatment — then organise every authority around the matter you are building.
             </p>
             <div className="l-hero-cta">
-              <Link href="/login" className="btn btn-primary">
-                Open research desk <ArrowRight size={14} />
+              <Link href={deskHref} className="btn btn-primary">
+                {signedIn ? "Continue research" : "Open research desk"} <ArrowRight size={14} />
               </Link>
               <a href="/sample/lexreport-sample-report.pdf" download className="btn btn-secondary">Read sample report</a>
             </div>
@@ -134,7 +140,7 @@ export function LandingPage() {
             </div>
             <div className="l-authority-card">
               <div className="l-authority-status"><BadgeCheck size={13} /> Verified authority</div>
-              <div className="l-authority-cite">(2026) 4 LRR 221 (SC)</div>
+              <div className="l-authority-cite">(2026) ELR-000001 (SC)</div>
               <div className="l-authority-title">Zenith Trustees Ltd v. Adebayo &amp; Sons Holdings</div>
               <div className="l-authority-rule">Priority of floating charges and crystallisation.</div>
               <div className="l-authority-meta">
@@ -171,7 +177,7 @@ export function LandingPage() {
 
       <LandingStory coverageRows={coverageRows} coverageLoading={coverageQuery.loading} />
 
-      <LandingFinalCta />
+      <LandingFinalCta signedIn={signedIn} />
 
       <footer className="l-footer">
         <div className="sidebar-brand">

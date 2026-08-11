@@ -74,8 +74,8 @@ export function LandingSearchPreview() {
         <div className="lx-result-grid">
           <article className="lx-result-card lx-result-card-primary">
             <div className="lx-result-kicker"><BadgeCheck size={13} /> Best verified match for <code>{submitted}</code></div>
-            <h3>A.G. &amp; C.J. Akwa Ibom State v. Essien</h3>
-            <p className="lx-result-cite">(2025) 3 LRR 184 (SC)</p>
+            <h3>S. Anaja v. United Bank for Africa</h3>
+            <p className="lx-result-cite">(2025) ELR-000214 (SC)</p>
             <p>Where a decision affecting civil rights is taken without giving the affected party an opportunity to be heard, the decision cannot stand.</p>
             <div className="lx-result-tags"><span>Ratio</span><span>Followed 22</span><span>98% strength</span></div>
           </article>
@@ -109,7 +109,7 @@ function ReportAnatomy() {
       <div className="lx-anatomy-wrap">
         <div className="lx-report-sheet" aria-label="Example structured law report">
           <div className="lx-report-masthead"><span>LexReport</span><span>Supreme Court · 2026</span></div>
-          <p className="lx-report-series">4 LRR 221 (SC)</p>
+          <p className="lx-report-series">(2026) ELR-000001 (SC)</p>
           <h3>Zenith Trustees Ltd v. Adebayo &amp; Sons Holdings</h3>
           <div className="lx-report-rule" />
           <div className="lx-report-section"><strong>Coram</strong><p>Okoro, Agim, Jauro, Abubakar and Idris JJSC</p></div>
@@ -232,7 +232,7 @@ function ProductViews() {
           <aside><div className="lx-window-logo">Lr</div>{[Search, FileText, Network, BriefcaseBusiness, BookOpen].map((Icon, i) => <Icon key={i} size={16} className={i === (tab === "Research" ? 0 : tab === "Matters" ? 3 : 1) ? "active" : ""} />)}</aside>
           <main>
             <div className="lx-window-heading"><span>{tab}</span><BadgeCheck size={15} /></div>
-            {tab === "Research" && <><div className="lx-window-search"><Search size={14} /> natural justice</div><div className="lx-window-card"><small>SUPREME COURT · VERIFIED</small><strong>Essien v. Akwa Ibom State</strong><span>(2025) 3 LRR 184 (SC)</span><p>Fair hearing · Followed 22 · Strength 98%</p></div><div className="lx-window-card muted" /></>}
+            {tab === "Research" && <><div className="lx-window-search"><Search size={14} /> natural justice</div><div className="lx-window-card"><small>SUPREME COURT · VERIFIED</small><strong>S. Anaja v. United Bank for Africa</strong><span>(2025) ELR-000214 (SC)</span><p>Fair hearing · Followed 22 · Strength 98%</p></div><div className="lx-window-card muted" /></>}
             {tab === "Matters" && <><div className="lx-window-matter"><small>FHC/L/CS/284/2026</small><strong>Adebayo Holdings — Commercial dispute</strong><span>12 authorities · 4 notes · Bundle ready</span></div><div className="lx-window-columns"><div /><div /><div /></div></>}
             {tab === "Reports" && <><div className="lx-window-matter"><small>RESEARCH BUNDLE</small><strong>Authorities on crystallisation</strong><span>Verified 10 August 2026</span></div><div className="lx-window-report-lines">{[88, 72, 94, 66, 82].map((width) => <i key={width} style={{ width: `${width}%` }} />)}</div></>}
           </main>
@@ -328,7 +328,7 @@ export function LandingStory({ coverageRows, coverageLoading }: { coverageRows: 
   );
 }
 
-export function LandingFinalCta() {
+export function LandingFinalCta({ signedIn = false }: { signedIn?: boolean }) {
   return (
     <section className="lx-final-cta">
       <div className="lx-final-mark"><Scale size={28} /></div>
@@ -336,7 +336,9 @@ export function LandingFinalCta() {
       <h2>Build your argument on verified authority.</h2>
       <span>Search the archive, follow the precedent and keep every authority connected to the matter.</span>
       <div>
-        <Link href="/login" className="btn btn-light">Open research desk <ArrowRight size={14} /></Link>
+        <Link href={signedIn ? "/dashboard" : "/login"} className="btn btn-light">
+          {signedIn ? "Return to research desk" : "Open research desk"} <ArrowRight size={14} />
+        </Link>
         <a href="/sample/lexreport-sample-report.pdf" download className="btn btn-outline-light">Download sample report</a>
       </div>
     </section>

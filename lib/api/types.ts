@@ -14,6 +14,8 @@ export type CaseSummary = {
   id: string;
   title: string;
   citation: string;
+  editorialCitation?: string;
+  sourceCitation?: string | null;
   court: string;
   year: number;
   judges: string;
@@ -29,12 +31,21 @@ export type CaseSummary = {
   verified: boolean;
   /** "Federal", or the state whose law governs. */
   jurisdiction: string;
+  documentType?: "judgment" | "ruling" | "order" | "decision" | string;
+  sourcePageCount?: number;
   /** Court-assigned citation, independent of any law reporter. */
   neutralCitation?: string | null;
   /** Unique LexReport series placement assigned to this judgment. */
   report?: ReportPlacement | null;
   /** Matched passage with `<b>` marks, present only on relevance-ranked search hits. */
   snippet?: string;
+};
+
+export type SourcePage = {
+  number: number;
+  text: string;
+  extraction: "text" | "ocr";
+  citation: string;
 };
 
 export type Counsel = {
@@ -50,7 +61,7 @@ export type ReportPlacement = {
   volume?: number | null;
   part?: number | null;
   page?: number | null;
-  /** Composed for display and copying, e.g. "(2026) 4 LRR (Pt. 12) 221". */
+  /** Composed for display and copying, e.g. "(2026) ELR-000001 (SC)". */
   seriesCitation: string;
 };
 
@@ -87,6 +98,8 @@ export type CaseDetail = CaseSummary & {
   /** The judgment as delivered — the text a practitioner actually cites from. */
   fullText: string;
   suitNo?: string | null;
+  appealNo?: string | null;
+  sourcePages?: SourcePage[];
   appellant?: string | null;
   respondent?: string | null;
   counsel: Counsel[];

@@ -79,8 +79,14 @@
 
 /* A visible focus ring is the only way a keyboard user can tell where they are. */
 :focus-visible {
-  outline: 2px solid var(--accent, #1d4ed8);
+  outline: 2px solid var(--color-g-500, #2d7c54);
   outline-offset: 2px;
+}
+
+/* Text controls already use a branded border and shadow on focus. Suppress the
+   browser/default outer ring so forms never show a second blue highlight. */
+:where(input:not([type="checkbox"]):not([type="radio"]), textarea, select):focus-visible {
+  outline: none;
 }
 
 .sr-only {

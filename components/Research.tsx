@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CaseEntry } from "./CaseEntry";
 import { ResearchFilters } from "./ResearchFilters";
+import { SearchPagination } from "./SearchPagination";
 import { SearchSyntaxHelp } from "./SearchSyntaxHelp";
 import { AsyncSection, ErrorState } from "./AsyncState";
 import { casesApi, catalogApi, draftsApi, researchApi } from "@/lib/api";
@@ -21,6 +22,8 @@ import {
 import { useDashboard } from "@/contexts/DashboardContext";
 import { cn } from "@/lib/utils";
 import { tcls } from "@/lib/types";
+import { routes } from "@/lib/routes";
+import { matchingPinpointCase, parsePinpointCitation } from "@/lib/search/pinpoint-citation";
 
 const DRAFT_STORAGE_KEY = "lr-draft-id";
 const ARCHIVE_ID = /^[A-Z]{2,4}-\d+$/;
@@ -43,6 +46,7 @@ function ResearchContent() {
   const urlKey = urlParams.toString();
   const lastSyncedUrl = useRef(urlKey);
   const skipNextSync = useRef(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   // Seeded from the URL so a shared or reloaded search shows its own query text.
   const [researchState, setResearchState] = useState<ResearchUrlState>(() =>
@@ -52,6 +56,7 @@ function ResearchContent() {
   const [filtersExpanded, setFiltersExpanded] = useState(false);
 
   const createDraft = useApiMutation(() => draftsApi.create({}));
+  const resolvePinpoint = useApiMutation((lookup: string) => casesApi.index(lookup));
 
   useEffect(() => {
     if (urlKey === lastSyncedUrl.current) return;
@@ -122,9 +127,19 @@ function ResearchContent() {
     setResearchState((prev) => ({ ...prev, ...patch }));
   }, []);
 
-  const runSearch = useCallback(() => {
-    patchState({ q: queryInput.trim(), page: 1 });
-  }, [queryInput, patchState]);
+  const runSearch = useCallback(async () => {
+    const value = queryInput.trim();
+    const pinpoint = parsePinpointCitation(value);
+    if (pinpoint) {
+      const matches = await resolvePinpoint.mutate(pinpoint.lookup);
+      const matchedCase = matchingPinpointCase(matches, pinpoint);
+      if (matchedCase) {
+        router.push(routes.casePage(matchedCase.id, pinpoint.page));
+        return;
+      }
+    }
+    patchState({ q: value, page: 1 });
+  }, [queryInput, patchState, resolvePinpoint, router]);
 
   const updateFilters = useCallback((next: ResearchFilterState) => {
     setResearchState((prev) => ({
@@ -146,6 +161,13 @@ function ResearchContent() {
     }));
   }, []);
 
+  const changePage = useCallback((page: number) => {
+    patchState({ page });
+    window.requestAnimationFrame(() => {
+      resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [patchState]);
+
   const handleGenerateSkeleton = async () => {
     const created = await createDraft.mutate();
     if (!created) return;
@@ -163,7 +185,7 @@ function ResearchContent() {
             value={queryInput}
             onChange={(e) => setQueryInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") runSearch();
+              if (e.key === "Enter") void runSearch();
             }}
             placeholder="Search judgments — try ratio:natural justice or &quot;floating charge&quot;"
             aria-label="Search query"
@@ -185,8 +207,12 @@ function ResearchContent() {
               </option>
             ))}
           </select>
-          <button className="btn btn-primary" onClick={runSearch}>
-            Search corpus
+          <button
+            className="btn btn-primary"
+            onClick={() => void runSearch()}
+            disabled={resolvePinpoint.pending}
+          >
+            {resolvePinpoint.pending ? "Opening page…" : "Search corpus"}
           </button>
         </div>
       </div>
@@ -200,7 +226,7 @@ function ResearchContent() {
       />
 
       <div className="content-grid">
-        <div>
+        <div ref={resultsRef} className="search-results-column">
           <div className="page-header" style={{ marginBottom: 10 }}>
             <div>
               <p className="label">
@@ -229,32 +255,13 @@ function ResearchContent() {
                     <CaseEntry key={item.id} item={item} />
                   ))}
                   {data.meta.totalPages > 1 && (
-                    <div className="search-pagination">
-                      <span className="search-pagination-meta">
-                        Showing {(data.meta.page - 1) * data.meta.limit + 1}–
-                        {Math.min(data.meta.page * data.meta.limit, data.meta.total)} of{" "}
-                        {data.meta.total}
-                      </span>
-                      <div className="search-pagination-controls">
-                        <button
-                          className="btn btn-ghost btn-sm"
-                          disabled={data.meta.page <= 1}
-                          onClick={() => patchState({ page: data.meta.page - 1 })}
-                        >
-                          Previous
-                        </button>
-                        <span className="search-pagination-page">
-                          Page {data.meta.page} of {data.meta.totalPages}
-                        </span>
-                        <button
-                          className="btn btn-ghost btn-sm"
-                          disabled={data.meta.page >= data.meta.totalPages}
-                          onClick={() => patchState({ page: data.meta.page + 1 })}
-                        >
-                          Next
-                        </button>
-                      </div>
-                    </div>
+                    <SearchPagination
+                      page={data.meta.page}
+                      totalPages={data.meta.totalPages}
+                      total={data.meta.total}
+                      limit={data.meta.limit}
+                      onPageChange={changePage}
+                    />
                   )}
                 </>
               )}

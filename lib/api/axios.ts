@@ -41,13 +41,13 @@ api.interceptors.response.use(
           return api(originalRequest);
         } catch {
           clearTokens();
-          if (typeof window !== "undefined") {
+          if (typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")) {
             window.location.href = "/login";
           }
         }
       } else {
         clearTokens();
-        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+        if (typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")) {
           window.location.href = "/login";
         }
       }
@@ -83,7 +83,6 @@ export function clearTokens(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
-  sessionStorage.removeItem("lr-auth");
 }
 
 export function isAuthenticated(): boolean {

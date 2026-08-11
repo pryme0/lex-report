@@ -1,8 +1,17 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { Link as LinkIcon, Minus, Plus, Quote } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Link as LinkIcon,
+  Minus,
+  Plus,
+  Quote,
+} from "lucide-react";
 import { useDashboard } from "@/contexts/DashboardContext";
+import type { SourcePage } from "@/lib/api/types";
 import { copyText } from "@/lib/judgment";
 import {
   parseJudgmentMarkdown,
@@ -324,15 +333,338 @@ function Blocks({
   );
 }
 
+type PageSegment =
+  | { kind: "heading"; text: string }
+  | { kind: "paragraph"; text: string; numbered: boolean };
+
+const DECISION_MARKER_RE = /^(?:JUDGMENT|JUDGEMENT|RULING|ORDER|DECISION)$/i;
+
+function isPageHeading(line: string): boolean {
+  const letters = line.match(/[A-Za-z]/g) ?? [];
+  const uppercase = line.match(/[A-Z]/g) ?? [];
+  return (
+    line.length <= 100 &&
+    letters.length >= 3 &&
+    uppercase.length / letters.length > 0.88 &&
+    /^(?:ISSUE\b|LEGAL REPRESENTATION|APPELLANT|RESPONDENT|APPLICANT|COURT|CONCLUSION|RESOLUTION|SUBMISSIONS|PRELIMINARY|INTRODUCTION|ORDERS?|APPEAL NO|SUIT NO)/i.test(
+      line,
+    )
+  );
+}
+
+function joinWrappedLines(lines: string[]): string {
+  return lines.reduce((text, line) => {
+    if (!text) return line;
+    return /[A-Za-z]-$/.test(text) && /^[a-z]/.test(line)
+      ? `${text.slice(0, -1)}${line}`
+      : `${text} ${line}`;
+  }, "");
+}
+
+function segmentPageText(text: string): PageSegment[] {
+  const lines = text
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.replace(/\s+/g, " ").trim());
+  const segments: PageSegment[] = [];
+  let buffer: string[] = [];
+  let numbered = false;
+
+  const flush = () => {
+    const value = joinWrappedLines(buffer).trim();
+    if (value) segments.push({ kind: "paragraph", text: value, numbered });
+    buffer = [];
+    numbered = false;
+  };
+
+  for (const line of lines) {
+    if (!line) {
+      flush();
+      continue;
+    }
+    if (isPageHeading(line)) {
+      flush();
+      segments.push({ kind: "heading", text: line });
+      continue;
+    }
+    if (/^(?:\d{1,2}[.)]|[ivxlcdm]+[.)])\s+/i.test(line)) {
+      flush();
+      numbered = true;
+      buffer.push(line);
+      continue;
+    }
+
+    const accumulated = joinWrappedLines(buffer);
+    if (buffer.length && accumulated.length > 360 && /[.!?][”"')\]]?$/.test(accumulated)) {
+      flush();
+    }
+    buffer.push(line);
+  }
+  flush();
+  return segments;
+}
+
+function PageBody({
+  page,
+  frontMatter,
+  onCopy,
+  anchorId,
+  showCoatOfArms,
+}: {
+  page: SourcePage;
+  frontMatter: "all" | "through-marker" | "none";
+  onCopy?: (citation: string) => void;
+  anchorId?: string;
+  showCoatOfArms?: boolean;
+}) {
+  const lines = page.text.replace(/\r\n/g, "\n").split("\n");
+  const markerIndex = lines.findIndex((line) => DECISION_MARKER_RE.test(line.trim()));
+  const frontEnd =
+    frontMatter === "all" ? lines.length : frontMatter === "through-marker" ? markerIndex + 1 : 0;
+  const frontLines = lines.slice(0, Math.max(0, frontEnd));
+  const body = lines.slice(Math.max(0, frontEnd)).join("\n");
+
+  return (
+    <section id={anchorId} className="judgment-source-page">
+      <header className="judgment-page-running-head">
+        <span>Electronic Lex Report</span>
+        <button
+          type="button"
+          className="judgment-page-cite judgment-no-print"
+          onClick={() => onCopy?.(page.citation)}
+          title="Copy page citation"
+        >
+          {page.citation}
+          <Copy size={11} aria-hidden="true" />
+        </button>
+        <span className="judgment-page-cite judgment-print-only">{page.citation}</span>
+      </header>
+
+      <div className="judgment-page-content">
+        {frontLines.length > 0 && (
+          <div className="judgment-page-front-matter">
+            {showCoatOfArms && (
+              <img
+                className="judgment-coat-of-arms"
+                src="https://upload.wikimedia.org/wikipedia/commons/b/bc/Coat_of_arms_of_Nigeria.svg"
+                alt="Coat of arms of Nigeria"
+                width="112"
+                height="95"
+              />
+            )}
+            {frontLines.map((line, index) => {
+              const value = line.trim();
+              if (!value) return <span key={index} className="judgment-page-front-space" />;
+              return (
+                <span
+                  key={index}
+                  className={cn(
+                    "judgment-page-front-line",
+                    DECISION_MARKER_RE.test(value) && "is-decision-label",
+                  )}
+                >
+                  {value}
+                </span>
+              );
+            })}
+          </div>
+        )}
+
+        {segmentPageText(body).map((segment, index) =>
+          segment.kind === "heading" ? (
+            <h3 key={index} className="judgment-page-heading">
+              {segment.text}
+            </h3>
+          ) : (
+            <p
+              key={index}
+              className={cn("judgment-page-paragraph", segment.numbered && "is-numbered")}
+            >
+              {segment.text}
+            </p>
+          ),
+        )}
+      </div>
+
+      <footer className="judgment-page-footer">
+        <span>{page.number}</span>
+      </footer>
+    </section>
+  );
+}
+
+function PaginatedJudgment({
+  pages,
+  print,
+  textSize,
+  onTextSizeChange,
+  citation,
+}: {
+  pages: SourcePage[];
+  print: boolean;
+  textSize: TextSize;
+  onTextSizeChange?: (next: TextSize) => void;
+  citation?: string;
+}) {
+  const { showToast } = useDashboard();
+  const articleRef = useRef<HTMLElement>(null);
+  const orderedPages = useMemo(() => [...pages].sort((a, b) => a.number - b.number), [pages]);
+  const [activePage, setActivePage] = useState(orderedPages[0]?.number ?? 1);
+  const markerPageIndex = orderedPages.findIndex((page) =>
+    page.text.split(/\r?\n/).some((line) => DECISION_MARKER_RE.test(line.trim())),
+  );
+  const progress = useReadingProgress(print ? { current: null } : articleRef);
+
+  useEffect(() => {
+    if (print || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (visible) setActivePage(Number(visible.target.getAttribute("data-page-number")));
+      },
+      { rootMargin: "-20% 0px -65% 0px", threshold: 0 },
+    );
+    const nodes = orderedPages
+      .map((page) => document.querySelector(`[data-page-number="${page.number}"]`))
+      .filter((node): node is Element => Boolean(node));
+    nodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, [orderedPages, print]);
+
+  useEffect(() => {
+    if (print || typeof window === "undefined") return;
+    const match = /^#source-page-(\d+)$/.exec(window.location.hash);
+    if (!match) return;
+
+    const pageNumber = Number(match[1]);
+    if (!orderedPages.some((page) => page.number === pageNumber)) return;
+    setActivePage(pageNumber);
+
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(`source-page-${pageNumber}`)?.scrollIntoView({
+        behavior: "auto",
+        block: "start",
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [orderedPages, print]);
+
+  const goToPage = (number: number) => {
+    window.history.replaceState(null, "", `#source-page-${number}`);
+    setActivePage(number);
+    document.getElementById(`source-page-${number}`)?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const copyPageCitation = async (pageCitation: string) => {
+    const ok = await copyText(pageCitation);
+    showToast(ok ? `Copied "${pageCitation}".` : "Could not copy citation.");
+  };
+
+  return (
+    <div className={cn("judgment-pages-layout", print && "is-print")}>
+      {!print && (
+        <aside className="judgment-page-index judgment-no-print" aria-label="Judgment pages">
+          <div className="judgment-outline-label">Pages</div>
+          <div className="judgment-page-index-list">
+            {orderedPages.map((page) => (
+              <button
+                key={page.number}
+                type="button"
+                className={cn("judgment-page-index-link", activePage === page.number && "is-active")}
+                onClick={() => goToPage(page.number)}
+                aria-current={activePage === page.number ? "page" : undefined}
+              >
+                <span>Page {page.number}</span>
+                {page.extraction === "ocr" && <small>OCR</small>}
+              </button>
+            ))}
+          </div>
+        </aside>
+      )}
+
+      <div className="judgment-pages-column">
+        {!print && (
+          <div className="judgment-reading-bar judgment-page-toolbar judgment-no-print">
+            <div className="judgment-reading-meta">
+              <strong>Page {activePage} of {orderedPages.length}</strong>
+              <span className="judgment-reading-progress" aria-hidden="true">
+                <span
+                  className="judgment-reading-progress-fill"
+                  style={{ transform: `scaleX(${progress})` }}
+                />
+              </span>
+            </div>
+            <div className="judgment-page-tools">
+              <div className="judgment-page-stepper" role="group" aria-label="Page navigation">
+                <button
+                  type="button"
+                  onClick={() => goToPage(Math.max(orderedPages[0].number, activePage - 1))}
+                  disabled={activePage === orderedPages[0].number}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft size={15} />
+                </button>
+                <span>{citation}</span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    goToPage(Math.min(orderedPages.at(-1)?.number ?? activePage, activePage + 1))
+                  }
+                  disabled={activePage === orderedPages.at(-1)?.number}
+                  aria-label="Next page"
+                >
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+              {onTextSizeChange && <TextSizeControl size={textSize} onChange={onTextSizeChange} />}
+            </div>
+          </div>
+        )}
+
+        <article
+          ref={articleRef}
+          className="judgment-pages"
+          data-text-size={textSize}
+          aria-label={`Full judgment in ${orderedPages.length} source pages`}
+        >
+          {orderedPages.map((page, index) => (
+            <div key={page.number} data-page-number={page.number} className="judgment-page-anchor">
+              <PageBody
+                page={page}
+                anchorId={print ? undefined : `source-page-${page.number}`}
+                showCoatOfArms={index === 0}
+                frontMatter={
+                  markerPageIndex >= 0 && index < markerPageIndex
+                    ? "all"
+                    : index === markerPageIndex
+                      ? "through-marker"
+                      : "none"
+                }
+                onCopy={print ? undefined : copyPageCitation}
+              />
+            </div>
+          ))}
+        </article>
+      </div>
+    </div>
+  );
+}
+
 export function JudgmentText({
   fullText,
+  sourcePages,
   citation,
   title,
+  court,
   print = false,
 }: {
   fullText: string;
+  sourcePages?: SourcePage[];
   citation?: string;
   title?: string;
+  court?: string;
   print?: boolean;
 }) {
   const { showToast } = useDashboard();
@@ -347,6 +679,18 @@ export function JudgmentText({
   const outlineIds = useMemo(() => outline.map((entry) => entry.id), [outline]);
   const activeId = useActiveSection(print ? [] : outlineIds);
   const progress = useReadingProgress(print ? { current: null } : articleRef);
+
+  if (sourcePages?.length) {
+    return (
+      <PaginatedJudgment
+        pages={sourcePages}
+        print={print}
+        textSize={print ? "md" : textSize}
+        onTextSizeChange={print ? undefined : setTextSize}
+        citation={citation ?? court}
+      />
+    );
+  }
 
   if (print) {
     return (
