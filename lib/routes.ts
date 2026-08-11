@@ -2,6 +2,8 @@
 
 export const routes = {
   case: (id: string) => `/dashboard/cases/${encodeURIComponent(id)}`,
+  casePage: (id: string, page: number) =>
+    `${routes.case(id)}#source-page-${Math.max(1, Math.trunc(page))}`,
   statute: (id: string) => `/dashboard/legislation/${encodeURIComponent(id)}`,
   statuteSection: (id: string, section: string) =>
     `${routes.statute(id)}/sections/${encodeURIComponent(section)}`,

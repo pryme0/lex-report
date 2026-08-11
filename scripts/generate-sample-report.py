@@ -129,7 +129,7 @@ def build_story():
 
     story += [Paragraph("ILLUSTRATIVE SUPREME COURT REPORT", styles["Kicker"])]
     story += [Paragraph("Zenith Trustees Ltd v. Adebayo &amp; Sons Holdings", styles["Display"])]
-    story += [Table([[pill("(2026) 4 LRR 221 (SC)", PALE_GREEN, MID_GREEN), pill("VERIFIED SAMPLE", PALE_BRASS, BRASS), pill("COMMERCIAL LAW", PAPER)]], colWidths=[52 * mm, 42 * mm, 42 * mm], hAlign="LEFT", style=[("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 5)]), Spacer(1, 7 * mm)]
+    story += [Table([[pill("(2026) ELR-000001 (SC)", PALE_GREEN, MID_GREEN), pill("VERIFIED SAMPLE", PALE_BRASS, BRASS), pill("COMMERCIAL LAW", PAPER)]], colWidths=[52 * mm, 42 * mm, 42 * mm], hAlign="LEFT", style=[("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 5)]), Spacer(1, 7 * mm)]
     story += [info_table([
         ("COURT", "Supreme Court of Nigeria"),
         ("CORAM", "Okoro, Agim, Jauro, Abubakar and Idris JJSC"),

@@ -277,8 +277,10 @@ export function JudgmentDetail({
               <div className="judgment-reading-panel">
                 <JudgmentText
                   fullText={item.fullText}
+                  sourcePages={item.sourcePages}
                   citation={judgmentCitation(item)}
                   title={item.title}
+                  court={item.court}
                 />
               </div>
             )}
@@ -286,8 +288,10 @@ export function JudgmentDetail({
             <div className="judgment-print-body" aria-hidden="true">
               <JudgmentText
                 fullText={item.fullText}
+                sourcePages={item.sourcePages}
                 citation={judgmentCitation(item)}
                 title={item.title}
+                court={item.court}
                 print
               />
             </div>

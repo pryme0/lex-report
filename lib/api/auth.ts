@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { api, getErrorMessage, setTokens, clearTokens, isAuthenticated } from "./axios";
 
 export interface User {
@@ -30,7 +31,7 @@ export interface SigninData {
   password: string;
 }
 
-export function useUser() {
+export function useUser({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ["user"],
     queryFn: async () => {
@@ -39,7 +40,26 @@ export function useUser() {
     },
     retry: false,
     staleTime: 5 * 60 * 1000,
+    enabled,
   });
+}
+
+/** Resolves the persistent browser token against the API before treating a visitor as signed in. */
+export function useAuthSession() {
+  const [hasToken, setHasToken] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setHasToken(isAuthenticated());
+  }, []);
+
+  const userQuery = useUser({ enabled: hasToken === true });
+  const isLoading = hasToken === null || (hasToken === true && userQuery.isLoading);
+
+  return {
+    user: userQuery.data ?? null,
+    isAuthenticated: hasToken === true && Boolean(userQuery.data),
+    isLoading,
+  };
 }
 
 export function useSignup() {
@@ -76,7 +96,6 @@ export function useSignin() {
     },
     onSuccess: (data) => {
       setTokens(data.accessToken, data.refreshToken);
-      sessionStorage.setItem("lr-auth", "1");
       queryClient.invalidateQueries({ queryKey: ["user"] });
       router.push("/dashboard");
     },

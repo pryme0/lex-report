@@ -296,34 +296,141 @@
 
 /* ─── Pagination ────────────────────────────────────────────────────────── */
 .search-pagination {
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) auto;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 16px;
-  padding: 12px 14px;
+  gap: 14px 24px;
+  margin-top: 20px;
+  padding: 16px 18px 34px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius);
   background: var(--color-paper);
 }
 
 .search-pagination-meta {
+  display: grid;
+  gap: 2px;
   font-size: 0.82rem;
   color: var(--color-muted);
+}
+
+.search-pagination-meta strong {
+  color: var(--color-body);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.search-pagination-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  min-width: 0;
 }
 
 .search-pagination-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
-.search-pagination-page {
-  font-size: 0.82rem;
-  font-weight: 600;
+.search-pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.search-page-btn {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 7px;
+  border: 1px solid var(--color-line);
+  border-radius: 5px;
+  background: var(--color-paper);
   color: var(--color-body);
-  min-width: 100px;
+  font-size: 0.76rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.search-page-btn:hover:not(:disabled) {
+  border-color: var(--color-g-300);
+  background: var(--color-g-50);
+  color: var(--color-g-700);
+}
+
+.search-page-btn.is-active {
+  border-color: var(--color-g-700);
+  background: var(--color-g-700);
+  color: #fff;
+}
+
+.search-page-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.search-page-ellipsis {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  color: var(--color-faint);
+  font-size: 0.82rem;
+}
+
+.search-pagination-jump {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 14px;
+  border-left: 1px solid var(--color-line);
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.search-pagination-jump input {
+  width: 64px;
+  height: 34px;
+  padding: 0 7px;
+  border: 1px solid var(--color-line-2);
+  border-radius: 5px;
+  background: var(--color-bg);
+  color: var(--color-ink);
   text-align: center;
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.search-pagination-jump input:focus {
+  border-color: var(--color-g-400);
+  box-shadow: 0 0 0 3px rgba(45, 124, 84, 0.1);
+}
+
+.search-pagination-jump button {
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--color-g-700);
+  border-radius: 5px;
+  background: var(--color-g-700);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.search-pagination-summary {
+  position: absolute;
+  right: 18px;
+  bottom: 10px;
+  color: var(--color-faint);
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── Global search palette ─────────────────────────────────────────────── */
@@ -518,6 +625,24 @@
 }
 
 @media (max-width: 900px) {
+  .search-results-column {
+    scroll-margin-top: 76px;
+  }
+
+  .search-pagination {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .search-pagination-navigation {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .search-pagination-summary {
+    right: auto;
+    left: 18px;
+  }
+
   .research-filters-quick {
     margin-left: 0;
     width: 100%;
@@ -534,6 +659,49 @@
 }
 
 @media (max-width: 640px) {
+  .search-pagination {
+    padding: 14px 14px 36px;
+    gap: 12px;
+  }
+
+  .search-pagination-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .search-pagination-navigation {
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .search-pagination-pages {
+    display: none;
+  }
+
+  .search-pagination-jump {
+    margin-left: auto;
+    padding-left: 8px;
+  }
+
+  .search-pagination-jump label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .search-pagination-jump input {
+    width: 58px;
+  }
+
+  .search-pagination-summary {
+    left: 14px;
+  }
+
   .search-palette-trigger {
     flex: none;
     width: 38px;

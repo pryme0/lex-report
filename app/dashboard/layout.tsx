@@ -10,6 +10,7 @@ import { JudgmentDetail } from "@/components/JudgmentDetail";
 import { isDetailRoute } from "@/lib/routes";
 import { useSidebarCollapse } from "@/lib/useSidebarCollapse";
 import { cn } from "@/lib/utils";
+import { useAuthSession } from "@/lib/api/auth";
 
 function Toast() {
   const { toast, clearToast } = useDashboard();
@@ -81,18 +82,13 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const session = useAuthSession();
 
   useEffect(() => {
-    const auth = sessionStorage.getItem("lr-auth");
-    if (!auth) {
-      router.replace("/login");
-    } else {
-      setReady(true);
-    }
-  }, [router]);
+    if (!session.isLoading && !session.isAuthenticated) router.replace("/login");
+  }, [router, session.isAuthenticated, session.isLoading]);
 
-  if (!ready) return null;
+  if (session.isLoading || !session.isAuthenticated) return null;
 
   return (
     <DashboardProvider>

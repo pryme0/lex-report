@@ -1,18 +1,26 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ArrowRight, BadgeCheck, Eye, EyeOff, Landmark, Loader2, LockKeyhole, Mail, Scale, ShieldCheck } from "lucide-react";
 import { useSignin } from "@/lib/api/auth";
+import { useAuthSession } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/axios";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const session = useAuthSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const signin = useSignin();
+
+  useEffect(() => {
+    if (session.isAuthenticated) router.replace("/dashboard");
+  }, [router, session.isAuthenticated]);
 
   const forgotPasswordHref = email.trim()
     ? `/forgot-password?email=${encodeURIComponent(email.trim())}`
@@ -22,6 +30,8 @@ export default function LoginPage() {
     e.preventDefault();
     signin.mutate({ email, password });
   }
+
+  if (session.isLoading || session.isAuthenticated) return null;
 
   return (
     <div className="login-page login-page-signin">

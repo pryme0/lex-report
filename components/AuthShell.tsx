@@ -1,7 +1,12 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, BadgeCheck, Landmark, Scale, ShieldCheck } from "lucide-react";
+import { useAuthSession } from "@/lib/api/auth";
 
 type AuthShellProps = {
   children: ReactNode;
@@ -24,6 +29,15 @@ export function AuthShell({
   statNote,
   extended = false,
 }: AuthShellProps) {
+  const router = useRouter();
+  const session = useAuthSession();
+
+  useEffect(() => {
+    if (session.isAuthenticated) router.replace("/dashboard");
+  }, [router, session.isAuthenticated]);
+
+  if (session.isLoading || session.isAuthenticated) return null;
+
   return (
     <div className={`login-page login-page-signin${extended ? " login-page-auth-extended" : ""}`}>
       <main className="login-panel login-signin-panel">
