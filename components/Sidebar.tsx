@@ -22,9 +22,13 @@ const navItems = [
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
+  peeking?: boolean;
+  onPeekChange?: (peeking: boolean) => void;
 }
 
-export function Sidebar({ open, onClose }: SidebarProps) {
+export function Sidebar({ open, onClose, collapsed: _collapsed, onToggleCollapsed: _onToggleCollapsed, peeking: _peeking, onPeekChange: _onPeekChange }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const profileQuery = useApiQuery("users:profile", () => usersApi.profile());
