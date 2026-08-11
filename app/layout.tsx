@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
 import { QueryProvider } from "@/lib/api/query-provider";
 import "./globals.css";
 // Loaded after globals so each area's rules win where they overlap.
@@ -15,22 +14,6 @@ import "./styles/auth.css";
 // cannot accidentally reintroduce horizontal overflow on small screens.
 import "./styles/responsive.css";
 
-// Self-hosted by Next so the fonts are not a render-blocking third-party request.
-const plexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-  variable: "--font-plex-sans",
-});
-
-const sourceSerif = Source_Serif_4({
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  style: ["normal", "italic"],
-  display: "swap",
-  variable: "--font-source-serif",
-});
-
 export const metadata: Metadata = {
   title: "LexReport — Nigerian Law Intelligence",
   description: "Verified judgments, ratio tracking, and litigation intelligence for Nigerian legal practice.",
@@ -38,7 +21,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${plexSans.variable} ${sourceSerif.variable}`}>
+    <html lang="en">
       <body>
         <QueryProvider>{children}</QueryProvider>
       </body>
