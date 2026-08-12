@@ -248,6 +248,10 @@ export const draftsApi = {
       `/drafts/${encodeURIComponent(id)}/issues/${encodeURIComponent(issueId)}/authorities`,
       { caseId },
     ),
+  removeAuthority: (id: string, issueId: string, caseId: string) =>
+    http.delete<DraftWorkspace>(
+      `/drafts/${encodeURIComponent(id)}/issues/${encodeURIComponent(issueId)}/authorities/${encodeURIComponent(caseId)}`,
+    ),
   updateBundleOrder: (id: string, caseIds: string[]) =>
     http.put<DraftWorkspace>(`/drafts/${encodeURIComponent(id)}/bundle/order`, { caseIds }),
   updateBundleDetails: (id: string, body: Partial<BundleDetails>) =>
