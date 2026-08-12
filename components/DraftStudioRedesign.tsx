@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   Plus, Trash2, Search, GripVertical, FileText, Eye, EyeOff,
   Download, ChevronDown, ChevronRight, X, Check,
-  Bold, Italic, Underline, List, ListOrdered,
 } from "lucide-react";
 import { AutoSizeTextarea } from "@/components/AutoSizeInput";
 import { cn } from "@/lib/utils";
@@ -33,73 +32,6 @@ const NIGERIAN_STATES = [
 const DRAFT_STORAGE_KEY = "lr-draft-id";
 
 type IssueEdit = { text: string; submission: string };
-
-// ─── Rich Text Editor ─────────────────────────────────────────────────────────
-
-function RichTextEditor({
-  value,
-  onChange,
-  onBlur,
-  placeholder,
-  disabled,
-}: {
-  value: string;
-  onChange: (val: string) => void;
-  onBlur?: () => void;
-  placeholder?: string;
-  disabled?: boolean;
-}) {
-  const editorRef = useRef<HTMLDivElement>(null);
-
-  const execCommand = (cmd: string) => {
-    document.execCommand(cmd, false);
-    editorRef.current?.focus();
-  };
-
-  const handleInput = () => {
-    if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
-    }
-  };
-
-  useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value;
-    }
-  }, [value]);
-
-  return (
-    <div className="ds-rich-editor-wrap">
-      <div className="ds-rich-toolbar">
-        <button type="button" onClick={() => execCommand("bold")} title="Bold" disabled={disabled}>
-          <Bold size={14} />
-        </button>
-        <button type="button" onClick={() => execCommand("italic")} title="Italic" disabled={disabled}>
-          <Italic size={14} />
-        </button>
-        <button type="button" onClick={() => execCommand("underline")} title="Underline" disabled={disabled}>
-          <Underline size={14} />
-        </button>
-        <span className="ds-toolbar-divider" />
-        <button type="button" onClick={() => execCommand("insertUnorderedList")} title="Bullet List" disabled={disabled}>
-          <List size={14} />
-        </button>
-        <button type="button" onClick={() => execCommand("insertOrderedList")} title="Numbered List" disabled={disabled}>
-          <ListOrdered size={14} />
-        </button>
-      </div>
-      <div
-        ref={editorRef}
-        className="ds-rich-editor"
-        contentEditable={!disabled}
-        onInput={handleInput}
-        onBlur={onBlur}
-        data-placeholder={placeholder}
-        suppressContentEditableWarning
-      />
-    </div>
-  );
-}
 
 // ─── Tag Input for Multiple Parties ───────────────────────────────────────────
 
@@ -866,11 +798,13 @@ export function DraftStudioRedesign({ onAction }: { onAction: (m: string) => voi
           {/* Introduction */}
           <section className="ds-section">
             <h2 className="ds-section-title">Introduction</h2>
-            <RichTextEditor
+            <AutoSizeTextarea
+              className="ds-textarea"
               value={briefDraft.intro}
               onChange={(val) => handleBriefChange("intro", val)}
               onBlur={handleBriefBlur}
               placeholder="Set out the nature of the proceedings, the relief sought, and a brief summary of the facts..."
+              minRows={4}
               disabled={pending}
             />
           </section>
@@ -937,11 +871,13 @@ export function DraftStudioRedesign({ onAction }: { onAction: (m: string) => voi
           {/* Conclusion */}
           <section className="ds-section">
             <h2 className="ds-section-title">Conclusion</h2>
-            <RichTextEditor
+            <AutoSizeTextarea
+              className="ds-textarea"
               value={briefDraft.conclusion}
               onChange={(val) => handleBriefChange("conclusion", val)}
               onBlur={handleBriefBlur}
               placeholder="Summarize your arguments and reiterate the relief sought..."
+              minRows={4}
               disabled={pending}
             />
           </section>
@@ -949,11 +885,13 @@ export function DraftStudioRedesign({ onAction }: { onAction: (m: string) => voi
           {/* Relief */}
           <section className="ds-section">
             <h2 className="ds-section-title">Relief Sought</h2>
-            <RichTextEditor
+            <AutoSizeTextarea
+              className="ds-textarea"
               value={briefDraft.relief}
               onChange={(val) => handleBriefChange("relief", val)}
               onBlur={handleBriefBlur}
               placeholder="State precisely the orders you are inviting the court to make..."
+              minRows={3}
               disabled={pending}
             />
           </section>
