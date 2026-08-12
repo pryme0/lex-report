@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, FileText, Share2, PenLine, BookOpen, BookText, Gavel, Languages, LogOut, BookMarked, Scale, SlidersHorizontal, X } from "lucide-react";
+import { Search, FileText, Share2, PenLine, BookOpen, BookText, Gavel, Languages, LogOut, BookMarked, Scale, SlidersHorizontal, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { catalogApi, usersApi } from "@/lib/api";
 import { useApiQuery } from "@/lib/api/hooks";
+import { clearTokens } from "@/lib/api/axios";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -22,15 +24,23 @@ const navItems = [
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
-  collapsed?: boolean;
-  onToggleCollapsed?: () => void;
-  peeking?: boolean;
-  onPeekChange?: (peeking: boolean) => void;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
+  peeking: boolean;
+  onPeekChange: (peeking: boolean) => void;
 }
 
-export function Sidebar({ open, onClose, collapsed: _collapsed, onToggleCollapsed: _onToggleCollapsed, peeking: _peeking, onPeekChange: _onPeekChange }: SidebarProps) {
+export function Sidebar({
+  open,
+  onClose,
+  collapsed,
+  onToggleCollapsed,
+  peeking,
+  onPeekChange,
+}: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const expanded = !collapsed || peeking;
   const profileQuery = useApiQuery("users:profile", () => usersApi.profile());
   const profile = profileQuery.data;
   const filtersQuery = useApiQuery("catalog:filters", () => catalogApi.filters());
@@ -38,10 +48,19 @@ export function Sidebar({ open, onClose, collapsed: _collapsed, onToggleCollapse
   const coverageSpan =
     years?.min && years?.max ? `${years.min} – ${years.max}` : "—";
 
-  function logout() {
-    sessionStorage.removeItem("lr-auth");
-    router.push("/");
+  async function logout() {
+    try {
+      await usersApi.logout();
+    } catch {
+      // Local credentials must still be cleared if the server is unavailable.
+    }
+    clearTokens();
+    router.push("/login");
   }
+
+  useEffect(() => {
+    onPeekChange(false);
+  }, [collapsed, onPeekChange]);
 
   function isActive(href: string) {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -49,12 +68,27 @@ export function Sidebar({ open, onClose, collapsed: _collapsed, onToggleCollapse
   }
 
   return (
-    <aside className={cn("sidebar", open && "open")}>
+    <aside
+      className={cn("sidebar", open && "open", !expanded && "rail")}
+      onMouseEnter={() => {
+        if (collapsed) onPeekChange(true);
+      }}
+      onMouseLeave={() => onPeekChange(false)}
+    >
       <div className="sidebar-top">
         <Link href="/dashboard" className="sidebar-brand" onClick={onClose}>
           <div className="sidebar-mark">Lr</div>
           <span className="sidebar-brand-name">LexReport</span>
         </Link>
+        <button
+          className="sidebar-pin"
+          onClick={onToggleCollapsed}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!collapsed}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
+        </button>
         <button className="sidebar-close" onClick={onClose} aria-label="Close menu">
           <X size={16} />
         </button>
@@ -67,8 +101,9 @@ export function Sidebar({ open, onClose, collapsed: _collapsed, onToggleCollapse
             href={href}
             className={cn("nav-item", isActive(href) && "active")}
             onClick={onClose}
+            title={label}
           >
-            <Icon size={16} /> {label}
+            <Icon size={16} /> <span className="nav-label">{label}</span>
           </Link>
         ))}
 
@@ -79,8 +114,9 @@ export function Sidebar({ open, onClose, collapsed: _collapsed, onToggleCollapse
             href="/dashboard/admin"
             className={cn("nav-item", isActive("/dashboard/admin") && "active")}
             onClick={onClose}
+            title="Editorial"
           >
-            <SlidersHorizontal size={16} /> Editorial
+            <SlidersHorizontal size={16} /> <span className="nav-label">Editorial</span>
           </Link>
         )}
 
@@ -88,11 +124,12 @@ export function Sidebar({ open, onClose, collapsed: _collapsed, onToggleCollapse
           href="/dashboard/profile"
           className={cn("nav-item", pathname === "/dashboard/profile" && "active")}
           onClick={onClose}
+          title="Profile"
         >
-          <BookMarked size={16} /> Profile
+          <BookMarked size={16} /> <span className="nav-label">Profile</span>
         </Link>
-        <button className="nav-item" onClick={logout}>
-          <LogOut size={16} /> Log out
+        <button className="nav-item" onClick={logout} title="Log out">
+          <LogOut size={16} /> <span className="nav-label">Log out</span>
         </button>
       </nav>
 
@@ -101,9 +138,9 @@ export function Sidebar({ open, onClose, collapsed: _collapsed, onToggleCollapse
           <div className="coverage-label">Coverage span</div>
           <div className="coverage-range">{coverageSpan}</div>
         </div>
-        <Link href="/dashboard/profile" className="user-chip" onClick={onClose}>
+        <Link href="/dashboard/profile" className="user-chip" onClick={onClose} title={profile?.name ?? "Profile"}>
           <div className="user-avatar">{profile?.initials ?? "···"}</div>
-          <div>
+          <div className="user-chip-info">
             <span className="user-name">{profile?.name ?? "Loading…"}</span>
             <span className="user-role">{profile?.accountRole ?? "—"}</span>
           </div>
