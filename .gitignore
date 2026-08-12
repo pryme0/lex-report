@@ -9,3 +9,4 @@ tsconfig.tsbuildinfo
 # Browser smoke-test and layout-audit output
 smoke/
 audit/
+tmp/

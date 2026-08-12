@@ -417,6 +417,10 @@ function PageBody({
   anchorId?: string;
   showCoatOfArms?: boolean;
 }) {
+  const editorialBlocks = useMemo(
+    () => (page.extraction === "editorial" ? parseJudgmentMarkdown(page.text).blocks : []),
+    [page.extraction, page.text],
+  );
   const lines = page.text.replace(/\r\n/g, "\n").split("\n");
   const markerIndex = lines.findIndex((line) => DECISION_MARKER_RE.test(line.trim()));
   const frontEnd =
@@ -425,7 +429,10 @@ function PageBody({
   const body = lines.slice(Math.max(0, frontEnd)).join("\n");
 
   return (
-    <section id={anchorId} className="judgment-source-page">
+    <section
+      id={anchorId}
+      className={cn("judgment-source-page", page.extraction === "editorial" && "is-editorial")}
+    >
       <header className="judgment-page-running-head">
         <span>Electronic Lex Report</span>
         <button
@@ -441,7 +448,11 @@ function PageBody({
       </header>
 
       <div className="judgment-page-content">
-        {frontLines.length > 0 && (
+        {page.extraction === "editorial" ? (
+          <div className="judgment-page-markdown">
+            <Blocks blocks={editorialBlocks} />
+          </div>
+        ) : frontLines.length > 0 ? (
           <div className="judgment-page-front-matter">
             {showCoatOfArms && (
               <img
@@ -468,22 +479,23 @@ function PageBody({
               );
             })}
           </div>
-        )}
+        ) : null}
 
-        {segmentPageText(body).map((segment, index) =>
-          segment.kind === "heading" ? (
-            <h3 key={index} className="judgment-page-heading">
-              {segment.text}
-            </h3>
-          ) : (
-            <p
-              key={index}
-              className={cn("judgment-page-paragraph", segment.numbered && "is-numbered")}
-            >
-              {segment.text}
-            </p>
-          ),
-        )}
+        {page.extraction !== "editorial" &&
+          segmentPageText(body).map((segment, index) =>
+            segment.kind === "heading" ? (
+              <h3 key={index} className="judgment-page-heading">
+                {segment.text}
+              </h3>
+            ) : (
+              <p
+                key={index}
+                className={cn("judgment-page-paragraph", segment.numbered && "is-numbered")}
+              >
+                {segment.text}
+              </p>
+            ),
+          )}
       </div>
 
       <footer className="judgment-page-footer">
@@ -578,6 +590,7 @@ function PaginatedJudgment({
               >
                 <span>Page {page.number}</span>
                 {page.extraction === "ocr" && <small>OCR</small>}
+                {page.extraction === "editorial" && <small>Editorial</small>}
               </button>
             ))}
           </div>

@@ -584,6 +584,37 @@
   text-indent: -1.4em;
 }
 
+.judgment-source-page.is-editorial {
+  min-height: 980px;
+}
+
+/* Legacy archive records retain Markdown in their editorial page text. Reuse the
+   judgment block renderer, but tune its spacing to the printed-page surface. */
+.judgment-page-markdown .judgment-heading:first-child,
+.judgment-page-markdown .judgment-opinion:first-child,
+.judgment-page-markdown .judgment-coram:first-child,
+.judgment-page-markdown .judgment-para:first-child {
+  margin-top: 0;
+}
+
+.judgment-page-markdown .judgment-heading--h1 {
+  font-size: 1.45em;
+}
+
+.judgment-page-markdown .judgment-heading--h2 {
+  font-size: 1.18em;
+}
+
+.judgment-page-markdown .judgment-heading--h3,
+.judgment-page-markdown .judgment-heading--h4 {
+  font-size: 0.92em;
+}
+
+.judgment-page-markdown .judgment-para {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
 .judgment-page-footer {
   display: grid;
   place-items: center;
