@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   Plus, ChevronDown, ChevronRight, Trash2,
   ArrowUp, ArrowDown, Download, List, Search,
+  PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
 import { AutoSizeInput, AutoSizeTextarea } from "@/components/AutoSizeInput";
 import { cn } from "@/lib/utils";
@@ -117,6 +118,8 @@ function CasesSidebar({
   activeIssueId,
   matterLinked,
   pending,
+  collapsed,
+  onToggle,
 }: {
   cases: SavedCase[];
   onAddToIssue: (caseId: string) => void;
@@ -125,6 +128,8 @@ function CasesSidebar({
   activeIssueId: string | null;
   matterLinked: boolean;
   pending?: boolean;
+  collapsed: boolean;
+  onToggle: () => void;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<CaseSummary[] | null>(null);
@@ -160,7 +165,18 @@ function CasesSidebar({
   const isSearching = searchQuery.trim().length > 0;
 
   return (
-    <aside className="studio-sidebar">
+    <aside className={cn("studio-sidebar", collapsed && "collapsed")}>
+      <div className="studio-sidebar-header">
+        {!collapsed && <span className="studio-sidebar-title">Cases</span>}
+        <button
+          className="studio-sidebar-toggle"
+          onClick={onToggle}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+        </button>
+      </div>
+
       <div className="studio-search-box">
         <Search size={14} className="studio-search-icon" />
         <input
@@ -818,6 +834,7 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
     { kind: "new-draft" } | { kind: "link-matter"; matterId: string } | null
   >(null);
   const [draftsOpen, setDraftsOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const draftsTriggerRef = useRef<HTMLButtonElement>(null);
   const draftsMenuRef = useDismissable<HTMLDivElement>(draftsOpen, () => setDraftsOpen(false), draftsTriggerRef);
 
@@ -1430,7 +1447,7 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
         </p>
       )}
 
-      <div className="studio-body">
+      <div className={cn("studio-body", sidebarCollapsed && "sidebar-collapsed")}>
         <CasesSidebar
           cases={draft.cases}
           onAddToIssue={handleAddToIssue}
@@ -1439,6 +1456,8 @@ export function DraftStudio({ onAction }: { onAction: (m: string) => void }) {
           activeIssueId={tab === "arguments" ? activeIssueId : null}
           matterLinked={Boolean(draft.matterId)}
           pending={pending}
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
 
         <div className="studio-main">

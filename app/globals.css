@@ -1127,6 +1127,7 @@ dl, dd { margin: 0; }
 .studio-tab.active { color: var(--color-ink); border-bottom-color: var(--color-g-600); }
 
 .studio-body { display: grid; grid-template-columns: 280px 1fr; flex: 1; overflow: hidden; }
+.studio-body.sidebar-collapsed { grid-template-columns: 48px 1fr; }
 
 .studio-sidebar {
   border-right: 1px solid var(--color-line); background: var(--color-paper);
@@ -1156,13 +1157,34 @@ dl, dd { margin: 0; }
 }
 .studio-case-list { flex: 1; overflow-y: auto; }
 
-.studio-case-item { border-bottom: 1px solid var(--color-line); }
+.studio-case-item { border-bottom: 1px solid var(--color-line); padding: 12px 14px; }
 .studio-case-item.open { background: #fdfcfa; }
-.studio-case-row { display: flex; align-items: flex-start; gap: 8px; padding: 11px 12px 10px; }
+.studio-case-row { display: flex; align-items: flex-start; gap: 8px; }
 .studio-case-info { flex: 1; min-width: 0; }
 .studio-case-name { font-size: 0.775rem; font-weight: 600; color: var(--color-body); line-height: 1.35; margin-bottom: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .studio-case-cite { font-size: 0.68rem; font-weight: 700; color: var(--color-g-500); margin-bottom: 5px; }
 .studio-case-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+/* Sidebar toggle */
+.studio-sidebar-toggle {
+  display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border: none; background: transparent;
+  color: var(--color-muted); cursor: pointer; border-radius: var(--radius-sm);
+  transition: background 0.12s, color 0.12s;
+}
+.studio-sidebar-toggle:hover { background: var(--color-panel); color: var(--color-body); }
+.studio-sidebar-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-bottom: 1px solid var(--color-line); flex-shrink: 0;
+}
+.studio-sidebar-title {
+  font-size: 0.75rem; font-weight: 600; color: var(--color-body); text-transform: uppercase; letter-spacing: 0.03em;
+}
+.studio-sidebar.collapsed { width: 48px; min-width: 48px; }
+.studio-sidebar.collapsed .studio-search-box,
+.studio-sidebar.collapsed .studio-sidebar-label,
+.studio-sidebar.collapsed .studio-case-list { display: none; }
+.studio-sidebar.collapsed .studio-sidebar-header { justify-content: center; padding: 10px; border-bottom: none; }
 .studio-add-auth { font-size: 0.63rem !important; height: 22px !important; padding: 0 8px !important; }
 
 .studio-note-toggle {
