@@ -1187,6 +1187,7 @@ function SuggestionRow({
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function FirmLibrary({ onAction }: { onAction: (m: string) => void }) {
   const [open, setOpen] = useState<string | null>(null);
   const [areaFilter, setAreaFilter] = useState("All");
@@ -1669,7 +1670,7 @@ function LibraryContent({ onGoToDraftStudio, onAction }: {
   const tabs: { id: LibTab; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
     { id: "saves",   label: "My saves",     icon: Folder },
     { id: "matters", label: "Matters",      icon: Briefcase },
-    { id: "firm",    label: "Firm library", icon: BookOpen },
+    // { id: "firm",    label: "Firm library", icon: BookOpen }, // Firm functionality disabled for now
   ];
 
   return (
@@ -1698,7 +1699,7 @@ function LibraryContent({ onGoToDraftStudio, onAction }: {
             onAction={onAction}
           />
         )}
-        {tab === "firm"    && <FirmLibrary onAction={onAction} />}
+        {/* tab === "firm" && <FirmLibrary onAction={onAction} /> */}
       </div>
     </div>
   );
