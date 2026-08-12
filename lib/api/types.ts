@@ -44,7 +44,7 @@ export type CaseSummary = {
 export type SourcePage = {
   number: number;
   text: string;
-  extraction: "text" | "ocr";
+  extraction: "text" | "ocr" | "editorial";
   citation: string;
 };
 
