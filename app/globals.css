@@ -1881,6 +1881,138 @@ dl, dd { margin: 0; }
   border-color: var(--color-g-300);
 }
 
+/* ─── Rich Text Editor ─────────────────────────────────────────────────────── */
+.ds-rich-editor-wrap {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow: hidden;
+}
+
+.ds-rich-editor-wrap:focus-within {
+  border-color: var(--color-g-300);
+}
+
+.ds-rich-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px;
+  background: var(--color-panel);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.ds-rich-toolbar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: all 100ms ease;
+}
+
+.ds-rich-toolbar button:hover:not(:disabled) {
+  background: var(--color-line);
+  color: var(--color-ink);
+}
+
+.ds-rich-toolbar button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ds-toolbar-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--color-line-2);
+  margin: 0 6px;
+}
+
+.ds-rich-editor {
+  min-height: 100px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--color-ink);
+  outline: none;
+}
+
+.ds-rich-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-faint);
+  pointer-events: none;
+}
+
+.ds-rich-editor ul,
+.ds-rich-editor ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.ds-rich-editor li {
+  margin: 4px 0;
+}
+
+/* ─── Tag Input ────────────────────────────────────────────────────────────── */
+.ds-tag-input-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 10px;
+  min-height: 42px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: #fff;
+  cursor: text;
+}
+
+.ds-tag-input-container:focus-within {
+  border-color: var(--color-g-300);
+}
+
+.ds-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: var(--color-g-50);
+  border: 1px solid var(--color-g-100);
+  border-radius: 4px;
+  font-size: 0.82rem;
+  color: var(--color-ink);
+}
+
+.ds-tag-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.ds-tag-remove:hover {
+  background: var(--color-rose-bg);
+  color: var(--color-rose);
+}
+
+.ds-tag-input {
+  flex: 1;
+  min-width: 120px;
+  border: none;
+  background: transparent;
+  font-size: 0.85rem;
+  outline: none;
+}
+
 .ds-add-auth-btn {
   display: flex;
   align-items: center;
