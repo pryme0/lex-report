@@ -327,8 +327,11 @@
 }
 
 .case-snippet strong {
-  color: var(--color-g-700);
-  font-weight: 700;
+  background: #c6f6a8;
+  color: var(--color-ink);
+  font-weight: 600;
+  padding: 1px 2px;
+  border-radius: 2px;
 }
 
 /* ─── Pagination ────────────────────────────────────────────────────────── */
@@ -635,8 +638,11 @@
 }
 
 .search-palette-hit-snippet strong {
-  color: var(--color-g-600);
-  font-weight: 700;
+  background: #c6f6a8;
+  color: var(--color-ink);
+  font-weight: 600;
+  padding: 1px 2px;
+  border-radius: 2px;
 }
 
 .search-palette-footer {
