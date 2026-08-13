@@ -4,25 +4,28 @@ export type PinpointCitation = {
   year: number;
   elrNumber: number;
   courtCode: string;
-  page: number;
+  /** Absent when the query was a bare citation with no pinpoint page. */
+  page: number | null;
   reportCitation: string;
   lookup: string;
 };
 
-const PINPOINT_CITATION_RE =
-  /^\s*\((\d{4})\)\s+ELR[-\s](\d+)\s+\(([A-Z]+)\)\s*,?\s*p(?:age)?\.?\s*(\d+)\s*$/i;
+// Page suffix (", p. 12" / "page 12") is optional so a bare citation like
+// "(2025) ELR-000150 (SC)" is recognized too, not just pinpoint cites.
+const CITATION_RE =
+  /^\s*\((\d{4})\)\s+ELR[-\s](\d+)\s+\(([A-Z]+)\)\s*(?:,?\s*p(?:age)?\.?\s*(\d+))?\s*$/i;
 
 export function parsePinpointCitation(value: string): PinpointCitation | null {
-  const match = PINPOINT_CITATION_RE.exec(value);
+  const match = CITATION_RE.exec(value);
   if (!match) return null;
 
   const year = Number(match[1]);
   const elrNumber = Number(match[2]);
   const courtCode = match[3].toUpperCase();
-  const page = Number(match[4]);
-  if (!Number.isSafeInteger(elrNumber) || elrNumber < 1 || !Number.isSafeInteger(page) || page < 1) {
-    return null;
-  }
+  const pageRaw = match[4];
+  const page = pageRaw !== undefined ? Number(pageRaw) : null;
+  if (!Number.isSafeInteger(elrNumber) || elrNumber < 1) return null;
+  if (page !== null && (!Number.isSafeInteger(page) || page < 1)) return null;
 
   const lookup = `ELR-${String(elrNumber).padStart(6, "0")}`;
   return {

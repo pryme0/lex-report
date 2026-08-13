@@ -10,7 +10,7 @@ import { SearchPagination } from "./SearchPagination";
 import { SearchSyntaxHelp } from "./SearchSyntaxHelp";
 import { AsyncSection, ErrorState } from "./AsyncState";
 import { casesApi, catalogApi, draftsApi, researchApi } from "@/lib/api";
-import type { CaseSearchParams, CaseSort, Paginated, CaseSummary } from "@/lib/api";
+import type { CaseIndexItem, CaseSearchParams, CaseSort, Paginated, CaseSummary } from "@/lib/api";
 import { useApiMutation, useApiQuery } from "@/lib/api/hooks";
 import {
   parseResearchUrl,
@@ -23,7 +23,7 @@ import { useDashboard } from "@/contexts/DashboardContext";
 import { cn } from "@/lib/utils";
 import { tcls } from "@/lib/types";
 import { routes } from "@/lib/routes";
-import { matchingPinpointCase, parsePinpointCitation } from "@/lib/search/pinpoint-citation";
+import { parsePinpointCitation } from "@/lib/search/pinpoint-citation";
 
 const DRAFT_STORAGE_KEY = "lr-draft-id";
 const ARCHIVE_ID = /^[A-Z]{2,4}-\d+$/;
@@ -56,7 +56,13 @@ function ResearchContent() {
   const [filtersExpanded, setFiltersExpanded] = useState(false);
 
   const createDraft = useApiMutation(() => draftsApi.create({}));
-  const resolvePinpoint = useApiMutation((lookup: string) => casesApi.index(lookup));
+  const resolveCitation = useApiMutation((elrNumber: number) =>
+    casesApi.citationLookup(elrNumber),
+  );
+  const [citationNotice, setCitationNotice] = useState<{
+    reportCitation: string;
+    closest: CaseIndexItem[];
+  } | null>(null);
 
   useEffect(() => {
     if (urlKey === lastSyncedUrl.current) return;
@@ -129,17 +135,26 @@ function ResearchContent() {
 
   const runSearch = useCallback(async () => {
     const value = queryInput.trim();
+    setCitationNotice(null);
     const pinpoint = parsePinpointCitation(value);
     if (pinpoint) {
-      const matches = await resolvePinpoint.mutate(pinpoint.lookup);
-      const matchedCase = matchingPinpointCase(matches, pinpoint);
-      if (matchedCase) {
-        router.push(routes.casePage(matchedCase.id, pinpoint.page));
+      const result = await resolveCitation.mutate(pinpoint.elrNumber);
+      if (result?.exact) {
+        router.push(
+          pinpoint.page !== null
+            ? routes.casePage(result.exact.id, pinpoint.page)
+            : routes.case(result.exact.id),
+        );
         return;
       }
+      setCitationNotice({
+        reportCitation: pinpoint.reportCitation,
+        closest: result?.closest ?? [],
+      });
+      return;
     }
     patchState({ q: value, page: 1 });
-  }, [queryInput, patchState, resolvePinpoint, router]);
+  }, [queryInput, patchState, resolveCitation, router]);
 
   const updateFilters = useCallback((next: ResearchFilterState) => {
     setResearchState((prev) => ({
@@ -210,12 +225,36 @@ function ResearchContent() {
           <button
             className="btn btn-primary"
             onClick={() => void runSearch()}
-            disabled={resolvePinpoint.pending}
+            disabled={resolveCitation.pending}
           >
-            {resolvePinpoint.pending ? "Opening page…" : "Search corpus"}
+            {resolveCitation.pending ? "Locating citation…" : "Search corpus"}
           </button>
         </div>
       </div>
+
+      {citationNotice && (
+        <div className="search-citation-notice">
+          <p>
+            No judgment matches &ldquo;{citationNotice.reportCitation}&rdquo;
+            {citationNotice.closest.length > 0 ? ". Closest citations:" : "."}
+          </p>
+          {citationNotice.closest.length > 0 && (
+            <ul className="search-citation-closest">
+              {citationNotice.closest.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => router.push(routes.case(item.id))}
+                  >
+                    {item.citation} — {item.title}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <ResearchFilters
         archive={filtersQuery.data}
