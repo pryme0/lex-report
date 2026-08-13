@@ -647,7 +647,7 @@ function PaginatedJudgment({
               <PageBody
                 page={page}
                 anchorId={print ? undefined : `source-page-${page.number}`}
-                showCoatOfArms={index === 0}
+                showCoatOfArms={index === 0 && page.extraction !== "ocr"}
                 frontMatter={
                   markerPageIndex >= 0 && index < markerPageIndex
                     ? "all"
