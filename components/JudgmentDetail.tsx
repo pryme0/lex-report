@@ -16,6 +16,9 @@ import { JudgmentFrontMatter } from "./JudgmentFrontMatter";
 import { JudgmentText } from "./JudgmentText";
 import { copyText, judgmentCitation } from "@/lib/judgment";
 import { statuteHref } from "@/lib/routes";
+import { AIChatButton, AIChatPanel } from "./ai-chat";
+import { useAIChat } from "@/hooks/useAIChat";
+import type { CaseContext } from "./ai-chat/types";
 
 type DetailTab = "judgment" | "headnote" | "citator";
 
@@ -204,7 +207,22 @@ export function JudgmentDetail({
   variant?: "overlay" | "page";
 }) {
   const [tab, setTab] = useState<DetailTab>("judgment");
+  const [chatOpen, setChatOpen] = useState(false);
   const query = useApiQuery(`case:${caseId}`, () => casesApi.detail(caseId));
+
+  const caseContext: CaseContext = query.data
+    ? {
+        id: query.data.id,
+        title: query.data.title,
+        citation: judgmentCitation(query.data),
+        court: query.data.court,
+        year: query.data.year,
+        ratio: query.data.ratio,
+        holding: query.data.holding,
+      }
+    : { id: caseId, title: "Loading...", citation: "", court: "", year: 0, ratio: "", holding: "" };
+
+  const { messages, isLoading, sendMessage } = useAIChat({ caseContext });
 
   useEffect(() => {
     setTab("judgment");
@@ -298,6 +316,20 @@ export function JudgmentDetail({
           </>
         )}
       </AsyncSection>
+
+      {variant === "page" && (
+        <>
+          <AIChatButton isOpen={chatOpen} onClick={() => setChatOpen(!chatOpen)} />
+          <AIChatPanel
+            isOpen={chatOpen}
+            onClose={() => setChatOpen(false)}
+            caseContext={caseContext}
+            messages={messages}
+            isLoading={isLoading}
+            onSend={sendMessage}
+          />
+        </>
+      )}
     </div>
   );
 }
