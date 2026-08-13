@@ -116,6 +116,11 @@ export type CaseDetail = CaseSummary & {
 
 export type CaseIndexItem = { id: string; title: string; citation: string };
 
+export type CaseCitationLookupResult = {
+  exact: CaseIndexItem | null;
+  closest: CaseIndexItem[];
+};
+
 export type Citator = {
   standing: Standing;
   standingBasis: string;

@@ -5,6 +5,7 @@ import type {
   AuthorityMap,
   Brief,
   BundleDetails,
+  CaseCitationLookupResult,
   CaseDetail,
   CaseIndexItem,
   CaseSearchParams,
@@ -74,6 +75,8 @@ export const casesApi = {
   search: (params: CaseSearchParams = {}) =>
     http.get<Paginated<CaseSummary>>(`/cases/search${searchQuery(params)}`),
   index: (q?: string) => http.get<CaseIndexItem[]>(`/cases/index${buildQuery({ q })}`),
+  citationLookup: (elrNumber: number) =>
+    http.get<CaseCitationLookupResult>(`/cases/citation-lookup${buildQuery({ elrNumber })}`),
   detail: (id: string) => http.get<CaseDetail>(`/cases/${encodeURIComponent(id)}`),
   citator: (id: string) => http.get<Citator>(`/cases/${encodeURIComponent(id)}/citator`),
   citationGraph: (id: string) =>
