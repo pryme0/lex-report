@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Plus, Trash2, Search, GripVertical, FileText, Eye, EyeOff,
+  Plus, Trash2, Search, GripVertical, Eye, EyeOff,
   Download, ChevronDown, ChevronRight, X, Check,
 } from "lucide-react";
 import { AutoSizeTextarea } from "@/components/AutoSizeInput";
@@ -30,6 +30,12 @@ const NIGERIAN_STATES = [
 ];
 
 const DRAFT_STORAGE_KEY = "lr-draft-id";
+
+// Strip HTML tags from content (cleanup from old rich text editor)
+function stripHtml(html: string): string {
+  if (!html) return "";
+  return html.replace(/<[^>]*>/g, "").trim();
+}
 
 type IssueEdit = { text: string; submission: string };
 
@@ -616,12 +622,21 @@ export function DraftStudioRedesign({ onAction }: { onAction: (m: string) => voi
     setIssueEdits((prev) => {
       const next: Record<string, IssueEdit> = {};
       for (const issue of draft.issues) {
-        next[issue.id] = prev[issue.id] ?? { text: issue.text, submission: issue.submission };
+        next[issue.id] = prev[issue.id] ?? {
+          text: stripHtml(issue.text),
+          submission: stripHtml(issue.submission)
+        };
       }
       return next;
     });
     setDetailsDraft(draft.bundleDetails);
-    setBriefDraft(draft.brief);
+    // Strip HTML from brief fields (cleanup from old rich text editor)
+    setBriefDraft({
+      ...draft.brief,
+      intro: stripHtml(draft.brief.intro),
+      conclusion: stripHtml(draft.brief.conclusion),
+      relief: stripHtml(draft.brief.relief),
+    });
   }, [draft]);
 
   // Mutations
@@ -768,29 +783,23 @@ export function DraftStudioRedesign({ onAction }: { onAction: (m: string) => voi
 
   return (
     <div className="ds-container">
-      {/* Header */}
-      <header className="ds-header">
-        <div className="ds-header-left">
-          <FileText size={20} />
-          <h1>Draft Studio</h1>
-        </div>
-        <div className="ds-header-actions">
-          <button
-            className={cn("btn btn-ghost btn-sm", showPreview && "active")}
-            onClick={() => setShowPreview(!showPreview)}
-          >
-            {showPreview ? <EyeOff size={14} /> : <Eye size={14} />}
-            {showPreview ? "Hide Preview" : "Preview"}
-          </button>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => handleExport("pdf")}
-            disabled={exportMut.pending}
-          >
-            <Download size={14} /> Export PDF
-          </button>
-        </div>
-      </header>
+      {/* Action Bar */}
+      <div className="ds-action-bar">
+        <button
+          className={cn("btn btn-ghost btn-sm", showPreview && "active")}
+          onClick={() => setShowPreview(!showPreview)}
+        >
+          {showPreview ? <EyeOff size={14} /> : <Eye size={14} />}
+          {showPreview ? "Hide Preview" : "Preview"}
+        </button>
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={() => handleExport("pdf")}
+          disabled={exportMut.pending}
+        >
+          <Download size={14} /> Export PDF
+        </button>
+      </div>
 
       <div className={cn("ds-workspace", showPreview && "with-preview")}>
         {/* Main Content */}

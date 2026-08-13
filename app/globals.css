@@ -1697,6 +1697,15 @@ dl, dd { margin: 0; }
   background: var(--color-bg);
 }
 
+.ds-action-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--color-paper);
+  border-bottom: 1px solid var(--color-line);
+}
+
 .ds-header {
   display: flex;
   align-items: center;
