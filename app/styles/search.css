@@ -324,6 +324,10 @@
   border-left: 2px solid var(--color-g-200);
   background: var(--color-bg);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .case-snippet strong {
