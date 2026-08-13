@@ -24,7 +24,12 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [graphCaseId, setGraphCaseId] = useState<string | null>(null);
   const [toast, setToast] = useState("");
 
-  const openCase = useCallback((id: string) => setSelectedCaseId(id), []);
+  const openCase = useCallback(
+    (id: string) => {
+      router.push(`/dashboard/cases/${encodeURIComponent(id)}`);
+    },
+    [router],
+  );
   const closeCase = useCallback(() => setSelectedCaseId(null), []);
 
   const viewGraph = useCallback(
