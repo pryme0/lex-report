@@ -325,7 +325,84 @@
   border-color: var(--color-g-300);
 }
 
-/* ─── Typing Indicator ─────────────────────────────────────────────────────── */
+/* ─── Status & Tool Calls ──────────────────────────────────────────────────── */
+.ai-chat-status {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+}
+
+.ai-chat-thinking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
+
+.ai-chat-tool-calls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-chat-tool-call {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: var(--color-panel);
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
+.ai-chat-tool-call-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-body);
+  font-weight: 500;
+}
+
+.ai-chat-tool-call-in_progress .ai-chat-tool-call-header {
+  color: var(--color-g-600);
+}
+
+.ai-chat-tool-call-completed .ai-chat-tool-call-header {
+  color: var(--color-g-700);
+}
+
+.ai-chat-tool-call-error .ai-chat-tool-call-header {
+  color: var(--color-rose);
+}
+
+.ai-chat-tool-check {
+  color: var(--color-g-600);
+}
+
+.ai-chat-tool-error {
+  color: var(--color-rose);
+}
+
+.ai-chat-tool-call-result {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  padding-left: 24px;
+}
+
+.ai-chat-spinner {
+  animation: ai-chat-spin 1s linear infinite;
+}
+
+@keyframes ai-chat-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Typing Indicator (legacy) ────────────────────────────────────────────── */
 .ai-chat-typing {
   display: flex;
   align-items: center;
@@ -336,14 +413,6 @@
   border-radius: 4px 16px 16px 16px;
   font-size: 0.82rem;
   color: var(--color-muted);
-}
-
-.ai-chat-spinner {
-  animation: ai-chat-spin 1s linear infinite;
-}
-
-@keyframes ai-chat-spin {
-  to { transform: rotate(360deg); }
 }
 
 /* ─── Chat Input ───────────────────────────────────────────────────────────── */

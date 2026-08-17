@@ -8,12 +8,21 @@ import { ChatMessages } from "./ChatMessages";
 import { ChatInput } from "./ChatInput";
 import { ContextBadge } from "./ContextBadge";
 
+interface ToolCallState {
+  tool: string;
+  label: string;
+  status: "in_progress" | "completed" | "error";
+  result?: string;
+}
+
 interface AIChatPanelProps {
   isOpen: boolean;
   onClose: () => void;
   caseContext: CaseContext;
   messages: ChatMessage[];
   isLoading?: boolean;
+  thinkingMessage?: string | null;
+  toolCalls?: ToolCallState[];
   onSend: (message: string, mode: ChatMode) => void;
   onAction?: (action: ChatAction) => void;
   onSuggestionClick?: (suggestion: string) => void;
@@ -25,6 +34,8 @@ export function AIChatPanel({
   caseContext,
   messages,
   isLoading,
+  thinkingMessage,
+  toolCalls,
   onSend,
   onAction,
   onSuggestionClick,
@@ -52,7 +63,13 @@ export function AIChatPanel({
       <ChatHeader mode={mode} onModeChange={setMode} onClose={onClose} />
       <ContextBadge caseContext={caseContext} />
       <div className="ai-chat-body" onClick={handleSuggestionClick}>
-        <ChatMessages messages={messages} isLoading={isLoading} onAction={onAction} />
+        <ChatMessages
+          messages={messages}
+          isLoading={isLoading}
+          thinkingMessage={thinkingMessage}
+          toolCalls={toolCalls}
+          onAction={onAction}
+        />
       </div>
       <ChatInput onSend={handleSend} disabled={isLoading} />
     </div>

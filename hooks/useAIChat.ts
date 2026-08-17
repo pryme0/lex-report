@@ -1,36 +1,36 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import type { ChatMessage, ChatMode, CaseContext, ChatAction } from "@/components/ai-chat/types";
+import { useState, useCallback, useRef } from "react";
+import type { ChatMessage, ChatMode, CaseContext } from "@/components/ai-chat/types";
 import { getAccessToken } from "@/lib/api/axios";
 
 interface UseAIChatOptions {
   caseContext: CaseContext;
 }
 
-interface LexChatResponse {
-  content: string;
-  citations?: Array<{
-    caseId: string;
-    title: string;
-    citation: string;
-    relevance?: string;
-  }>;
-  actions?: Array<{
-    type: "send_to_draft" | "view_case" | "search_more";
-    label: string;
-    payload?: Record<string, unknown>;
-  }>;
-  toolsUsed?: string[];
+interface ToolCallState {
+  tool: string;
+  label: string;
+  status: "in_progress" | "completed" | "error";
+  result?: string;
 }
 
 export function useAIChat({ caseContext }: UseAIChatOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [thinkingMessage, setThinkingMessage] = useState<string | null>(null);
+  const [toolCalls, setToolCalls] = useState<ToolCallState[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const sendMessage = useCallback(
     async (content: string, mode: ChatMode) => {
+      // Cancel any existing request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+
       const userMessage: ChatMessage = {
         id: `user-${Date.now()}`,
         role: "user",
@@ -41,9 +41,25 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
       setMessages((prev) => [...prev, userMessage]);
       setIsLoading(true);
       setError(null);
+      setThinkingMessage(null);
+      setToolCalls([]);
+
+      // Create placeholder for AI response
+      const aiMessageId = `ai-${Date.now()}`;
+      let streamedContent = "";
+      let citations: ChatMessage["citations"] = [];
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: aiMessageId,
+          role: "assistant",
+          content: "",
+          timestamp: new Date(),
+        },
+      ]);
 
       try {
-        // Build history from previous messages
         const history = messages.map((msg) => ({
           role: msg.role,
           content: msg.content,
@@ -72,6 +88,7 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
                 holding: caseContext.holding,
               },
             }),
+            signal: abortControllerRef.current.signal,
           }
         );
 
@@ -79,22 +96,109 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
           throw new Error(`Failed to get response: ${response.statusText}`);
         }
 
-        const data: LexChatResponse = await response.json();
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error("No response body");
+        }
 
-        const aiMessage: ChatMessage = {
-          id: `ai-${Date.now()}`,
-          role: "assistant",
-          content: data.content,
-          timestamp: new Date(),
-          citations: data.citations,
-          actions: data.actions,
-        };
+        const decoder = new TextDecoder();
+        let buffer = "";
 
-        setMessages((prev) => [...prev, aiMessage]);
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          let currentEvent = "";
+
+          for (const line of lines) {
+            if (line.startsWith("event: ")) {
+              currentEvent = line.slice(7).trim();
+            } else if (line.startsWith("data: ") && currentEvent) {
+              try {
+                const data = JSON.parse(line.slice(6));
+
+                switch (currentEvent) {
+                  case "thinking":
+                    setThinkingMessage(data.message);
+                    break;
+
+                  case "tool_call":
+                    setToolCalls((prev) => [
+                      ...prev,
+                      {
+                        tool: data.tool,
+                        label: data.label,
+                        status: "in_progress",
+                      },
+                    ]);
+                    break;
+
+                  case "tool_result":
+                    setToolCalls((prev) =>
+                      prev.map((tc) =>
+                        tc.tool === data.tool && tc.status === "in_progress"
+                          ? {
+                              ...tc,
+                              status: data.success ? "completed" : "error",
+                              result: data.summary || data.error,
+                            }
+                          : tc
+                      )
+                    );
+                    break;
+
+                  case "content":
+                    streamedContent += data.text;
+                    setMessages((prev) =>
+                      prev.map((msg) =>
+                        msg.id === aiMessageId
+                          ? { ...msg, content: streamedContent }
+                          : msg
+                      )
+                    );
+                    setThinkingMessage(null);
+                    break;
+
+                  case "done":
+                    if (data.citations) {
+                      citations = data.citations;
+                      setMessages((prev) =>
+                        prev.map((msg) =>
+                          msg.id === aiMessageId
+                            ? { ...msg, citations }
+                            : msg
+                        )
+                      );
+                    }
+                    setThinkingMessage(null);
+                    break;
+
+                  case "error":
+                    throw new Error(data.message || "Stream error");
+                }
+
+                currentEvent = "";
+              } catch (parseError) {
+                // Skip malformed JSON
+              }
+            }
+          }
+        }
       } catch (err) {
+        if ((err as Error).name === "AbortError") {
+          return;
+        }
         setError(err instanceof Error ? err.message : "Failed to get response");
+        // Remove the empty AI message on error
+        setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
       } finally {
         setIsLoading(false);
+        setThinkingMessage(null);
+        setToolCalls([]);
       }
     },
     [caseContext, messages]
@@ -103,13 +207,27 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
   const clearMessages = useCallback(() => {
     setMessages([]);
     setError(null);
+    setThinkingMessage(null);
+    setToolCalls([]);
+  }, []);
+
+  const cancelRequest = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setIsLoading(false);
+      setThinkingMessage(null);
+      setToolCalls([]);
+    }
   }, []);
 
   return {
     messages,
     isLoading,
     error,
+    thinkingMessage,
+    toolCalls,
     sendMessage,
     clearMessages,
+    cancelRequest,
   };
 }
