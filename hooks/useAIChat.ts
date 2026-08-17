@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import type { ChatMessage, ChatMode, CaseContext, ChatAction } from "@/components/ai-chat/types";
-import { getToken } from "@/lib/api/axios";
+import { getAccessToken } from "@/lib/api/axios";
 
 interface UseAIChatOptions {
   caseContext: CaseContext;
@@ -49,7 +49,7 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
           content: msg.content,
         }));
 
-        const token = getToken();
+        const token = getAccessToken();
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/lex/chat`,
           {
