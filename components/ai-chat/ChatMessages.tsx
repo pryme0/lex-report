@@ -13,10 +13,16 @@ interface ToolCallState {
   result?: string;
 }
 
+interface AgentStep {
+  type: "reasoning" | "planning" | "reflecting";
+  message: string;
+  timestamp: Date;
+}
+
 interface ChatMessagesProps {
   messages: ChatMessage[];
   isLoading?: boolean;
-  thinkingMessage?: string | null;
+  agentSteps?: AgentStep[];
   toolCalls?: ToolCallState[];
   onAction?: (action: ChatAction) => void;
 }
@@ -27,10 +33,16 @@ const TOOL_ICONS: Record<string, typeof Search> = {
   get_citator: Link2,
 };
 
+const STEP_ICONS: Record<AgentStep["type"], string> = {
+  reasoning: "💭",
+  planning: "📋",
+  reflecting: "🔍",
+};
+
 export function ChatMessages({
   messages,
   isLoading,
-  thinkingMessage,
+  agentSteps = [],
   toolCalls = [],
   onAction,
 }: ChatMessagesProps) {
@@ -38,7 +50,7 @@ export function ChatMessages({
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading, thinkingMessage, toolCalls]);
+  }, [messages, isLoading, agentSteps, toolCalls]);
 
   if (messages.length === 0 && !isLoading) {
     return (
@@ -62,12 +74,19 @@ export function ChatMessages({
           <AIMessage key={msg.id} message={msg} onAction={onAction} />
         )
       )}
-      {isLoading && (
-        <div className="ai-chat-status">
-          {thinkingMessage && (
-            <div className="ai-chat-thinking">
-              <Loader2 size={14} className="ai-chat-spinner" />
-              <span>{thinkingMessage}</span>
+      {isLoading && (agentSteps.length > 0 || toolCalls.length > 0) && (
+        <div className="ai-chat-agent-status">
+          {agentSteps.length > 0 && (
+            <div className="ai-chat-agent-steps">
+              {agentSteps.map((step, i) => (
+                <div
+                  key={`step-${i}`}
+                  className={`ai-chat-agent-step ai-chat-agent-step-${step.type}`}
+                >
+                  <span className="ai-chat-step-icon">{STEP_ICONS[step.type]}</span>
+                  <span className="ai-chat-step-message">{step.message}</span>
+                </div>
+              ))}
             </div>
           )}
           {toolCalls.length > 0 && (

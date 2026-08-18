@@ -15,11 +15,17 @@ interface ToolCallState {
   result?: string;
 }
 
+interface AgentStep {
+  type: "reasoning" | "planning" | "reflecting";
+  message: string;
+  timestamp: Date;
+}
+
 export function useAIChat({ caseContext }: UseAIChatOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [thinkingMessage, setThinkingMessage] = useState<string | null>(null);
+  const [agentSteps, setAgentSteps] = useState<AgentStep[]>([]);
   const [toolCalls, setToolCalls] = useState<ToolCallState[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -41,7 +47,7 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
       setMessages((prev) => [...prev, userMessage]);
       setIsLoading(true);
       setError(null);
-      setThinkingMessage(null);
+      setAgentSteps([]);
       setToolCalls([]);
 
       // Create placeholder for AI response
@@ -122,8 +128,17 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
                 const data = JSON.parse(line.slice(6));
 
                 switch (currentEvent) {
-                  case "thinking":
-                    setThinkingMessage(data.message);
+                  case "reasoning":
+                  case "planning":
+                  case "reflecting":
+                    setAgentSteps((prev) => [
+                      ...prev,
+                      {
+                        type: currentEvent as "reasoning" | "planning" | "reflecting",
+                        message: data.message,
+                        timestamp: new Date(),
+                      },
+                    ]);
                     break;
 
                   case "tool_call":
@@ -160,7 +175,6 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
                           : msg
                       )
                     );
-                    setThinkingMessage(null);
                     break;
 
                   case "done":
@@ -174,7 +188,6 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
                         )
                       );
                     }
-                    setThinkingMessage(null);
                     break;
 
                   case "error":
@@ -197,7 +210,7 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
         setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
       } finally {
         setIsLoading(false);
-        setThinkingMessage(null);
+        setAgentSteps([]);
         setToolCalls([]);
       }
     },
@@ -207,7 +220,7 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
   const clearMessages = useCallback(() => {
     setMessages([]);
     setError(null);
-    setThinkingMessage(null);
+    setAgentSteps([]);
     setToolCalls([]);
   }, []);
 
@@ -215,7 +228,7 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       setIsLoading(false);
-      setThinkingMessage(null);
+      setAgentSteps([]);
       setToolCalls([]);
     }
   }, []);
@@ -224,7 +237,7 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
     messages,
     isLoading,
     error,
-    thinkingMessage,
+    agentSteps,
     toolCalls,
     sendMessage,
     clearMessages,

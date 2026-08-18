@@ -15,13 +15,19 @@ interface ToolCallState {
   result?: string;
 }
 
+interface AgentStep {
+  type: "reasoning" | "planning" | "reflecting";
+  message: string;
+  timestamp: Date;
+}
+
 interface AIChatPanelProps {
   isOpen: boolean;
   onClose: () => void;
   caseContext: CaseContext;
   messages: ChatMessage[];
   isLoading?: boolean;
-  thinkingMessage?: string | null;
+  agentSteps?: AgentStep[];
   toolCalls?: ToolCallState[];
   onSend: (message: string, mode: ChatMode) => void;
   onAction?: (action: ChatAction) => void;
@@ -34,7 +40,7 @@ export function AIChatPanel({
   caseContext,
   messages,
   isLoading,
-  thinkingMessage,
+  agentSteps,
   toolCalls,
   onSend,
   onAction,
@@ -66,7 +72,7 @@ export function AIChatPanel({
         <ChatMessages
           messages={messages}
           isLoading={isLoading}
-          thinkingMessage={thinkingMessage}
+          agentSteps={agentSteps}
           toolCalls={toolCalls}
           onAction={onAction}
         />

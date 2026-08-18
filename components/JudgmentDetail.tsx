@@ -222,7 +222,7 @@ export function JudgmentDetail({
       }
     : { id: caseId, title: "Loading...", citation: "", court: "", year: 0, ratio: "", holding: "" };
 
-  const { messages, isLoading, thinkingMessage, toolCalls, sendMessage } = useAIChat({ caseContext });
+  const { messages, isLoading, agentSteps, toolCalls, sendMessage } = useAIChat({ caseContext });
 
   useEffect(() => {
     setTab("judgment");
@@ -326,7 +326,7 @@ export function JudgmentDetail({
             caseContext={caseContext}
             messages={messages}
             isLoading={isLoading}
-            thinkingMessage={thinkingMessage}
+            agentSteps={agentSteps}
             toolCalls={toolCalls}
             onSend={sendMessage}
           />
