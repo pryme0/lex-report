@@ -5,13 +5,10 @@ import {
   ChevronDown,
   ChevronRight,
   Search,
-  FileText,
-  Link2,
   CheckCircle2,
   CircleDashed,
   AlertCircle,
   Loader2,
-  Clock,
 } from "lucide-react";
 import type { TimelineItem, AssistantTurnState } from "./types";
 import { THINKING_VERBS } from "./types";
@@ -35,12 +32,6 @@ const AnimatedEllipsis = () => {
       {".".repeat(dotCount)}
     </span>
   );
-};
-
-const TOOL_ICONS: Record<string, typeof Search> = {
-  search_cases: Search,
-  get_case_details: FileText,
-  get_citator: Link2,
 };
 
 const getStepIcon = (item: TimelineItem) => {

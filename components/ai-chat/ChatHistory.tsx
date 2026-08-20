@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { MessageSquare, Plus, ChevronLeft, Clock, Trash2 } from "lucide-react";
+import { MessageSquare, Plus, ChevronLeft, Clock } from "lucide-react";
 import type { ChatSession } from "./types";
 import { cn } from "@/lib/utils";
 
