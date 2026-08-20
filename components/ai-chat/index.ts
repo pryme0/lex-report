@@ -7,4 +7,6 @@ export { UserMessage } from "./UserMessage";
 export { AIMessage } from "./AIMessage";
 export { SuggestedActions } from "./SuggestedActions";
 export { ContextBadge } from "./ContextBadge";
+export { WorkTrail } from "./WorkTrail";
+export { ChatHistory } from "./ChatHistory";
 export type * from "./types";

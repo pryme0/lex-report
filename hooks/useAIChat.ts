@@ -1,33 +1,79 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import type { ChatMessage, ChatMode, CaseContext } from "@/components/ai-chat/types";
+import { useState, useCallback, useRef, useEffect } from "react";
+import type {
+  ChatMessage,
+  ChatMode,
+  CaseContext,
+  TimelineItem,
+  AssistantTurnState,
+  ChatSession,
+} from "@/components/ai-chat/types";
+import { TOOL_LABELS } from "@/components/ai-chat/types";
 import { getAccessToken } from "@/lib/api/axios";
 
 interface UseAIChatOptions {
   caseContext: CaseContext;
 }
 
-interface ToolCallState {
-  tool: string;
-  label: string;
-  status: "in_progress" | "completed" | "error";
-  result?: string;
-}
-
-interface AgentStep {
-  type: "reasoning" | "planning" | "reflecting";
-  message: string;
-  timestamp: Date;
-}
-
 export function useAIChat({ caseContext }: UseAIChatOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [agentSteps, setAgentSteps] = useState<AgentStep[]>([]);
-  const [toolCalls, setToolCalls] = useState<ToolCallState[]>([]);
+  const [chatId, setChatId] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+
+  // Current assistant turn state (during streaming)
+  const [assistantTurn, setAssistantTurn] = useState<AssistantTurnState | null>(null);
+
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Load existing chat sessions for this case on mount
+  useEffect(() => {
+    loadChatSessions();
+  }, [caseContext.id]);
+
+  const loadChatSessions = useCallback(async () => {
+    try {
+      const token = getAccessToken();
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/lex/chats?caseId=${caseContext.id}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setSessions(data.sessions || []);
+      }
+    } catch {
+      // Silently fail - sessions are optional
+    }
+  }, [caseContext.id]);
+
+  const loadChat = useCallback(async (sessionId: string) => {
+    try {
+      const token = getAccessToken();
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/lex/chats/${sessionId}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setChatId(sessionId);
+        setMessages(
+          data.messages.map((m: Record<string, unknown>) => ({
+            ...m,
+            timestamp: new Date(m.timestamp as string),
+          }))
+        );
+      }
+    } catch (err) {
+      setError("Failed to load chat history");
+    }
+  }, []);
 
   const sendMessage = useCallback(
     async (content: string, mode: ChatMode) => {
@@ -47,14 +93,19 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
       setMessages((prev) => [...prev, userMessage]);
       setIsLoading(true);
       setError(null);
-      setAgentSteps([]);
-      setToolCalls([]);
 
-      // Create placeholder for AI response
+      // Initialize assistant turn state
       const aiMessageId = `ai-${Date.now()}`;
-      let streamedContent = "";
-      let citations: ChatMessage["citations"] = [];
+      const initialTurn: AssistantTurnState = {
+        messageId: aiMessageId,
+        status: "streaming",
+        text: "",
+        toolTimeline: [],
+        createdAt: new Date(),
+      };
+      setAssistantTurn(initialTurn);
 
+      // Create placeholder AI message
       setMessages((prev) => [
         ...prev,
         {
@@ -62,8 +113,13 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
           role: "assistant",
           content: "",
           timestamp: new Date(),
+          toolTimeline: [],
         },
       ]);
+
+      let streamedContent = "";
+      let finalTimeline: TimelineItem[] = [];
+      let newChatId = chatId;
 
       try {
         const history = messages.map((msg) => ({
@@ -84,6 +140,7 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
               message: content,
               mode,
               history,
+              chatId,
               caseContext: {
                 id: caseContext.id,
                 title: caseContext.title,
@@ -128,46 +185,122 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
                 const data = JSON.parse(line.slice(6));
 
                 switch (currentEvent) {
-                  case "reasoning":
-                  case "planning":
-                  case "reflecting":
-                    setAgentSteps((prev) => [
-                      ...prev,
-                      {
-                        type: currentEvent as "reasoning" | "planning" | "reflecting",
-                        message: data.message,
-                        timestamp: new Date(),
-                      },
-                    ]);
+                  case "stream_start":
+                    if (data.chatId) {
+                      newChatId = data.chatId;
+                      setChatId(data.chatId);
+                    }
                     break;
 
-                  case "tool_call":
-                    setToolCalls((prev) => [
-                      ...prev,
-                      {
-                        tool: data.tool,
-                        label: data.label,
-                        status: "in_progress",
-                      },
-                    ]);
-                    break;
-
-                  case "tool_result":
-                    setToolCalls((prev) =>
-                      prev.map((tc) =>
-                        tc.tool === data.tool && tc.status === "in_progress"
-                          ? {
-                              ...tc,
-                              status: data.success ? "completed" : "error",
-                              result: data.summary || data.error,
-                            }
-                          : tc
-                      )
+                  case "status": {
+                    const statusItem: TimelineItem = {
+                      id: `status-${Date.now()}-${Math.random()}`,
+                      type: "status",
+                      label: data.label || data.message || "Processing",
+                      state: "running",
+                      createdAt: new Date(),
+                    };
+                    setAssistantTurn((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            toolTimeline: [...prev.toolTimeline, statusItem],
+                          }
+                        : prev
                     );
+                    finalTimeline.push(statusItem);
                     break;
+                  }
+
+                  case "tool_start": {
+                    const toolItem: TimelineItem = {
+                      id: data.callId || `tool-${Date.now()}`,
+                      type: "tool",
+                      label: TOOL_LABELS[data.tool] || `Running ${data.tool}`,
+                      state: "running",
+                      toolName: data.tool,
+                      payload: {
+                        query: data.query,
+                        queries: data.queries,
+                      },
+                      createdAt: new Date(),
+                    };
+                    setAssistantTurn((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            toolTimeline: [...prev.toolTimeline, toolItem],
+                          }
+                        : prev
+                    );
+                    finalTimeline.push(toolItem);
+                    break;
+                  }
+
+                  case "tool_result": {
+                    // Update the matching tool item to complete
+                    const updateTimeline = (items: TimelineItem[]) =>
+                      items.map((item) =>
+                        item.toolName === data.tool && item.state === "running"
+                          ? {
+                              ...item,
+                              state: (data.success ? "complete" : "error") as TimelineItem["state"],
+                              summary: data.summary,
+                              payload: {
+                                ...item.payload,
+                                resultCount: data.resultCount,
+                                casesFound: data.cases,
+                                duration: data.duration,
+                                error: data.error,
+                              },
+                            }
+                          : item
+                      );
+                    setAssistantTurn((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            toolTimeline: updateTimeline(prev.toolTimeline),
+                          }
+                        : prev
+                    );
+                    finalTimeline = updateTimeline(finalTimeline);
+                    break;
+                  }
+
+                  case "source": {
+                    const sourceItem: TimelineItem = {
+                      id: `source-${Date.now()}`,
+                      type: "source",
+                      label: data.title
+                        ? `Using ${data.title}`
+                        : "Source added",
+                      state: "complete",
+                      summary: data.citation,
+                      payload: {
+                        source: data.caseId,
+                        sourceType: "case",
+                      },
+                      createdAt: new Date(),
+                    };
+                    setAssistantTurn((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            toolTimeline: [...prev.toolTimeline, sourceItem],
+                          }
+                        : prev
+                    );
+                    finalTimeline.push(sourceItem);
+                    break;
+                  }
 
                   case "content":
                     streamedContent += data.text;
+                    setAssistantTurn((prev) =>
+                      prev ? { ...prev, text: streamedContent } : prev
+                    );
+                    // Update message content
                     setMessages((prev) =>
                       prev.map((msg) =>
                         msg.id === aiMessageId
@@ -177,26 +310,58 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
                     );
                     break;
 
-                  case "done":
-                    if (data.citations) {
-                      citations = data.citations;
-                      setMessages((prev) =>
-                        prev.map((msg) =>
-                          msg.id === aiMessageId
-                            ? { ...msg, citations }
-                            : msg
-                        )
-                      );
-                    }
+                  case "done": {
+                    // Mark all running items as complete
+                    const completeTimeline = finalTimeline.map((item) =>
+                      item.state === "running"
+                        ? { ...item, state: "complete" as const }
+                        : item
+                    );
+                    // Update final message with citations and timeline
+                    setMessages((prev) =>
+                      prev.map((msg) =>
+                        msg.id === aiMessageId
+                          ? {
+                              ...msg,
+                              content: streamedContent,
+                              citations: data.citations,
+                              toolTimeline: completeTimeline,
+                            }
+                          : msg
+                      )
+                    );
+                    setAssistantTurn((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            status: "complete",
+                            toolTimeline: completeTimeline,
+                          }
+                        : prev
+                    );
                     break;
+                  }
 
                   case "error":
+                    setAssistantTurn((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            status: "error",
+                            error: { message: data.message },
+                          }
+                        : prev
+                    );
                     throw new Error(data.message || "Stream error");
                 }
 
                 currentEvent = "";
               } catch (parseError) {
-                // Skip malformed JSON
+                if (parseError instanceof Error && parseError.message !== "Stream error") {
+                  // Skip malformed JSON, but rethrow stream errors
+                } else {
+                  throw parseError;
+                }
               }
             }
           }
@@ -205,42 +370,50 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
         if ((err as Error).name === "AbortError") {
           return;
         }
-        setError(err instanceof Error ? err.message : "Failed to get response");
+        const errorMessage = err instanceof Error ? err.message : "Failed to get response";
+        setError(errorMessage);
         // Remove the empty AI message on error
         setMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
       } finally {
         setIsLoading(false);
-        setAgentSteps([]);
-        setToolCalls([]);
+        // Keep assistantTurn briefly for animation, then clear
+        setTimeout(() => setAssistantTurn(null), 300);
       }
     },
-    [caseContext, messages]
+    [caseContext, messages, chatId]
   );
 
   const clearMessages = useCallback(() => {
     setMessages([]);
     setError(null);
-    setAgentSteps([]);
-    setToolCalls([]);
+    setAssistantTurn(null);
+    setChatId(null);
   }, []);
 
   const cancelRequest = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       setIsLoading(false);
-      setAgentSteps([]);
-      setToolCalls([]);
+      setAssistantTurn(null);
     }
   }, []);
+
+  const startNewChat = useCallback(() => {
+    clearMessages();
+    loadChatSessions();
+  }, [clearMessages, loadChatSessions]);
 
   return {
     messages,
     isLoading,
     error,
-    agentSteps,
-    toolCalls,
+    chatId,
+    sessions,
+    assistantTurn,
     sendMessage,
     clearMessages,
     cancelRequest,
+    loadChat,
+    startNewChat,
   };
 }

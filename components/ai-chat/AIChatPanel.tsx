@@ -2,24 +2,12 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import type { ChatMode, ChatMessage, CaseContext, ChatAction } from "./types";
+import type { ChatMode, ChatMessage, CaseContext, ChatAction, AssistantTurnState, ChatSession } from "./types";
 import { ChatHeader } from "./ChatHeader";
 import { ChatMessages } from "./ChatMessages";
 import { ChatInput } from "./ChatInput";
 import { ContextBadge } from "./ContextBadge";
-
-interface ToolCallState {
-  tool: string;
-  label: string;
-  status: "in_progress" | "completed" | "error";
-  result?: string;
-}
-
-interface AgentStep {
-  type: "reasoning" | "planning" | "reflecting";
-  message: string;
-  timestamp: Date;
-}
+import { ChatHistory } from "./ChatHistory";
 
 interface AIChatPanelProps {
   isOpen: boolean;
@@ -27,11 +15,13 @@ interface AIChatPanelProps {
   caseContext: CaseContext;
   messages: ChatMessage[];
   isLoading?: boolean;
-  agentSteps?: AgentStep[];
-  toolCalls?: ToolCallState[];
+  assistantTurn?: AssistantTurnState | null;
+  chatId?: string | null;
+  sessions?: ChatSession[];
   onSend: (message: string, mode: ChatMode) => void;
   onAction?: (action: ChatAction) => void;
-  onSuggestionClick?: (suggestion: string) => void;
+  onLoadChat?: (chatId: string) => void;
+  onNewChat?: () => void;
 }
 
 export function AIChatPanel({
@@ -40,41 +30,58 @@ export function AIChatPanel({
   caseContext,
   messages,
   isLoading,
-  agentSteps,
-  toolCalls,
+  assistantTurn,
+  chatId,
+  sessions = [],
   onSend,
   onAction,
-  onSuggestionClick,
+  onLoadChat,
+  onNewChat,
 }: AIChatPanelProps) {
   const [mode, setMode] = useState<ChatMode>("research");
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const handleSend = (message: string) => {
     onSend(message, mode);
   };
 
-  const handleSuggestionClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.classList.contains("ai-chat-suggestion")) {
-      const suggestion = target.textContent || "";
-      if (onSuggestionClick) {
-        onSuggestionClick(suggestion);
-      } else {
-        onSend(suggestion, mode);
-      }
-    }
+  const handleSuggestionClick = (suggestion: string) => {
+    onSend(suggestion, mode);
+  };
+
+  const handleSelectChat = (selectedChatId: string) => {
+    onLoadChat?.(selectedChatId);
+    setHistoryOpen(false);
+  };
+
+  const handleNewChat = () => {
+    onNewChat?.();
+    setHistoryOpen(false);
   };
 
   return (
     <div className={cn("ai-chat-panel", isOpen && "is-open")}>
+      {/* Chat History Sidebar */}
+      {onLoadChat && (
+        <ChatHistory
+          sessions={sessions}
+          currentChatId={chatId || null}
+          onSelectChat={handleSelectChat}
+          onNewChat={handleNewChat}
+          isOpen={historyOpen}
+          onToggle={() => setHistoryOpen(!historyOpen)}
+        />
+      )}
+
       <ChatHeader mode={mode} onModeChange={setMode} onClose={onClose} />
       <ContextBadge caseContext={caseContext} />
-      <div className="ai-chat-body" onClick={handleSuggestionClick}>
+      <div className="ai-chat-body">
         <ChatMessages
           messages={messages}
           isLoading={isLoading}
-          agentSteps={agentSteps}
-          toolCalls={toolCalls}
+          assistantTurn={assistantTurn}
           onAction={onAction}
+          onSuggestionClick={handleSuggestionClick}
         />
       </div>
       <ChatInput onSend={handleSend} disabled={isLoading} />
