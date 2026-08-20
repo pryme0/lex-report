@@ -31,6 +31,35 @@ const AnimatedEllipsis = () => {
   );
 };
 
+// Extract follow-up suggestions from AI response
+function extractFollowUpSuggestions(content: string): string[] {
+  const suggestions: string[] = [];
+
+  // Look for patterns like "- [suggestion]" or "• [suggestion]" after "What would you like" or similar
+  const followUpMatch = content.match(/(?:What would you like|Would you like|You might want|Next steps|Follow-up options)[^\n]*\n((?:[-•*]\s+.+\n?)+)/i);
+
+  if (followUpMatch) {
+    const listSection = followUpMatch[1];
+    const items = listSection.match(/[-•*]\s+(.+)/g);
+    if (items) {
+      for (const item of items.slice(0, 3)) { // Max 3 suggestions
+        const text = item.replace(/^[-•*]\s+/, '').trim();
+        if (text && text.length > 5 && text.length < 100) {
+          suggestions.push(text);
+        }
+      }
+    }
+  }
+
+  return suggestions;
+}
+
+// Remove the follow-up section from content for cleaner display
+function removeFollowUpSection(content: string): string {
+  // Remove the follow-up section at the end
+  return content.replace(/\n\n\*\*What would you like[^\n]*\*\*\n((?:[-•*]\s+.+\n?)+)$/i, '').trim();
+}
+
 export function ChatMessages({
   messages,
   isLoading,
@@ -98,6 +127,10 @@ export function ChatMessages({
           return <UserMessage key={msg.id} message={msg} />;
         }
 
+        // Extract follow-up suggestions from completed messages
+        const followUpSuggestions = !isStreamingMessage ? extractFollowUpSuggestions(msg.content) : [];
+        const cleanContent = followUpSuggestions.length > 0 ? removeFollowUpSection(msg.content) : msg.content;
+
         return (
           <div key={msg.id} className="ai-chat-message ai-chat-message-ai">
             <div className="ai-chat-message-avatar">
@@ -108,25 +141,10 @@ export function ChatMessages({
               </svg>
             </div>
             <div className="ai-chat-message-body">
-              {/* Work Trail - ABOVE the message content */}
+              {/* Work Trail - ONLY during streaming */}
               {isStreamingMessage && assistantTurn && (
                 <div className="mb-2">
-                  <WorkTrail turn={assistantTurn} keepOpenAfterComplete />
-                </div>
-              )}
-
-              {/* Completed message work trail (collapsed by default) */}
-              {!isStreamingMessage && msg.toolTimeline && msg.toolTimeline.length > 0 && (
-                <div className="mb-2">
-                  <WorkTrail
-                    turn={{
-                      messageId: msg.id,
-                      status: "complete",
-                      text: msg.content,
-                      toolTimeline: msg.toolTimeline,
-                      createdAt: msg.timestamp,
-                    }}
-                  />
+                  <WorkTrail turn={assistantTurn} />
                 </div>
               )}
 
@@ -139,7 +157,28 @@ export function ChatMessages({
                   </div>
                 ) : null
               ) : (
-                <AIMessage message={msg} onAction={onAction} />
+                <>
+                  <AIMessage
+                    message={{ ...msg, content: cleanContent }}
+                    onAction={onAction}
+                  />
+
+                  {/* Follow-up suggestion buttons */}
+                  {followUpSuggestions.length > 0 && (
+                    <div className="ai-chat-followup-buttons">
+                      {followUpSuggestions.map((suggestion, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          className="ai-chat-followup-btn"
+                          onClick={() => onSuggestionClick?.(suggestion)}
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
