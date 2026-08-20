@@ -1,6 +1,5 @@
 export { AIChatButton } from "./AIChatButton";
 export { AIChatPanel } from "./AIChatPanel";
-export { ChatHeader } from "./ChatHeader";
 export { ChatMessages } from "./ChatMessages";
 export { ChatInput } from "./ChatInput";
 export { UserMessage } from "./UserMessage";

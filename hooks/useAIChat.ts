@@ -339,6 +339,8 @@ export function useAIChat({ caseContext }: UseAIChatOptions) {
                           }
                         : prev
                     );
+                    // Refresh sessions list to show newly created chat
+                    loadChatSessions();
                     break;
                   }
 

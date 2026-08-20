@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageSquare, Plus, ChevronLeft, Clock } from "lucide-react";
+import { MessageSquare, Plus, ChevronLeft } from "lucide-react";
 import type { ChatSession } from "./types";
 import { cn } from "@/lib/utils";
 
@@ -35,18 +35,7 @@ export function ChatHistory({
   isOpen,
   onToggle,
 }: ChatHistoryProps) {
-  if (!isOpen) {
-    return (
-      <button
-        type="button"
-        onClick={onToggle}
-        className="ai-chat-history-toggle"
-        title="Chat history"
-      >
-        <Clock size={14} />
-      </button>
-    );
-  }
+  if (!isOpen) return null;
 
   return (
     <div className="ai-chat-history-panel">
