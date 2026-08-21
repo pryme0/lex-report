@@ -566,6 +566,7 @@ dl, dd { margin: 0; }
 .judgment-court-label { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--color-g-400); margin-bottom: 7px; }
 .judgment-title { font-family: var(--font-display); font-size: clamp(1.3rem,3vw,2.2rem); font-weight: 600; color: var(--color-ink); line-height: 1.2; letter-spacing: -0.02em; margin-bottom: 9px; max-width: 56ch; }
 .judgment-cite { font-size: 0.845rem; font-weight: 700; color: var(--color-g-500); }
+.judgment-header-badges { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
 .judgment-cols { display: grid; grid-template-columns: 1fr 280px; gap: 14px; align-items: start; }
 .judgment-body, .judgment-aside {
   background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius); padding: 22px;
@@ -587,6 +588,9 @@ dl, dd { margin: 0; }
   line-height: 1.4; min-height: auto; transition: all 0.12s;
 }
 .authority-link-btn:hover { background: var(--color-g-50); border-color: var(--color-g-100); color: var(--color-g-700); }
+.similar-case-btn { display: flex; flex-direction: column; gap: 2px; }
+.similar-case-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.similar-case-meta { font-size: 0.7rem; font-weight: 400; color: var(--color-faint); }
 .issue-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .issue-tag { font-size: 0.75rem; font-weight: 600; padding: 4px 11px; background: var(--color-bg); border: 1px solid var(--color-line); border-radius: 999px; color: var(--color-body); }
 

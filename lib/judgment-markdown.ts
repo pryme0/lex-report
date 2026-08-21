@@ -14,7 +14,6 @@ export type OpinionRole = "lead" | "concurring" | "dissenting";
 export type JudgmentBlock =
   | { kind: "heading"; level: 1 | 2 | 3 | 4; text: string; id: string }
   | { kind: "opinion"; id: string; judge: string; qualifier: string; role: OpinionRole }
-  | { kind: "coram"; text: string }
   | { kind: "paragraph"; number: string | null; children: InlineNode[] }
   | { kind: "quote"; blocks: JudgmentBlock[] }
   | { kind: "list"; ordered: false; items: InlineNode[][] }
@@ -213,11 +212,9 @@ function pushParagraph(ctx: ParseContext, children: InlineNode[], explicitNumber
     first?.kind === "strong" &&
     /^coram:?$/i.test(inlineToPlainText(first.children).trim())
   ) {
-    const text = inlineToPlainText(children.slice(1)).replace(/^[:\s]+/, "").trim();
-    if (text) {
-      ctx.blocks.push({ kind: "coram", text });
-      return;
-    }
+    // The judgment header (above the reading panel) already shows the Lex Report citation, so
+    // the source document's own "Coram: ..." line is dropped rather than rendered here.
+    return;
   }
 
   const { number, children: body } =
@@ -364,6 +361,26 @@ function collapseWhitespace(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
+/** Drops every "## OTHER CITATIONS" section — heading plus the citation lines under it, up to
+ * the next heading — wherever it appears in the source, not just inside the canonical leading
+ * header block. That content duplicates the citation already shown in the page header above the
+ * reading panel. */
+function stripOtherCitationsSections(source: string): string {
+  const paras = splitParagraphs(source);
+  const out: string[] = [];
+  let i = 0;
+  while (i < paras.length) {
+    if (OTHER_CITATIONS_HEADING_RE.test(paras[i])) {
+      i += 1;
+      while (i < paras.length && !/^#{1,6}\s/.test(paras[i].trim())) i += 1;
+      continue;
+    }
+    out.push(paras[i]);
+    i += 1;
+  }
+  return out.join("\n\n");
+}
+
 /** Frontmatter `lines` are rendered as plain text (never run through the Markdown inline parser),
  * so any "**bold**"/"*em*" wrapping carried over from a synthesised header line — e.g. the
  * citation-summary line, which formatting passes emit in bold — would otherwise show up as
@@ -454,9 +471,10 @@ function extractCanonicalHeader(
 }
 
 export function parseJudgmentMarkdown(fullText: string, title?: string, citation?: string): ParsedJudgment {
-  const source = (fullText ?? "").replace(/\r\n/g, "\n").trim();
-  if (!source) return { blocks: [], outline: [], paragraphCount: 0 };
+  const rawSource = (fullText ?? "").replace(/\r\n/g, "\n").trim();
+  if (!rawSource) return { blocks: [], outline: [], paragraphCount: 0 };
 
+  const source = stripOtherCitationsSections(rawSource);
   const header = extractCanonicalHeader(source, citation);
 
   const ctx: ParseContext = {
