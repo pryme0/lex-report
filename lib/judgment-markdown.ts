@@ -18,7 +18,8 @@ export type JudgmentBlock =
   | { kind: "paragraph"; number: string | null; children: InlineNode[] }
   | { kind: "quote"; blocks: JudgmentBlock[] }
   | { kind: "list"; ordered: false; items: InlineNode[][] }
-  | { kind: "rule" };
+  | { kind: "rule" }
+  | { kind: "frontmatter"; lines: string[] };
 
 export type OutlineEntry = {
   id: string;
@@ -335,9 +336,128 @@ function walk(ctx: ParseContext, tokens: Token[]) {
   }
 }
 
-export function parseJudgmentMarkdown(fullText: string, title?: string): ParsedJudgment {
+// Matches the FIRST line of a paragraph belonging to the canonical Nigerian-court-judgment header
+// block synthesised by the Gemini formatting pass (see gemini-judgment-formatter.service.ts rule
+// 8) — "IN THE ... COURT", "BEFORE THEIR LORDSHIPS:", "APPEAL NO.:"/"SUIT NO.:", "BETWEEN:", "AND".
+const FRONT_MATTER_LINE_RE =
+  /^(?:IN THE\b|BEFORE THEIR LORDSHIPS\b|(?:APPEAL|SUIT) NO\.?:|BETWEEN:?$|AND$)/i;
+// A party line ending in its designation, e.g. "SHOOTING STARS SPORTS CLUB LTD (3SC) — APPELLANT".
+const FRONT_MATTER_PARTY_RE =
+  /—\s*(APPELLANT|RESPONDENT|APPLICANT|DEFENDANT|CLAIMANT|PETITIONER|CROSS-APPELLANT|CROSS-RESPONDENT)S?\.?\s*$/i;
+// The old JELR-style citation summary line some legacy imports carry directly under the title,
+// e.g. "(2024) JELR 114312 (CA) COURT OF APPEAL · CA/IB/03/2016 · MARCH 14, 2024 · NIGERIA".
+const CITATION_SUMMARY_RE =
+  /\((?:19|20)\d{2}\)[^\n]*?\b(COURT OF APPEAL|SUPREME COURT|HIGH COURT|FEDERAL HIGH COURT)\b/i;
+const OTHER_CITATIONS_HEADING_RE = /^##\s+OTHER CITATIONS\s*$/im;
+const LEADING_H1_RE = /^#\s+(?!#)/;
+const HEADING_OR_CORAM_RE = /^(?:#{1,6}\s|\*\*Coram:)/i;
+
+/** Splits raw source text into blank-line-separated paragraphs, the same unit `marked` treats as
+ * a paragraph, but keeping each paragraph's internal line breaks intact — needed because the next
+ * step must render "BEFORE THEIR LORDSHIPS: judge one / judge two / judge three" as three lines,
+ * which `marked`'s soft-line-break-to-space collapsing would otherwise erase. */
+function splitParagraphs(source: string): string[] {
+  return source.split(/\n{2,}/);
+}
+
+function collapseWhitespace(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+/** Frontmatter `lines` are rendered as plain text (never run through the Markdown inline parser),
+ * so any "**bold**"/"*em*" wrapping carried over from a synthesised header line — e.g. the
+ * citation-summary line, which formatting passes emit in bold — would otherwise show up as
+ * literal asterisks on screen. */
+function stripMarkdownEmphasis(text: string): string {
+  return text.replace(/\*\*(.+?)\*\*/g, "$1").replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, "$1");
+}
+
+/** Pulls the leading run of canonical-header paragraphs (see FRONT_MATTER_LINE_RE /
+ * FRONT_MATTER_PARTY_RE) off the front of `source`, splitting each onto its own display line —
+ * one per judge, one for "APPEAL NO.:", one for "SUIT NO.:", etc. — rather than the single
+ * run-on line `marked` would otherwise produce. Immediately after that run, also absorbs (and
+ * replaces with `citation`) an old JELR-style citation-summary line, dropping any "OTHER
+ * CITATIONS" section that follows it — that content duplicated the citation already shown in the
+ * page header above the reading panel and in the synthesised header itself. Returns null when the
+ * text doesn't open with this header at all, leaving `source` untouched for ordinary judgments. */
+function extractCanonicalHeader(
+  source: string,
+  citation?: string,
+): { lines: string[]; rest: string } | null {
+  const paras = splitParagraphs(source);
+
+  let end = 0;
+  while (end < paras.length) {
+    const para = paras[end].trim();
+    const firstLine = para.split("\n")[0].trim();
+    if (!FRONT_MATTER_LINE_RE.test(firstLine) && !FRONT_MATTER_PARTY_RE.test(collapseWhitespace(para))) break;
+    end += 1;
+  }
+  if (end === 0) return null;
+
+  const lines: string[] = [];
+  for (const para of paras.slice(0, end)) {
+    for (const line of para.split("\n")) {
+      const trimmed = stripMarkdownEmphasis(line.trim());
+      if (trimmed) lines.push(trimmed);
+    }
+  }
+
+  let rest = paras.slice(end);
+  // A duplicate "# Title" heading, if present, is left in place (kept at rest[0]) for the existing
+  // heading-suppression logic in pushHeading to drop. Some formatting passes instead emit the
+  // title as several standalone "**Bold**" paragraphs ahead of the citation line (e.g.
+  // "**MUHAMMAD ABUBAKAR KABIR**" / "**V.**" / "**...RESPONDENTS**") — those have no heading token
+  // for pushHeading to catch, so they're identified here and dropped outright below.
+  const BOLD_ONLY_PARA_RE = /^\*\*[^*\n]+\*\*$/;
+  let keepPrefix = 0; // leading paragraphs of `rest` left untouched
+  let boldTitleRun = 0; // standalone bold title paragraphs to drop, once confirmed by what follows
+  if (rest[0] && LEADING_H1_RE.test(rest[0])) {
+    keepPrefix = 1;
+  } else {
+    let idx = 0;
+    while (rest[idx] && BOLD_ONLY_PARA_RE.test(rest[idx].trim())) idx += 1;
+    if (idx > 0 && rest[idx] && CITATION_SUMMARY_RE.test(collapseWhitespace(rest[idx]))) {
+      boldTitleRun = idx;
+    }
+  }
+  const citationIdx = keepPrefix + boldTitleRun;
+  const citationPara = rest[citationIdx];
+  if (citationPara && CITATION_SUMMARY_RE.test(collapseWhitespace(citationPara))) {
+    if (citation) {
+      const collapsed = collapseWhitespace(citationPara).replace(/\s*[·|]?\s*$/, "");
+      const replaced = collapsed.replace(
+        /^\(?(?:19|20)\d{2}\)?.*?(?=(?:COURT OF APPEAL|SUPREME COURT|HIGH COURT|FEDERAL HIGH COURT))/i,
+        `${citation} · `,
+      );
+      lines.push(stripMarkdownEmphasis(replaced));
+    }
+
+    let dropEnd = citationIdx + 1;
+    if (rest[dropEnd] && OTHER_CITATIONS_HEADING_RE.test(rest[dropEnd])) {
+      dropEnd += 1;
+      while (rest[dropEnd] && !HEADING_OR_CORAM_RE.test(rest[dropEnd])) dropEnd += 1;
+    }
+    rest = [...rest.slice(0, keepPrefix), ...rest.slice(dropEnd)];
+  }
+
+  // A "**Coram:** judge one, judge two, ..." or "**CORAM**\n**Judge One**\n**Judge Two**..."
+  // paragraph directly under the header duplicates the judges already listed individually under
+  // "BEFORE THEIR LORDSHIPS:" above — drop it. (A later mid-document mention of a lower court's
+  // coram, e.g. "...Coram: Bolaji, J....", is plain prose inside a sentence, not its own bolded
+  // paragraph, so it's untouched.)
+  if (rest[keepPrefix] && /^\*\*coram:?\*\*?/i.test(rest[keepPrefix])) {
+    rest = [...rest.slice(0, keepPrefix), ...rest.slice(keepPrefix + 1)];
+  }
+
+  return { lines, rest: rest.join("\n\n") };
+}
+
+export function parseJudgmentMarkdown(fullText: string, title?: string, citation?: string): ParsedJudgment {
   const source = (fullText ?? "").replace(/\r\n/g, "\n").trim();
   if (!source) return { blocks: [], outline: [], paragraphCount: 0 };
+
+  const header = extractCanonicalHeader(source, citation);
 
   const ctx: ParseContext = {
     blocks: [],
@@ -347,9 +467,11 @@ export function parseJudgmentMarkdown(fullText: string, title?: string): ParsedJ
     title,
   };
 
-  walk(ctx, marked.lexer(source, { gfm: true, breaks: false }));
+  walk(ctx, marked.lexer(header ? header.rest : source, { gfm: true, breaks: false }));
 
-  return { blocks: ctx.blocks, outline: ctx.outline, paragraphCount: ctx.paragraphNumbers.size };
+  const blocks = header ? [{ kind: "frontmatter" as const, lines: header.lines }, ...ctx.blocks] : ctx.blocks;
+
+  return { blocks, outline: ctx.outline, paragraphCount: ctx.paragraphNumbers.size };
 }
 
 export function pinpointReference(citation: string | undefined, paragraph: string): string {

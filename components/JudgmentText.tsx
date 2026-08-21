@@ -327,6 +327,17 @@ function Blocks({
 
           case "rule":
             return <hr key={key} className="judgment-rule" />;
+
+          case "frontmatter":
+            return (
+              <div key={key} className="judgment-page-front-matter">
+                {block.lines.map((line, i) => (
+                  <span key={i} className="judgment-page-front-line">
+                    {line}
+                  </span>
+                ))}
+              </div>
+            );
         }
       })}
     </>
@@ -410,16 +421,21 @@ function PageBody({
   onCopy,
   anchorId,
   showCoatOfArms,
+  caseCitation,
 }: {
   page: SourcePage;
   frontMatter: "all" | "through-marker" | "none";
   onCopy?: (citation: string) => void;
   anchorId?: string;
   showCoatOfArms?: boolean;
+  caseCitation?: string;
 }) {
   const editorialBlocks = useMemo(
-    () => (page.extraction === "editorial" ? parseJudgmentMarkdown(page.text).blocks : []),
-    [page.extraction, page.text],
+    () =>
+      page.extraction === "editorial"
+        ? parseJudgmentMarkdown(page.text, undefined, caseCitation).blocks
+        : [],
+    [page.extraction, page.text, caseCitation],
   );
   const lines = page.text.replace(/\r\n/g, "\n").split("\n");
   const markerIndex = lines.findIndex((line) => DECISION_MARKER_RE.test(line.trim()));
@@ -656,6 +672,7 @@ function PaginatedJudgment({
                       : "none"
                 }
                 onCopy={print ? undefined : copyPageCitation}
+                caseCitation={citation}
               />
             </div>
           ))}
@@ -685,8 +702,8 @@ export function JudgmentText({
   const [textSize, setTextSize] = useTextSize();
 
   const { blocks, outline, paragraphCount } = useMemo(
-    () => parseJudgmentMarkdown(fullText, title),
-    [fullText, title],
+    () => parseJudgmentMarkdown(fullText, title, citation),
+    [fullText, title, citation],
   );
 
   const outlineIds = useMemo(() => outline.map((entry) => entry.id), [outline]);
