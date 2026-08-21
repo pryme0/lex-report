@@ -97,6 +97,14 @@ export type StandingNote = {
 export type CaseDetail = CaseSummary & {
   /** The judgment as delivered — the text a practitioner actually cites from. */
   fullText: string;
+  /** Full structured judgment summary, as Markdown under the editorial summarizer headings. */
+  summary: string;
+  /** Ratio decidendi extracted from the judgment text, separate from the headnote `ratio` field. */
+  ratioDecidendi: string;
+  /** Obiter dicta identified in the judgment, or a statement that none was identified. */
+  obiterDicta: string;
+  /** Issues determined by the court, as standalone issue statements. */
+  issuesDetermined: string[];
   suitNo?: string | null;
   appealNo?: string | null;
   sourcePages?: SourcePage[];

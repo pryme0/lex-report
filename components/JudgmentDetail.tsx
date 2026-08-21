@@ -12,7 +12,7 @@ import { useApiQuery } from "@/lib/api/hooks";
 import { AsyncSection, EmptyState } from "./AsyncState";
 import { tcls } from "@/lib/types";
 import { CaseCitator } from "./CaseCitator";
-import { JudgmentFrontMatter } from "./JudgmentFrontMatter";
+import { JudgmentSummaryView } from "./JudgmentSummaryView";
 import { JudgmentText } from "./JudgmentText";
 import { copyText, judgmentCitation } from "@/lib/judgment";
 import { statuteHref } from "@/lib/routes";
@@ -20,83 +20,7 @@ import { AIChatButton, AIChatPanel } from "./ai-chat";
 import { useAIChat } from "@/hooks/useAIChat";
 import type { CaseContext } from "./ai-chat/types";
 
-type DetailTab = "judgment" | "headnote" | "citator";
-
-function HeadnoteView({ item }: { item: CaseDetail }) {
-  const router = useRouter();
-  const { openCase, showToast } = useDashboard();
-
-  return (
-    <div className="judgment-cols">
-      <div className="judgment-body">
-        <div className="judgment-section">
-          <h3>Ratio decidendi</h3>
-          <p>{item.ratio}</p>
-        </div>
-        <div className="judgment-section">
-          <h3>Facts</h3>
-          <p>{item.facts}</p>
-        </div>
-        <div className="judgment-section">
-          <h3>Held</h3>
-          <p>{item.holding}</p>
-        </div>
-      </div>
-      <aside className="judgment-aside">
-        <dl className="meta-dl">
-          <div className="aside-section-label">Report metadata</div>
-          <dt>Judges</dt>
-          <dd>{item.judges}</dd>
-          <dt>Area</dt>
-          <dd>{item.area}</dd>
-          <dt>Posture</dt>
-          <dd>{item.posture}</dd>
-          <dt>Strength</dt>
-          <dd>{item.strength}%</dd>
-        </dl>
-        <div className="aside-section-label">Cases cited</div>
-        <div className="authority-links">
-          {item.citedCases.length === 0 && <p className="citator-empty">None recorded.</p>}
-          {item.citedCases.map((c, i) => (
-            <button
-              key={`${c.caseId ?? "ext"}-${c.title}-${i}`}
-              className="authority-link-btn"
-              onClick={() =>
-                c.caseId
-                  ? openCase(c.caseId)
-                  : showToast(`${c.title} is not reported in this archive.`)
-              }
-            >
-              {c.title}
-              {!c.caseId && <span className="authority-link-note">not in archive</span>}
-            </button>
-          ))}
-        </div>
-        <div className="aside-section-label">Statutes considered</div>
-        <div className="authority-links">
-          {item.citedStatutes.length === 0 && <p className="citator-empty">None recorded.</p>}
-          {item.citedStatutes.map((s, i) =>
-            s.statuteId ? (
-              <button
-                key={`${s.statuteId}-${s.section ?? ""}-${i}`}
-                className="authority-link-btn"
-                onClick={() => router.push(statuteHref(s.statuteId!, s.section))}
-              >
-                {s.title}
-                {s.section ? `, ${s.section}` : ""}
-              </button>
-            ) : (
-              <span key={`${s.title}-${s.section ?? ""}-${i}`}>
-                {s.title}
-                {s.section ? `, ${s.section}` : ""}
-              </span>
-            ),
-          )}
-        </div>
-      </aside>
-    </div>
-  );
-}
+type DetailTab = "judgment" | "summary" | "citator";
 
 function JudgmentToolbar({
   caseId,
@@ -255,8 +179,6 @@ export function JudgmentDetail({
               <span className={cn("treatment-pill", tcls[item.treatment])}>{item.treatment}</span>
             </header>
 
-            <JudgmentFrontMatter item={item} />
-
             <div className="jd-tabs judgment-no-print" role="tablist" aria-label="Judgment sections">
               <button
                 className={cn("jd-tab", tab === "judgment" && "active")}
@@ -268,13 +190,13 @@ export function JudgmentDetail({
                 Judgment
               </button>
               <button
-                className={cn("jd-tab", tab === "headnote" && "active")}
+                className={cn("jd-tab", tab === "summary" && "active")}
                 type="button"
                 role="tab"
-                aria-selected={tab === "headnote"}
-                onClick={() => setTab("headnote")}
+                aria-selected={tab === "summary"}
+                onClick={() => setTab("summary")}
               >
-                Headnote
+                Summary
               </button>
               <button
                 className={cn("jd-tab", tab === "citator" && "active")}
@@ -289,8 +211,8 @@ export function JudgmentDetail({
 
             {tab === "citator" ? (
               <CaseCitator caseId={item.id} />
-            ) : tab === "headnote" ? (
-              <HeadnoteView item={item} />
+            ) : tab === "summary" ? (
+              <JudgmentSummaryView item={item} />
             ) : (
               <div className="judgment-reading-panel">
                 <JudgmentText
