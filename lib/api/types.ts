@@ -10,6 +10,12 @@ export type Paginated<T> = {
   };
 };
 
+export type InterpretedQuery = {
+  usedAi: boolean;
+  filters: Partial<CaseSearchParams>;
+  cleanedQuery: string;
+};
+
 export type CaseSummary = {
   id: string;
   title: string;
@@ -124,6 +130,18 @@ export type CaseDetail = CaseSummary & {
 
 export type CaseIndexItem = { id: string; title: string; citation: string };
 
+export type SimilarCase = {
+  id: string;
+  title: string;
+  citation: string;
+  court: string;
+  year: number;
+  digestArea: string;
+  treatment: string;
+  score: number;
+  matchReasons: string[];
+};
+
 export type CaseCitationLookupResult = {
   exact: CaseIndexItem | null;
   closest: CaseIndexItem[];
@@ -190,6 +208,8 @@ export type CaseSearchParams = {
   year?: number;
   yearFrom?: number;
   yearTo?: number;
+  /** 1-12. Coverage is partial — only cases whose decision date was captured at import time. */
+  month?: number;
   area?: string;
   digestArea?: string;
   jurisdiction?: string;
@@ -205,6 +225,11 @@ export type CaseSearchParams = {
   limit?: number;
 };
 
+export type CaseSearchResult = Paginated<CaseSummary> & {
+  /** Present when the query was interpreted by AI (a natural-language query, not the practitioner syntax). */
+  interpreted?: InterpretedQuery;
+};
+
 /** A facet value present in the archive, with how many judgments carry it. */
 export type FacetCount = { value: string; count: number };
 
@@ -216,6 +241,8 @@ export type ArchiveFilters = {
     max: number | null;
     counts: { year: number; count: number }[];
   };
+  /** Calendar order (Jan-Dec). Coverage is partial — based on captured decision dates. */
+  months: { value: number; label: string; count: number }[];
   practiceAreas: FacetCount[];
   digestAreas: FacetCount[];
   jurisdictions: FacetCount[];

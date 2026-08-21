@@ -41,6 +41,10 @@ export function SearchSyntaxHelp() {
           <p className="search-syntax-lead">
             Terms are combined with <strong>AND</strong> by default. Use operators and field prefixes to narrow a search.
           </p>
+          <p className="search-syntax-lead">
+            Or just ask in plain English — <em>&quot;breach of contract cases from the Supreme Court in 2023&quot;</em> —
+            and AI will work out the filters for you. Anything using the syntax below runs as a normal keyword search instead.
+          </p>
           <dl className="search-syntax-list">
             <div>
               <dt>Quoted phrases</dt>

@@ -9,6 +9,7 @@ import type {
   CaseDetail,
   CaseIndexItem,
   CaseSearchParams,
+  CaseSearchResult,
   CaseSummary,
   CitationGraph,
   Citator,
@@ -39,6 +40,7 @@ import type {
   ReportBatch,
   ReportBatchDetail,
   ResearchPreference,
+  SimilarCase,
   StatuteCase,
   StatuteDetail,
   StatuteListItem,
@@ -57,6 +59,7 @@ const searchQuery = (params: CaseSearchParams) =>
     year: params.year,
     yearFrom: params.yearFrom,
     yearTo: params.yearTo,
+    month: params.month,
     area: params.area,
     digestArea: params.digestArea,
     jurisdiction: params.jurisdiction,
@@ -73,7 +76,7 @@ const searchQuery = (params: CaseSearchParams) =>
 
 export const casesApi = {
   search: (params: CaseSearchParams = {}) =>
-    http.get<Paginated<CaseSummary>>(`/cases/search${searchQuery(params)}`),
+    http.get<CaseSearchResult>(`/cases/search${searchQuery(params)}`),
   index: (q?: string) => http.get<CaseIndexItem[]>(`/cases/index${buildQuery({ q })}`),
   citationLookup: (elrNumber: number) =>
     http.get<CaseCitationLookupResult>(`/cases/citation-lookup${buildQuery({ elrNumber })}`),
@@ -81,6 +84,8 @@ export const casesApi = {
   citator: (id: string) => http.get<Citator>(`/cases/${encodeURIComponent(id)}/citator`),
   citationGraph: (id: string) =>
     http.get<CitationGraph>(`/cases/${encodeURIComponent(id)}/citation-graph`),
+  similar: (id: string) =>
+    http.get<SimilarCase[]>(`/cases/${encodeURIComponent(id)}/similar`),
 };
 
 export const searchApi = {

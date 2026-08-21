@@ -6,6 +6,7 @@ export type ResearchFilterState = Pick<
   | "year"
   | "yearFrom"
   | "yearTo"
+  | "month"
   | "area"
   | "digestArea"
   | "jurisdiction"
@@ -42,6 +43,7 @@ export function parseResearchUrl(params: URLSearchParams): ResearchUrlState {
     year: parseIntParam(params.get("year")),
     yearFrom: parseIntParam(params.get("yearFrom")),
     yearTo: parseIntParam(params.get("yearTo")),
+    month: parseIntParam(params.get("month")),
     area: params.get("area") ?? undefined,
     digestArea: params.get("digestArea") ?? undefined,
     jurisdiction: params.get("jurisdiction") ?? undefined,
@@ -63,6 +65,7 @@ export function serializeResearchUrl(state: ResearchUrlState): string {
   if (state.year != null) params.set("year", String(state.year));
   if (state.yearFrom != null) params.set("yearFrom", String(state.yearFrom));
   if (state.yearTo != null) params.set("yearTo", String(state.yearTo));
+  if (state.month != null) params.set("month", String(state.month));
   if (state.area) params.set("area", state.area);
   if (state.digestArea) params.set("digestArea", state.digestArea);
   if (state.jurisdiction) params.set("jurisdiction", state.jurisdiction);
@@ -85,6 +88,7 @@ export function researchFiltersFromState(
     year: state.year,
     yearFrom: state.yearFrom,
     yearTo: state.yearTo,
+    month: state.month,
     area: state.area,
     digestArea: state.digestArea,
     jurisdiction: state.jurisdiction,

@@ -17,6 +17,7 @@ import type { CaseDetail } from "@/lib/api";
 import { copyText } from "@/lib/judgment";
 import { statuteHref } from "@/lib/routes";
 import { parseSummaryMarkdown, type SummaryBlock, type SummaryInline } from "@/lib/summary-markdown";
+import { SimilarCases } from "./SimilarCases";
 
 const HEADING_NUMBER_RE = /^(\d{1,2})[.)]\s*(.+)$/;
 
@@ -201,15 +202,7 @@ export function JudgmentSummaryView({ item }: { item: CaseDetail }) {
   const { showToast } = useDashboard();
   const [copied, setCopied] = useState(false);
   const blocks = useMemo(() => parseSummaryMarkdown(item.summary), [item.summary]);
-
-  if (!item.summary?.trim()) {
-    return (
-      <div className="summary-empty">
-        <Sparkles size={18} aria-hidden="true" />
-        <p>No AI-generated summary has been produced for this judgment yet.</p>
-      </div>
-    );
-  }
+  const hasSummary = !!item.summary?.trim();
 
   const handleCopy = async () => {
     const ok = await copyText(item.summary);
@@ -229,39 +222,55 @@ export function JudgmentSummaryView({ item }: { item: CaseDetail }) {
           Structured from the full judgment for quick review — verify against the reported text
           before filing or relying on it.
         </p>
-        <button type="button" className="btn btn-ghost btn-sm summary-copy-btn judgment-no-print" onClick={handleCopy}>
-          {copied ? <Check size={12} aria-hidden="true" /> : <CopyIcon size={12} aria-hidden="true" />}
-          {copied ? "Copied" : "Copy summary"}
-        </button>
+        {hasSummary && (
+          <button type="button" className="btn btn-ghost btn-sm summary-copy-btn judgment-no-print" onClick={handleCopy}>
+            {copied ? <Check size={12} aria-hidden="true" /> : <CopyIcon size={12} aria-hidden="true" />}
+            {copied ? "Copied" : "Copy summary"}
+          </button>
+        )}
       </div>
 
       <div className="judgment-cols summary-cols">
         <div className="summary-body-col">
-          <SummaryOutline blocks={blocks} />
-          <div className="judgment-body summary-body">
-            <SummaryBlocks blocks={blocks} />
-          </div>
+          {hasSummary ? (
+            <>
+              <SummaryOutline blocks={blocks} />
+              <div className="judgment-body summary-body">
+                <SummaryBlocks blocks={blocks} />
+              </div>
+            </>
+          ) : (
+            <div className="summary-empty">
+              <Sparkles size={18} aria-hidden="true" />
+              <p>No AI-generated summary has been produced for this judgment yet.</p>
+            </div>
+          )}
         </div>
         <aside className="judgment-aside summary-aside">
-          <SideCard icon={<Gavel size={13} aria-hidden="true" />} label="Ratio decidendi">
-            <p className="summary-side-text">
-              {item.ratioDecidendi || "Not expressly stated in the judgment."}
-            </p>
-          </SideCard>
-          <SideCard icon={<Quote size={13} aria-hidden="true" />} label="Obiter dicta">
-            <p className="summary-side-text">
-              {item.obiterDicta || "No significant obiter dicta were identified."}
-            </p>
-          </SideCard>
-          {item.issuesDetermined.length > 0 && (
-            <SideCard icon={<ListChecks size={13} aria-hidden="true" />} label="Issues determined">
-              <ol className="judgment-issues-list">
-                {item.issuesDetermined.map((issue, i) => (
-                  <li key={i}>{issue}</li>
-                ))}
-              </ol>
-            </SideCard>
+          {hasSummary && (
+            <>
+              <SideCard icon={<Gavel size={13} aria-hidden="true" />} label="Ratio decidendi">
+                <p className="summary-side-text">
+                  {item.ratioDecidendi || "Not expressly stated in the judgment."}
+                </p>
+              </SideCard>
+              <SideCard icon={<Quote size={13} aria-hidden="true" />} label="Obiter dicta">
+                <p className="summary-side-text">
+                  {item.obiterDicta || "No significant obiter dicta were identified."}
+                </p>
+              </SideCard>
+              {item.issuesDetermined.length > 0 && (
+                <SideCard icon={<ListChecks size={13} aria-hidden="true" />} label="Issues determined">
+                  <ol className="judgment-issues-list">
+                    {item.issuesDetermined.map((issue, i) => (
+                      <li key={i}>{issue}</li>
+                    ))}
+                  </ol>
+                </SideCard>
+              )}
+            </>
           )}
+          <SimilarCases caseId={item.id} />
           <AuthorityLinks item={item} />
         </aside>
       </div>

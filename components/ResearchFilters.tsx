@@ -67,6 +67,7 @@ function activeFacetCount(filters: ResearchFilterState): number {
   if (filters.treatment) count += 1;
   if (filters.reportSeries) count += 1;
   if (filters.year != null || filters.yearFrom != null || filters.yearTo != null) count += 1;
+  if (filters.month != null) count += 1;
   if (filters.ratioOnly) count += 1;
   if (filters.positiveTreatment) count += 1;
   if (filters.verified) count += 1;
@@ -103,6 +104,10 @@ export function ResearchFilters({
       yearFrom: from,
       yearTo: to,
     });
+  };
+
+  const setMonth = (month: number | undefined) => {
+    onChange({ ...filters, month });
   };
 
   const clearAll = () => {
@@ -197,6 +202,26 @@ export function ResearchFilters({
                       </option>
                     ))}
                   </select>
+                </div>
+              )}
+              {archive.months.some((m) => m.count > 0) && (
+                <div className="research-month-filter">
+                  <select
+                    className="search-sort-select"
+                    value={filters.month ?? ""}
+                    aria-label="Month"
+                    onChange={(e) => setMonth(e.target.value ? Number(e.target.value) : undefined)}
+                  >
+                    <option value="">Any month</option>
+                    {archive.months.map(({ value, label, count }) => (
+                      <option key={value} value={value} disabled={count === 0}>
+                        {label} ({count})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="research-filter-caption">
+                    Based on captured decision dates — coverage is partial.
+                  </p>
                 </div>
               )}
               <div className="research-filter-pills">

@@ -265,14 +265,6 @@ function Blocks({
               </div>
             );
 
-          case "coram":
-            return (
-              <p key={key} className="judgment-coram">
-                <span className="judgment-coram-label">Coram</span>
-                {block.text}
-              </p>
-            );
-
           case "paragraph":
             return (
               <p
@@ -605,8 +597,6 @@ function PaginatedJudgment({
                 aria-current={activePage === page.number ? "page" : undefined}
               >
                 <span>Page {page.number}</span>
-                {page.extraction === "ocr" && <small>OCR</small>}
-                {page.extraction === "editorial" && <small>Editorial</small>}
               </button>
             ))}
           </div>
