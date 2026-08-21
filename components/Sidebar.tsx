@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { label: "Research",       href: "/dashboard",                icon: Search },
-  { label: "Reports",        href: "/dashboard/reports",        icon: FileText },
   { label: "Citation Graph", href: "/dashboard/citation-graph", icon: Share2 },
   { label: "Draft Studio",   href: "/dashboard/draft-studio",   icon: PenLine },
   { label: "Library",        href: "/dashboard/library",        icon: BookOpen },
@@ -110,14 +109,24 @@ export function Sidebar({
         <div className="nav-divider" />
 
         {profile?.editor && (
-          <Link
-            href="/dashboard/admin"
-            className={cn("nav-item", isActive("/dashboard/admin") && "active")}
-            onClick={onClose}
-            title="Editorial"
-          >
-            <SlidersHorizontal size={16} /> <span className="nav-label">Editorial</span>
-          </Link>
+          <>
+            <Link
+              href="/dashboard/reports"
+              className={cn("nav-item", isActive("/dashboard/reports") && "active")}
+              onClick={onClose}
+              title="Reports"
+            >
+              <FileText size={16} /> <span className="nav-label">Reports</span>
+            </Link>
+            <Link
+              href="/dashboard/admin"
+              className={cn("nav-item", isActive("/dashboard/admin") && "active")}
+              onClick={onClose}
+              title="Editorial"
+            >
+              <SlidersHorizontal size={16} /> <span className="nav-label">Editorial</span>
+            </Link>
+          </>
         )}
 
         <Link
