@@ -10,3 +10,6 @@ tsconfig.tsbuildinfo
 smoke/
 audit/
 tmp/
+
+# Local agent execution artifacts
+.agent/os/
