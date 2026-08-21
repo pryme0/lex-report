@@ -11,7 +11,6 @@ import type { CaseDetail } from "@/lib/api";
 import { useApiQuery } from "@/lib/api/hooks";
 import { AsyncSection, EmptyState } from "./AsyncState";
 import { tcls } from "@/lib/types";
-import { CaseCitator } from "./CaseCitator";
 import { JudgmentSummaryView } from "./JudgmentSummaryView";
 import { JudgmentText } from "./JudgmentText";
 import { copyText, judgmentCitation } from "@/lib/judgment";
@@ -19,7 +18,7 @@ import { AIChatButton, AIChatPanel } from "./ai-chat";
 import { useAIChat } from "@/hooks/useAIChat";
 import type { CaseContext } from "./ai-chat/types";
 
-type DetailTab = "judgment" | "summary" | "citator";
+type DetailTab = "judgment" | "summary";
 
 function JudgmentToolbar({
   caseId,
@@ -197,20 +196,9 @@ export function JudgmentDetail({
               >
                 Summary
               </button>
-              <button
-                className={cn("jd-tab", tab === "citator" && "active")}
-                type="button"
-                role="tab"
-                aria-selected={tab === "citator"}
-                onClick={() => setTab("citator")}
-              >
-                Citator
-              </button>
             </div>
 
-            {tab === "citator" ? (
-              <CaseCitator caseId={item.id} />
-            ) : tab === "summary" ? (
+            {tab === "summary" ? (
               <JudgmentSummaryView item={item} />
             ) : (
               <div className="judgment-reading-panel">
