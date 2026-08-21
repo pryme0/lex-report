@@ -15,7 +15,6 @@ import { CaseCitator } from "./CaseCitator";
 import { JudgmentSummaryView } from "./JudgmentSummaryView";
 import { JudgmentText } from "./JudgmentText";
 import { copyText, judgmentCitation } from "@/lib/judgment";
-import { statuteHref } from "@/lib/routes";
 import { AIChatButton, AIChatPanel } from "./ai-chat";
 import { useAIChat } from "@/hooks/useAIChat";
 import type { CaseContext } from "./ai-chat/types";
