@@ -11,6 +11,7 @@ import type { CaseDetail } from "@/lib/api";
 import { useApiQuery } from "@/lib/api/hooks";
 import { AsyncSection, EmptyState } from "./AsyncState";
 import { tcls } from "@/lib/types";
+import { CitationGraph } from "./CitationGraph";
 import { JudgmentSummaryView } from "./JudgmentSummaryView";
 import { JudgmentText } from "./JudgmentText";
 import { copyText, judgmentCitation } from "@/lib/judgment";
@@ -18,7 +19,7 @@ import { AIChatButton, AIChatPanel } from "./ai-chat";
 import { useAIChat } from "@/hooks/useAIChat";
 import type { CaseContext } from "./ai-chat/types";
 
-type DetailTab = "judgment" | "summary";
+type DetailTab = "judgment" | "summary" | "graph";
 
 function JudgmentToolbar({
   caseId,
@@ -101,9 +102,9 @@ function JudgmentToolbar({
           className="btn btn-ghost btn-sm"
           type="button"
           onClick={() => viewGraph(caseId)}
-          aria-label="View citation graph"
+          aria-label="Open citation graph full screen"
         >
-          <Share2 size={12} aria-hidden="true" /> Citation graph
+          <Share2 size={12} aria-hidden="true" /> Open full screen
         </button>
       </div>
     </div>
@@ -130,7 +131,10 @@ export function JudgmentDetail({
 }) {
   const [tab, setTab] = useState<DetailTab>("judgment");
   const [chatOpen, setChatOpen] = useState(false);
+  const router = useRouter();
+  const { showToast } = useDashboard();
   const query = useApiQuery(`case:${caseId}`, () => casesApi.detail(caseId));
+  const indexQuery = useApiQuery("cases:index", () => casesApi.index());
 
   const caseContext: CaseContext = query.data
     ? {
@@ -174,7 +178,9 @@ export function JudgmentDetail({
                 <h1 className="judgment-title">{item.title}</h1>
                 <div className="judgment-cite">{judgmentCitation(item)}</div>
               </div>
-              <span className={cn("treatment-pill", tcls[item.treatment])}>{item.treatment}</span>
+              <div className="judgment-header-badges">
+                <span className={cn("treatment-pill", tcls[item.treatment])}>{item.treatment}</span>
+              </div>
             </header>
 
             <div className="jd-tabs judgment-no-print" role="tablist" aria-label="Judgment sections">
@@ -196,9 +202,25 @@ export function JudgmentDetail({
               >
                 Summary
               </button>
+              <button
+                className={cn("jd-tab", tab === "graph" && "active")}
+                type="button"
+                role="tab"
+                aria-selected={tab === "graph"}
+                onClick={() => setTab("graph")}
+              >
+                Citation graph
+              </button>
             </div>
 
-            {tab === "summary" ? (
+            {tab === "graph" ? (
+              <CitationGraph
+                caseId={item.id}
+                cases={indexQuery.data ?? []}
+                onCaseSelect={(id) => router.push(`/dashboard/cases/${encodeURIComponent(id)}`)}
+                onAction={showToast}
+              />
+            ) : tab === "summary" ? (
               <JudgmentSummaryView item={item} />
             ) : (
               <div className="judgment-reading-panel">

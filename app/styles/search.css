@@ -146,6 +146,61 @@
   min-width: 100px;
 }
 
+.interpreted-query-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.interpreted-query-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-faint);
+}
+
+.interpreted-query-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--color-line-2);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-body);
+  background: var(--color-bg);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.interpreted-query-chip:hover {
+  background: var(--color-rose-bg);
+  border-color: var(--color-rose-bd);
+  color: var(--color-rose);
+}
+
+.research-month-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.research-month-filter .search-sort-select {
+  height: 32px;
+  min-width: 160px;
+  align-self: flex-start;
+}
+
+.research-filter-caption {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--color-faint);
+}
+
 .filter-pill-label {
   max-width: 160px;
   overflow: hidden;
@@ -233,6 +288,21 @@
 /* ─── Query syntax help ─────────────────────────────────────────────────── */
 .search-syntax-wrap {
   position: relative;
+}
+
+.search-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--color-g-200);
+  border-radius: var(--radius-sm);
+  background: var(--color-g-50);
+  color: var(--color-g-600);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .search-syntax-trigger {
@@ -772,6 +842,11 @@
   .search-syntax-trigger,
   .search-sort-select {
     width: 100%;
+  }
+
+  .search-ai-badge {
+    grid-column: 1 / -1;
+    justify-content: center;
   }
 
   .search-bar-actions > .btn-primary {

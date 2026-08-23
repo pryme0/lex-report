@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { Search, ArrowRight } from "lucide-react";
+import { Search, ArrowRight, X, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CaseEntry } from "./CaseEntry";
@@ -10,7 +10,7 @@ import { SearchPagination } from "./SearchPagination";
 import { SearchSyntaxHelp } from "./SearchSyntaxHelp";
 import { AsyncSection, ErrorState } from "./AsyncState";
 import { casesApi, catalogApi, draftsApi, researchApi } from "@/lib/api";
-import type { CaseIndexItem, CaseSearchParams, CaseSort, Paginated, CaseSummary } from "@/lib/api";
+import type { CaseIndexItem, CaseSearchParams, CaseSearchResult, CaseSort } from "@/lib/api";
 import { useApiMutation, useApiQuery } from "@/lib/api/hooks";
 import {
   parseResearchUrl,
@@ -53,7 +53,7 @@ function ResearchContent() {
     parseResearchUrl(urlParams),
   );
   const [queryInput, setQueryInput] = useState(researchState.q);
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [filtersExpanded, setFiltersExpanded] = useState(true);
 
   const createDraft = useApiMutation(() => draftsApi.create({}));
   const resolveCitation = useApiMutation((elrNumber: number) =>
@@ -100,6 +100,7 @@ function ResearchContent() {
     year: filters.year,
     yearFrom: filters.yearFrom,
     yearTo: filters.yearTo,
+    month: filters.month,
     area: filters.area,
     digestArea: filters.digestArea,
     jurisdiction: filters.jurisdiction,
@@ -156,6 +157,28 @@ function ResearchContent() {
     patchState({ q: value, page: 1 });
   }, [queryInput, patchState, resolveCitation, router]);
 
+  const removeInterpretedFilter = useCallback(
+    (key: keyof CaseSearchParams) => {
+      const interpreted = searchQuery.data?.interpreted;
+      if (!interpreted) return;
+      const remaining = { ...interpreted.filters };
+      delete remaining[key];
+      const nextQuery = interpreted.cleanedQuery;
+      setQueryInput(nextQuery);
+      patchState({
+        q: nextQuery,
+        court: remaining.court,
+        year: remaining.year,
+        yearFrom: remaining.yearFrom,
+        yearTo: remaining.yearTo,
+        area: remaining.area,
+        treatment: remaining.treatment,
+        page: 1,
+      });
+    },
+    [searchQuery.data, patchState],
+  );
+
   const updateFilters = useCallback((next: ResearchFilterState) => {
     setResearchState((prev) => ({
       ...prev,
@@ -163,6 +186,7 @@ function ResearchContent() {
       year: undefined,
       yearFrom: undefined,
       yearTo: undefined,
+      month: undefined,
       area: undefined,
       digestArea: undefined,
       jurisdiction: undefined,
@@ -202,11 +226,14 @@ function ResearchContent() {
             onKeyDown={(e) => {
               if (e.key === "Enter") void runSearch();
             }}
-            placeholder="Search judgments — try ratio:natural justice or &quot;floating charge&quot;"
+            placeholder="Search judgments, or ask a question — e.g. contract cases from the Supreme Court in 2023"
             aria-label="Search query"
           />
         </div>
         <div className="search-bar-actions">
+          <span className="search-ai-badge" title="Natural-language queries are interpreted by AI automatically">
+            <Sparkles size={12} aria-hidden="true" /> AI-powered
+          </span>
           <SearchSyntaxHelp />
           <select
             className="search-sort-select"
@@ -281,12 +308,31 @@ function ResearchContent() {
               <h2>Verified authorities</h2>
             </div>
           </div>
+          {searchQuery.data?.interpreted?.usedAi && (
+            <div className="interpreted-query-chips" aria-label="AI-interpreted search filters">
+              <span className="interpreted-query-label">Interpreted as:</span>
+              {(Object.keys(searchQuery.data.interpreted.filters) as (keyof CaseSearchParams)[])
+                .filter((key) => key !== "q")
+                .map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className="interpreted-query-chip"
+                    onClick={() => removeInterpretedFilter(key)}
+                    title="Remove this interpreted filter"
+                  >
+                    {key}: {String(searchQuery.data!.interpreted!.filters[key])}
+                    <X size={11} aria-hidden="true" />
+                  </button>
+                ))}
+            </div>
+          )}
           <div className="case-list">
             <AsyncSection
               query={searchQuery}
               loadingLabel="Searching…"
               emptyMessage="No authorities match."
-              isEmpty={(d: Paginated<CaseSummary>) => d.data.length === 0}
+              isEmpty={(d: CaseSearchResult) => d.data.length === 0}
             >
               {(data) => (
                 <>
