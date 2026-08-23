@@ -11,6 +11,7 @@ import "./styles/workspace.css";
 import "./styles/landing.css";
 import "./styles/auth.css";
 import "./styles/ai-chat.css";
+import "./styles/chat-page.css";
 // Cross-route responsive safeguards load last so desktop-focused feature styles
 // cannot accidentally reintroduce horizontal overflow on small screens.
 import "./styles/responsive.css";

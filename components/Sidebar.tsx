@@ -3,14 +3,15 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, FileText, Share2, PenLine, BookOpen, BookText, Gavel, Languages, LogOut, BookMarked, Scale, SlidersHorizontal, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { Search, FileText, Share2, PenLine, BookOpen, BookText, Gavel, Languages, LogOut, BookMarked, Scale, SlidersHorizontal, PanelLeftClose, PanelLeftOpen, X, MessageSquare } from "lucide-react";
 import { catalogApi, usersApi } from "@/lib/api";
 import { useApiQuery } from "@/lib/api/hooks";
 import { clearTokens } from "@/lib/api/axios";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { label: "Research",       href: "/dashboard",                icon: Search },
+  { label: "Chat",           href: "/dashboard",                icon: MessageSquare },
+  { label: "Research",       href: "/dashboard/research",       icon: Search },
   { label: "Citation Graph", href: "/dashboard/citation-graph", icon: Share2 },
   { label: "Draft Studio",   href: "/dashboard/draft-studio",   icon: PenLine },
   { label: "Library",        href: "/dashboard/library",        icon: BookOpen },

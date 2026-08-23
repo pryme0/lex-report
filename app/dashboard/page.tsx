@@ -1,2 +1,2 @@
-import { Research } from "@/components/Research";
-export default function Page() { return <Research />; }
+import { ChatPage } from "@/components/ChatPage";
+export default function Page() { return <ChatPage />; }
