@@ -70,8 +70,8 @@ export function ChatMessages({
   const bottomRef = useRef<HTMLDivElement>(null);
   const [verbIndex, setVerbIndex] = useState(0);
 
-  // Rotate thinking verbs while loading with no timeline
-  const showInitialLoader = isLoading && !assistantTurn?.toolTimeline?.length && !assistantTurn?.text;
+  // Only show initial loader when there's no assistantTurn yet (WorkTrail handles the rest)
+  const showInitialLoader = isLoading && !assistantTurn;
 
   useEffect(() => {
     if (!showInitialLoader) {
