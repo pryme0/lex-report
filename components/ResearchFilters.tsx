@@ -204,7 +204,7 @@ export function ResearchFilters({
                   </select>
                 </div>
               )}
-              {archive.months.some((m) => m.count > 0) && (
+              {archive.months?.some((m) => m.count > 0) && (
                 <div className="research-month-filter">
                   <select
                     className="search-sort-select"
