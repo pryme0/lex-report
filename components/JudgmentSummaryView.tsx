@@ -2,13 +2,18 @@
 
 import { Fragment, useMemo, useState, type ReactNode } from "react";
 import {
+  BookMarked,
   Check,
   Copy as CopyIcon,
+  Gavel,
+  Landmark,
   Sparkles,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useDashboard } from "@/contexts/DashboardContext";
 import type { CaseDetail } from "@/lib/api";
 import { copyText } from "@/lib/judgment";
+import { statuteHref } from "@/lib/routes";
 import { parseSummaryMarkdown, type SummaryBlock, type SummaryInline } from "@/lib/summary-markdown";
 import { SimilarCases } from "./SimilarCases";
 
@@ -135,6 +140,62 @@ function SideCard({
   );
 }
 
+function AuthorityLinks({ item }: { item: CaseDetail }) {
+  const router = useRouter();
+  const { openCase, showToast } = useDashboard();
+
+  return (
+    <>
+      <SideCard icon={<BookMarked size={13} aria-hidden="true" />} label="Cases cited">
+        {item.citedCases.length === 0 ? (
+          <p className="citator-empty">None recorded.</p>
+        ) : (
+          <div className="authority-links">
+            {item.citedCases.map((c, i) => (
+              <button
+                key={`${c.caseId ?? "ext"}-${c.title}-${i}`}
+                className="authority-link-btn"
+                onClick={() =>
+                  c.caseId ? openCase(c.caseId) : showToast(`${c.title} is not reported in this archive.`)
+                }
+              >
+                {c.title}
+                {!c.caseId && <span className="authority-link-note">not in archive</span>}
+              </button>
+            ))}
+          </div>
+        )}
+      </SideCard>
+
+      <SideCard icon={<Landmark size={13} aria-hidden="true" />} label="Statutes considered">
+        {item.citedStatutes.length === 0 ? (
+          <p className="citator-empty">None recorded.</p>
+        ) : (
+          <div className="authority-links">
+            {item.citedStatutes.map((s, i) =>
+              s.statuteId ? (
+                <button
+                  key={`${s.statuteId}-${s.section ?? ""}-${i}`}
+                  className="authority-link-btn"
+                  onClick={() => router.push(statuteHref(s.statuteId!, s.section))}
+                >
+                  {s.title}
+                  {s.section ? `, ${s.section}` : ""}
+                </button>
+              ) : (
+                <span key={`${s.title}-${s.section ?? ""}-${i}`} className="authority-link-static">
+                  {s.title}
+                  {s.section ? `, ${s.section}` : ""}
+                </span>
+              ),
+            )}
+          </div>
+        )}
+      </SideCard>
+    </>
+  );
+}
+
 export function JudgmentSummaryView({ item }: { item: CaseDetail }) {
   const { showToast } = useDashboard();
   const [copied, setCopied] = useState(false);
@@ -184,7 +245,36 @@ export function JudgmentSummaryView({ item }: { item: CaseDetail }) {
           )}
         </div>
         <aside className="judgment-aside summary-aside">
+          {hasSummary && (
+            <>
+              <SideCard icon={<Landmark size={13} aria-hidden="true" />} label="Applicable law">
+                {item.citedStatutes && item.citedStatutes.length > 0 ? (
+                  <ul className="summary-side-list">
+                    {item.citedStatutes.slice(0, 5).map((statute, i) => (
+                      <li key={i}>{statute.title}{statute.section ? `, ${statute.section}` : ""}</li>
+                    ))}
+                    {item.citedStatutes.length > 5 && (
+                      <li className="text-muted">+ {item.citedStatutes.length - 5} more</li>
+                    )}
+                  </ul>
+                ) : (
+                  <p className="summary-side-text">No statutes cited in this judgment.</p>
+                )}
+              </SideCard>
+              <SideCard icon={<BookMarked size={13} aria-hidden="true" />} label="Facts of the case">
+                <p className="summary-side-text">
+                  {item.facts || "Facts not summarized for this judgment."}
+                </p>
+              </SideCard>
+              <SideCard icon={<Gavel size={13} aria-hidden="true" />} label="Key legal principles">
+                <p className="summary-side-text">
+                  {item.ratio || item.ratioDecidendi || "No key principles identified."}
+                </p>
+              </SideCard>
+            </>
+          )}
           <SimilarCases caseId={item.id} />
+          <AuthorityLinks item={item} />
         </aside>
       </div>
     </div>
