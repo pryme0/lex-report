@@ -142,24 +142,27 @@ function SideCard({
 function extractSummarySection(summary: string, sectionName: string): string | null {
   if (!summary) return null;
 
-  // Match section heading (with or without number prefix) and capture content until next heading
-  const patterns = [
-    new RegExp(`(?:^|\\n)(?:\\d+[.)]\\s*)?\\*\\*${sectionName}\\*\\*\\s*\\n([\\s\\S]*?)(?=\\n(?:\\d+[.)]\\s*)?\\*\\*|$)`, 'i'),
-    new RegExp(`(?:^|\\n)(?:\\d+[.)]\\s*)?${sectionName}\\s*\\n([\\s\\S]*?)(?=\\n(?:\\d+[.)]\\s*)?\\*\\*|$)`, 'i'),
-  ];
+  // Match ## heading (markdown style) and capture content until next ## heading
+  // e.g., "## Material Facts of the Case" or "## Applicable Law"
+  const pattern = new RegExp(
+    `##\\s*(?:[^\\n]*${sectionName}[^\\n]*)\\n([\\s\\S]*?)(?=\\n##|$)`,
+    'i'
+  );
 
-  for (const pattern of patterns) {
-    const match = summary.match(pattern);
-    if (match && match[1]) {
-      // Clean up the extracted content
-      return match[1]
-        .trim()
-        .replace(/^\s*[-•]\s*/gm, '') // Remove bullet points at start
-        .split('\n')
-        .slice(0, 5) // Limit to first 5 lines for sidebar
-        .join('\n')
-        .trim();
-    }
+  const match = summary.match(pattern);
+  if (match && match[1]) {
+    // Clean up and truncate for sidebar display
+    const content = match[1]
+      .trim()
+      .replace(/^\s*[-•]\s*/gm, '') // Remove bullet points
+      .split('\n')
+      .filter(line => line.trim()) // Remove empty lines
+      .slice(0, 4) // Limit to first 4 lines
+      .join(' ')
+      .trim();
+
+    // Truncate to ~300 chars for sidebar
+    return content.length > 300 ? content.slice(0, 297) + '...' : content;
   }
   return null;
 }
@@ -227,7 +230,7 @@ export function JudgmentSummaryView({ item }: { item: CaseDetail }) {
               </SideCard>
               <SideCard icon={<Gavel size={13} aria-hidden="true" />} label="Key legal principles">
                 <p className="summary-side-text">
-                  {extractSummarySection(item.summary, "Key Legal Principles") || item.ratio || item.ratioDecidendi || "See summary for key principles."}
+                  {extractSummarySection(item.summary, "Key Legal Principles") || extractSummarySection(item.summary, "Ratio Decidendi") || item.ratio || item.ratioDecidendi || "See summary for key principles."}
                 </p>
               </SideCard>
             </>
