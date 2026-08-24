@@ -7,8 +7,6 @@ import {
   Copy as CopyIcon,
   Gavel,
   Landmark,
-  ListChecks,
-  Quote,
   Sparkles,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -249,25 +247,30 @@ export function JudgmentSummaryView({ item }: { item: CaseDetail }) {
         <aside className="judgment-aside summary-aside">
           {hasSummary && (
             <>
-              <SideCard icon={<Gavel size={13} aria-hidden="true" />} label="Ratio decidendi">
-                <p className="summary-side-text">
-                  {item.ratioDecidendi || "Not expressly stated in the judgment."}
-                </p>
-              </SideCard>
-              <SideCard icon={<Quote size={13} aria-hidden="true" />} label="Obiter dicta">
-                <p className="summary-side-text">
-                  {item.obiterDicta || "No significant obiter dicta were identified."}
-                </p>
-              </SideCard>
-              {item.issuesDetermined.length > 0 && (
-                <SideCard icon={<ListChecks size={13} aria-hidden="true" />} label="Issues determined">
-                  <ol className="judgment-issues-list">
-                    {item.issuesDetermined.map((issue, i) => (
-                      <li key={i}>{issue}</li>
+              <SideCard icon={<Landmark size={13} aria-hidden="true" />} label="Applicable law">
+                {item.citedStatutes && item.citedStatutes.length > 0 ? (
+                  <ul className="summary-side-list">
+                    {item.citedStatutes.slice(0, 5).map((statute, i) => (
+                      <li key={i}>{statute.title}{statute.section ? `, ${statute.section}` : ""}</li>
                     ))}
-                  </ol>
-                </SideCard>
-              )}
+                    {item.citedStatutes.length > 5 && (
+                      <li className="text-muted">+ {item.citedStatutes.length - 5} more</li>
+                    )}
+                  </ul>
+                ) : (
+                  <p className="summary-side-text">No statutes cited in this judgment.</p>
+                )}
+              </SideCard>
+              <SideCard icon={<BookMarked size={13} aria-hidden="true" />} label="Facts of the case">
+                <p className="summary-side-text">
+                  {item.facts || "Facts not summarized for this judgment."}
+                </p>
+              </SideCard>
+              <SideCard icon={<Gavel size={13} aria-hidden="true" />} label="Key legal principles">
+                <p className="summary-side-text">
+                  {item.ratio || item.ratioDecidendi || "No key principles identified."}
+                </p>
+              </SideCard>
             </>
           )}
           <SimilarCases caseId={item.id} />
