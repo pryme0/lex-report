@@ -2,7 +2,6 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import {
-  BookMarked,
   Check,
   Copy as CopyIcon,
   FileText,
@@ -178,32 +177,6 @@ function SideCard({
   );
 }
 
-function CitedCasesCard({ item }: { item: CaseDetail }) {
-  const { openCase, showToast } = useDashboard();
-
-  return (
-    <SideCard icon={<BookMarked size={13} aria-hidden="true" />} label="Cases cited">
-      {item.citedCases.length === 0 ? (
-        <p className="citator-empty">None recorded.</p>
-      ) : (
-        <div className="authority-links">
-          {item.citedCases.map((c, i) => (
-            <button
-              key={`${c.caseId ?? "ext"}-${c.title}-${i}`}
-              className="authority-link-btn"
-              onClick={() =>
-                c.caseId ? openCase(c.caseId) : showToast(`${c.title} is not reported in this archive.`)
-              }
-            >
-              {c.title}
-              {!c.caseId && <span className="authority-link-note">not in archive</span>}
-            </button>
-          ))}
-        </div>
-      )}
-    </SideCard>
-  );
-}
 
 /** Applicable law, primarily as prose extracted from the summary's own "Applicable Law" section
  * (see extractSummarySection) — falling back to the structured cited-statutes list (with links
@@ -350,7 +323,6 @@ export function JudgmentSummaryView({ item }: { item: CaseDetail }) {
             </>
           )}
           <SimilarCases caseId={item.id} />
-          <CitedCasesCard item={item} />
         </aside>
       </div>
     </div>
