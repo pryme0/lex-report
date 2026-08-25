@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import { Clock, TrendingUp, ArrowRight, Share2, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useDashboard } from "@/contexts/DashboardContext";
 import { mattersApi } from "@/lib/api";
 import type { CaseSummary, Matter } from "@/lib/api";
@@ -10,7 +9,7 @@ import { useApiQuery, useApiMutation } from "@/lib/api/hooks";
 import { useDismissable } from "@/lib/useDismissable";
 import { SaveToFolderMenu } from "@/components/SaveToFolderMenu";
 import { renderSearchSnippet } from "@/lib/search/snippet";
-import { tcls } from "@/lib/types";
+import { usePartnerSession } from "@/lib/usePartnerSession";
 
 type SaveTarget = "matter" | "folder";
 
@@ -57,16 +56,16 @@ export function CaseEntry({ item }: { item: CaseSummary }) {
     () => setSaveTarget(null),
     saveTarget === "matter" ? matterTriggerRef : folderTriggerRef,
   );
-  const t = tcls[item.treatment];
+  const partnerSession = usePartnerSession();
+  const isPartner = !!partnerSession;
   const citation = item.report?.seriesCitation ?? item.neutralCitation ?? item.citation;
 
   return (
-    <div className={cn("case-entry", t)}>
+    <div className="case-entry">
       <div className="case-entry-head">
         <span className="case-court-year">
           {item.court} · {item.year}
         </span>
-        <span className={cn("treatment-pill", t)}>{item.treatment}</span>
       </div>
       <button className="case-title-btn" onClick={() => openCase(item.id)}>
         <h3>{item.title}</h3>
@@ -101,46 +100,48 @@ export function CaseEntry({ item }: { item: CaseSummary }) {
         <button className="btn btn-ghost btn-sm" onClick={() => viewGraph(item.id)}>
           <Share2 size={12} /> Citation graph
         </button>
-        <div className="save-menu-wrap" ref={saveMenuRef}>
-          <button
-            ref={matterTriggerRef}
-            className="btn btn-ghost btn-sm"
-            aria-expanded={saveTarget === "matter"}
-            onClick={() => setSaveTarget((s) => (s === "matter" ? null : "matter"))}
-          >
-            Save to matter
-          </button>
-          <button
-            ref={folderTriggerRef}
-            className="btn btn-ghost btn-sm"
-            aria-expanded={saveTarget === "folder"}
-            onClick={() => setSaveTarget((s) => (s === "folder" ? null : "folder"))}
-          >
-            Save to folder
-          </button>
-          {saveTarget === "matter" && (
-            <div className="save-menu">
-              <SaveToMatter
-                item={item}
-                onSaved={(m) => {
-                  setSaveTarget(null);
-                  showToast(`${citation} saved to ${m.ref}.`);
-                }}
-              />
-            </div>
-          )}
-          {saveTarget === "folder" && (
-            <div className="save-menu">
-              <SaveToFolderMenu
-                caseId={item.id}
-                onSaved={(f) => {
-                  setSaveTarget(null);
-                  showToast(`${citation} saved to ${f.name}.`);
-                }}
-              />
-            </div>
-          )}
-        </div>
+        {!isPartner && (
+          <div className="save-menu-wrap" ref={saveMenuRef}>
+            <button
+              ref={matterTriggerRef}
+              className="btn btn-ghost btn-sm"
+              aria-expanded={saveTarget === "matter"}
+              onClick={() => setSaveTarget((s) => (s === "matter" ? null : "matter"))}
+            >
+              Save to matter
+            </button>
+            <button
+              ref={folderTriggerRef}
+              className="btn btn-ghost btn-sm"
+              aria-expanded={saveTarget === "folder"}
+              onClick={() => setSaveTarget((s) => (s === "folder" ? null : "folder"))}
+            >
+              Save to folder
+            </button>
+            {saveTarget === "matter" && (
+              <div className="save-menu">
+                <SaveToMatter
+                  item={item}
+                  onSaved={(m) => {
+                    setSaveTarget(null);
+                    showToast(`${citation} saved to ${m.ref}.`);
+                  }}
+                />
+              </div>
+            )}
+            {saveTarget === "folder" && (
+              <div className="save-menu">
+                <SaveToFolderMenu
+                  caseId={item.id}
+                  onSaved={(f) => {
+                    setSaveTarget(null);
+                    showToast(`${citation} saved to ${f.name}.`);
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

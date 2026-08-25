@@ -305,22 +305,7 @@ function ResearchContent() {
           {submittedQuery && looksLikeQuestion(submittedQuery) && (
             <SearchAiAnswer query={submittedQuery} />
           )}
-          <div className="page-header" style={{ marginBottom: 10 }}>
-            <div>
-              <p className="label">
-                Best matches
-                {searchQuery.data && (
-                  <>
-                    {" "}
-                    · {searchQuery.data.meta.total}{" "}
-                    {searchQuery.data.meta.total === 1 ? "authority" : "authorities"}
-                  </>
-                )}
-              </p>
-              <h2>Verified authorities</h2>
-            </div>
-          </div>
-          {searchQuery.data?.interpreted?.usedAi && (
+                    {searchQuery.data?.interpreted?.usedAi && (
             <div className="interpreted-query-chips" aria-label="AI-interpreted search filters">
               <span className="interpreted-query-label">Interpreted as:</span>
               {(Object.keys(searchQuery.data.interpreted.filters) as (keyof CaseSearchParams)[])
