@@ -38,12 +38,12 @@ export default function LoginPage() {
       <main className="login-panel login-signin-panel">
         <header className="login-signin-header">
           <Link href="/" className="login-back-link">
-            <ArrowLeft size={14} /> Back to LexTech Report
+            <ArrowLeft size={14} /> Back to ELR
           </Link>
-          <Link href="/" className="login-signin-brand" aria-label="LexTech Report home">
-            <div className="sidebar-mark">Lr</div>
+          <Link href="/" className="login-signin-brand" aria-label="Electronic Lextech Report home">
+            <div className="sidebar-mark">ELR</div>
             <div>
-              <div className="login-brand-name">LexTech Report</div>
+              <div className="login-brand-name">Electronic Lextech Report</div>
               <div className="login-brand-sub">Nigerian legal intelligence</div>
             </div>
           </Link>

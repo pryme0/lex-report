@@ -88,8 +88,8 @@ export function Sidebar({
     >
       <div className="sidebar-top">
         <Link href="/dashboard" className="sidebar-brand" onClick={onClose}>
-          <div className="sidebar-mark">Lr</div>
-          <span className="sidebar-brand-name">LexTech Report</span>
+          <div className="sidebar-mark">ELR</div>
+          <span className="sidebar-brand-name">Electronic Lextech Report</span>
         </Link>
         <button
           className="sidebar-pin"

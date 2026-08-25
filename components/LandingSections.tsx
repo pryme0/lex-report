@@ -45,7 +45,7 @@ export function LandingSearchPreview() {
       <div className="lx-section-heading lx-section-heading-center">
         <p className="l-hero-eyebrow">Search the law, not a folder of PDFs</p>
         <h2 id="search-preview-title">Start with the question your matter needs answered.</h2>
-        <p>Use ordinary language or precise legal fields. LexTech Report returns structured authorities, not isolated keyword hits.</p>
+        <p>Use ordinary language or precise legal fields. Electronic Lextech Report returns structured authorities, not isolated keyword hits.</p>
       </div>
 
       <div className="lx-search-demo">
@@ -108,7 +108,7 @@ function ReportAnatomy() {
     <section className="lx-anatomy-section" id="platform" aria-labelledby="anatomy-title">
       <div className="lx-anatomy-wrap">
         <div className="lx-report-sheet" aria-label="Example structured law report">
-          <div className="lx-report-masthead"><span>LexTech Report</span><span>Supreme Court · 2026</span></div>
+          <div className="lx-report-masthead"><span>Electronic Lextech Report</span><span>Supreme Court · 2026</span></div>
           <p className="lx-report-series">(2026) ELR-000001 (SC)</p>
           <h3>Zenith Trustees Ltd v. Adebayo &amp; Sons Holdings</h3>
           <div className="lx-report-rule" />
@@ -227,9 +227,9 @@ function ProductViews() {
       </div>
 
       <div className="lx-product-window">
-        <div className="lx-window-top"><span /><span /><span /><strong>LexTech Report / {tab.toLowerCase()}</strong></div>
+        <div className="lx-window-top"><span /><span /><span /><strong>Electronic Lextech Report / {tab.toLowerCase()}</strong></div>
         <div className="lx-window-body">
-          <aside><div className="lx-window-logo">Lr</div>{[Search, FileText, Network, BriefcaseBusiness, BookOpen].map((Icon, i) => <Icon key={i} size={16} className={i === (tab === "Research" ? 0 : tab === "Matters" ? 3 : 1) ? "active" : ""} />)}</aside>
+          <aside><div className="lx-window-logo">ELR</div>{[Search, FileText, Network, BriefcaseBusiness, BookOpen].map((Icon, i) => <Icon key={i} size={16} className={i === (tab === "Research" ? 0 : tab === "Matters" ? 3 : 1) ? "active" : ""} />)}</aside>
           <main>
             <div className="lx-window-heading"><span>{tab}</span><BadgeCheck size={15} /></div>
             {tab === "Research" && <><div className="lx-window-search"><Search size={14} /> natural justice</div><div className="lx-window-card"><small>SUPREME COURT · VERIFIED</small><strong>S. Anaja v. United Bank for Africa</strong><span>(2025) ELR-000214 (SC)</span><p>Fair hearing · Followed 22 · Strength 98%</p></div><div className="lx-window-card muted" /></>}
@@ -293,10 +293,10 @@ function CoverageMap({ rows, loading }: { rows: Coverage[]; loading: boolean }) 
 function EditorialStandards() {
   return (
     <section className="lx-standards-section" id="standards" aria-labelledby="standards-title">
-      <div className="lx-standard-seal" aria-hidden="true"><span>LR</span><strong>Verified</strong><small>Editorial standard</small></div>
+      <div className="lx-standard-seal" aria-hidden="true"><span>ELR</span><strong>Verified</strong><small>Editorial standard</small></div>
       <div className="lx-standards-copy">
         <div className="lx-section-heading">
-          <p className="l-hero-eyebrow">The LexTech Report editorial standard</p>
+          <p className="l-hero-eyebrow">The Electronic Lextech Report editorial standard</p>
           <h2 id="standards-title">Trust is a process, not a badge.</h2>
           <p>Each published report passes through a consistent legal editorial workflow before it enters the research archive.</p>
         </div>
@@ -332,7 +332,7 @@ export function LandingFinalCta({ signedIn = false }: { signedIn?: boolean }) {
   return (
     <section className="lx-final-cta">
       <div className="lx-final-mark"><Scale size={28} /></div>
-      <p>LexTech Report · Nigerian legal intelligence</p>
+      <p>Electronic Lextech Report · Nigerian legal intelligence</p>
       <h2>Build your argument on verified authority.</h2>
       <span>Search the archive, follow the precedent and keep every authority connected to the matter.</span>
       <div>

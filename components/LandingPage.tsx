@@ -83,8 +83,8 @@ export function LandingPage() {
       <nav className="l-nav">
         <div className="l-nav-inner">
           <Link href="/" className="sidebar-brand">
-            <div className="sidebar-mark">Lr</div>
-            <span className="sidebar-brand-name" style={{ color: "var(--l-ink)" }}>LexTech Report</span>
+            <div className="sidebar-mark">ELR</div>
+            <span className="sidebar-brand-name" style={{ color: "var(--l-ink)" }}>Electronic Lextech Report</span>
           </Link>
           <div className="l-nav-links">
             <a href="#platform">Reports</a>
@@ -115,7 +115,7 @@ export function LandingPage() {
               </Link>
               <a href="/sample/lexreport-sample-report.pdf" download className="btn btn-secondary">Read sample report</a>
             </div>
-            <div className="l-hero-proof" aria-label="LexTech Report research standards">
+            <div className="l-hero-proof" aria-label="ELR research standards">
               <span><BadgeCheck size={14} /> Editorially verified</span>
               <span><Landmark size={14} /> Nigerian courts</span>
               <span><Scale size={14} /> Treatment tracked</span>
@@ -181,10 +181,10 @@ export function LandingPage() {
 
       <footer className="l-footer">
         <div className="sidebar-brand">
-          <div className="sidebar-mark" style={{ width: 28, height: 28, fontSize: "0.8rem" }}>Lr</div>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>LexTech Report</span>
+          <div className="sidebar-mark" style={{ width: 28, height: 28, fontSize: "0.8rem" }}>ELR</div>
+          <span style={{ fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>Electronic Lextech Report</span>
         </div>
-        <span className="l-footer-copy">© 2026 LexTech Report. Nigerian law intelligence.</span>
+        <span className="l-footer-copy">© 2026 Electronic Lextech Report. Nigerian law intelligence.</span>
       </footer>
     </div>
   );

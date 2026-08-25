@@ -82,7 +82,7 @@ function EmptyState({ onSuggestionClick }: { onSuggestionClick: (s: string) => v
       <div className="chat-empty-icon">
         <Scale size={48} />
       </div>
-      <h1 className="chat-empty-title">LexTech Report AI</h1>
+      <h1 className="chat-empty-title">ELR AI</h1>
       <p className="chat-empty-subtitle">
         Your AI-powered legal research assistant. Search cases, analyze judgments, and draft legal documents.
       </p>
