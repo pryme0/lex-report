@@ -212,7 +212,7 @@ function pushParagraph(ctx: ParseContext, children: InlineNode[], explicitNumber
     first?.kind === "strong" &&
     /^coram:?$/i.test(inlineToPlainText(first.children).trim())
   ) {
-    // The judgment header (above the reading panel) already shows the Lex Report citation, so
+    // The judgment header (above the reading panel) already shows the LexTech Report citation, so
     // the source document's own "Coram: ..." line is dropped rather than rendered here.
     return;
   }

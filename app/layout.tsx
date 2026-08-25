@@ -17,7 +17,7 @@ import "./styles/chat-page.css";
 import "./styles/responsive.css";
 
 export const metadata: Metadata = {
-  title: "LexReport — Nigerian Law Intelligence",
+  title: "LexTech Report — Nigerian Law Intelligence",
   description: "Verified judgments, ratio tracking, and litigation intelligence for Nigerian legal practice.",
 };
 

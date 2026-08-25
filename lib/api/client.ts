@@ -102,7 +102,7 @@ async function request<T>(
     });
   } catch {
     throw new ApiError(
-      "Cannot reach the LexReport API. Check that the server is running.",
+      "Cannot reach the LexTech Report API. Check that the server is running.",
       0,
     );
   }
@@ -134,7 +134,7 @@ async function request<T>(
   } catch {
     // Surfaced as an ApiError so the calling screen shows its error state rather
     // than the raw parse failure taking down the whole route.
-    throw new ApiError("The LexReport API returned a malformed response.", response.status);
+    throw new ApiError("The LexTech Report API returned a malformed response.", response.status);
   }
 }
 

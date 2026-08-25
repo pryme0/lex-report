@@ -442,7 +442,7 @@ function PageBody({
       className={cn("judgment-source-page", page.extraction === "editorial" && "is-editorial")}
     >
       <header className="judgment-page-running-head">
-        <span>Electronic Lex Report</span>
+        <span>Electronic LexTech Report</span>
         <button
           type="button"
           className="judgment-page-cite judgment-no-print"
