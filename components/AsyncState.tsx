@@ -61,7 +61,10 @@ export function AsyncSection<T>({
   children: (data: T) => React.ReactNode;
 }) {
   if (query.loading && query.data === null) return <LoadingState label={loadingLabel} />;
-  if (query.error) return <ErrorState message={query.error} onRetry={query.refetch} />;
+  // A background revalidate can fail while cached data from an earlier successful fetch is
+  // still on screen — that's a quiet miss, not a reason to blow away good results, so only the
+  // no-data case is treated as a hard error.
+  if (query.error && query.data === null) return <ErrorState message={query.error} onRetry={query.refetch} />;
   if (query.data === null) return null;
   if (emptyMessage && isEmpty?.(query.data)) return <EmptyState message={emptyMessage} />;
   if (query.loading) {
