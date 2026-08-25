@@ -40,12 +40,29 @@ export default function ViewTokenPage() {
         // Store the session token (no refresh token for partner sessions)
         setTokens(data.accessToken, "");
 
-        // Store partner info for UI
+        // Store partner info for UI - merge with existing session to allow access to multiple cases
         if (typeof window !== "undefined") {
+          let existingCaseIds: string[] = [];
+          try {
+            const existing = localStorage.getItem("lr_partner_session");
+            if (existing) {
+              const parsed = JSON.parse(existing);
+              existingCaseIds = Array.isArray(parsed.caseIds) ? parsed.caseIds : (parsed.caseId ? [parsed.caseId] : []);
+            }
+          } catch {
+            // Ignore parse errors
+          }
+
+          // Add new caseId if not already in list
+          const caseIds = existingCaseIds.includes(caseId)
+            ? existingCaseIds
+            : [...existingCaseIds, caseId];
+
           localStorage.setItem("lr_partner_session", JSON.stringify({
             partnerName: data.partnerName,
             access: data.access,
-            caseId,
+            caseIds,
+            caseId, // Keep for backwards compatibility
           }));
         }
 
