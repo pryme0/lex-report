@@ -113,7 +113,6 @@ export function LandingPage() {
               <Link href={deskHref} className="btn btn-primary">
                 {signedIn ? "Continue research" : "Open research desk"} <ArrowRight size={14} />
               </Link>
-              <a href="/sample/lexreport-sample-report.pdf" download className="btn btn-secondary">Read sample report</a>
             </div>
             <div className="l-hero-proof" aria-label="ELR research standards">
               <span><BadgeCheck size={14} /> Editorially verified</span>

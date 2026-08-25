@@ -306,9 +306,6 @@ function EditorialStandards() {
           <div><Network size={18} /><span><strong>Treatment linked</strong><small>Subsequent judicial consideration classified and connected.</small></span></div>
           <div><Bell size={18} /><span><strong>Continuously updated</strong><small>Material treatment changes surface across saved matters.</small></span></div>
         </div>
-        <a className="lx-sample-download" href="/sample/lexreport-sample-report.pdf" download>
-          <Download size={15} /> Download a sample verified report <ArrowRight size={14} />
-        </a>
       </div>
     </section>
   );
@@ -339,7 +336,6 @@ export function LandingFinalCta({ signedIn = false }: { signedIn?: boolean }) {
         <Link href={signedIn ? "/dashboard" : "/login"} className="btn btn-light">
           {signedIn ? "Return to research desk" : "Open research desk"} <ArrowRight size={14} />
         </Link>
-        <a href="/sample/lexreport-sample-report.pdf" download className="btn btn-outline-light">Download sample report</a>
       </div>
     </section>
   );
