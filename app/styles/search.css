@@ -875,3 +875,111 @@
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* ─── AI overview (search page) ─────────────────────────────────────────── */
+.search-ai-answer {
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid var(--color-g-200);
+  border-radius: var(--radius-md);
+  background: var(--color-g-50);
+}
+
+.search-ai-answer-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-g-600);
+  margin-bottom: 8px;
+}
+
+.search-ai-answer-head h3 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.search-ai-answer-body {
+  position: relative;
+}
+
+.search-ai-answer-clamped {
+  max-height: 220px;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+}
+
+.search-ai-answer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-g-200);
+}
+
+.search-ai-answer-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-g-600);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.search-ai-answer-toggle-open {
+  transform: rotate(180deg);
+}
+
+.search-ai-answer-continue {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  color: var(--color-g-600);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.search-ai-answer-continue:hover {
+  text-decoration: underline;
+}
+
+.search-ai-answer-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.search-ai-answer-error p {
+  font-size: 0.85rem;
+  color: var(--color-danger, #9a3244);
+  margin: 0;
+}
+
+.search-ai-answer-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid var(--color-g-200);
+  border-radius: var(--radius-sm, 6px);
+  padding: 4px 8px;
+  color: var(--color-g-600);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.search-ai-answer-retry:hover {
+  background: var(--color-g-100, var(--color-g-50));
+}

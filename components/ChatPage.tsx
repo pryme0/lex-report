@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, MessageSquare, Trash2, Search, PenTool, Send, Scale } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGeneralChat } from "@/hooks/useGeneralChat";
@@ -26,6 +27,8 @@ function ChatSidebar({
         <Plus size={18} />
         New chat
       </button>
+
+      {sessions.length > 0 && <p className="label chat-sessions-label">Recent</p>}
 
       <div className="chat-sessions-list">
         {sessions.length === 0 ? (
@@ -79,7 +82,7 @@ function EmptyState({ onSuggestionClick }: { onSuggestionClick: (s: string) => v
       <div className="chat-empty-icon">
         <Scale size={48} />
       </div>
-      <h1 className="chat-empty-title">LexReport AI</h1>
+      <h1 className="chat-empty-title">LexTech Report AI</h1>
       <p className="chat-empty-subtitle">
         Your AI-powered legal research assistant. Search cases, analyze judgments, and draft legal documents.
       </p>
@@ -168,7 +171,9 @@ function ChatInput({
   );
 }
 
-export function ChatPage() {
+function ChatPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState<ChatMode>("research");
   const {
     messages,
@@ -185,6 +190,21 @@ export function ChatPage() {
   const handleSend = (message: string) => {
     sendMessage(message, mode);
   };
+
+  // Landed here from "Continue in AI chat" on the search page (see SearchAiAnswer /
+  // routes.askAi) — that session was already created and answered by the search page's own
+  // /lex/chat call, so load it rather than asking Lex the question again from scratch (which
+  // would just create a second, duplicate session). Drop the param once loaded so a refresh or
+  // back-navigation doesn't reload it.
+  const loadedRef = useRef(false);
+  useEffect(() => {
+    const targetChatId = searchParams.get("chatId");
+    if (!targetChatId || loadedRef.current) return;
+    loadedRef.current = true;
+    loadChat(targetChatId);
+    router.replace("/dashboard", { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once on mount only
+  }, []);
 
   const handleSuggestionClick = (suggestion: string) => {
     sendMessage(suggestion, mode);
@@ -224,5 +244,13 @@ export function ChatPage() {
         />
       </main>
     </div>
+  );
+}
+
+export function ChatPage() {
+  return (
+    <Suspense fallback={<div className="chat-page" />}>
+      <ChatPageContent />
+    </Suspense>
   );
 }

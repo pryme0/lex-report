@@ -1,39 +1,57 @@
-/* Chat Page Layout */
+/* Chat Page Layout — a fixed viewport height (not min-height) so the sidebar and its chat
+   history stay put; only .chat-page-content and .chat-sessions-list scroll internally. Without
+   this, .workspace's own height grows to fit content (see globals.css) and the whole page,
+   sidebar included, scrolls with the conversation — the opposite of a chat history rail. */
 .chat-page {
   display: flex;
-  height: 100%;
+  height: calc(100vh - 58px);
+  overflow: hidden;
   background: var(--color-bg);
 }
 
-/* Sidebar */
+/* Sidebar — static chat history rail */
 .chat-page-sidebar {
-  width: 280px;
-  min-width: 280px;
+  width: 284px;
+  min-width: 284px;
+  height: 100%;
   background: var(--color-paper);
   border-right: 1px solid var(--color-line);
+  box-shadow: 1px 0 0 rgba(255, 255, 255, 0.5) inset;
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  gap: 16px;
+  padding: 18px 14px;
+  gap: 14px;
 }
 
 .chat-new-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: 12px 16px;
-  background: var(--color-g-600);
+  background: linear-gradient(155deg, var(--color-g-500), var(--color-g-700));
   color: white;
   border: none;
-  border-radius: var(--radius);
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: var(--radius-lg);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: background 0.15s;
+  box-shadow: 0 2px 10px rgba(19, 50, 32, 0.22);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .chat-new-btn:hover {
-  background: var(--color-g-700);
+  box-shadow: 0 4px 14px rgba(19, 50, 32, 0.3);
+  transform: translateY(-1px);
+}
+
+.chat-new-btn:active {
+  transform: translateY(0);
+}
+
+.chat-sessions-label {
+  padding: 4px 6px 0;
 }
 
 .chat-sessions-list {
@@ -41,7 +59,9 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  margin: 0 -6px;
+  padding: 0 6px;
 }
 
 .chat-sessions-empty {
@@ -54,8 +74,22 @@
 .chat-session-item {
   display: flex;
   align-items: center;
+  position: relative;
   border-radius: var(--radius);
   transition: background 0.15s;
+}
+
+.chat-session-item::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--color-g-400);
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .chat-session-item:hover {
@@ -64,7 +98,10 @@
 
 .chat-session-item.active {
   background: var(--color-g-50);
-  border: 1px solid var(--color-g-200);
+}
+
+.chat-session-item.active::before {
+  opacity: 1;
 }
 
 .chat-session-btn {
@@ -82,8 +119,19 @@
   min-width: 0;
 }
 
+.chat-session-btn svg {
+  flex-shrink: 0;
+  color: var(--color-muted);
+  transition: color 0.15s ease;
+}
+
 .chat-session-item.active .chat-session-btn {
   color: var(--color-g-700);
+  font-weight: 600;
+}
+
+.chat-session-item.active .chat-session-btn svg {
+  color: var(--color-g-500);
 }
 
 .chat-session-title {
@@ -119,15 +167,22 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  background: var(--color-paper);
+  height: 100%;
+  background:
+    radial-gradient(ellipse 900px 480px at 50% -120px, var(--color-g-50) 0%, transparent 65%),
+    var(--color-paper);
 }
 
 .chat-page-content {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 28px 24px;
   display: flex;
   flex-direction: column;
+  /* Fades the very top of the scroll region rather than clipping messages abruptly against
+     the header edge — a small, deliberate touch that reads as considered rather than default. */
+  mask-image: linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 8px), black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 8px), black 100%);
 }
 
 /* Empty State */
@@ -149,10 +204,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-g-50);
-  border-radius: 20px;
+  background: linear-gradient(155deg, var(--color-g-50), var(--color-g-100));
+  border-radius: 24px;
   margin-bottom: 24px;
   color: var(--color-g-600);
+  box-shadow: 0 8px 24px rgba(19, 50, 32, 0.1);
 }
 
 .chat-empty-title {
@@ -161,6 +217,7 @@
   margin: 0 0 12px;
   color: var(--color-ink);
   font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
 
 .chat-empty-subtitle {
@@ -190,19 +247,22 @@
   transition: all 0.15s;
   text-align: left;
   line-height: 1.4;
+  box-shadow: 0 1px 2px rgba(15, 21, 16, 0.03);
 }
 
 .chat-suggestion-btn:hover {
   background: var(--color-g-50);
   border-color: var(--color-g-300);
   color: var(--color-ink);
+  box-shadow: 0 4px 14px rgba(19, 50, 32, 0.08);
+  transform: translateY(-1px);
 }
 
-/* Chat Input */
+/* Chat Input — a floating card lifted off the page edge rather than a hard bar butted
+   against the bottom border, so it reads as the focal control rather than a footer. */
 .chat-input-form {
-  padding: 20px 24px 28px;
-  background: var(--color-paper);
-  border-top: 1px solid var(--color-line);
+  padding: 14px 24px 22px;
+  background: transparent;
 }
 
 .chat-input-container {
@@ -237,9 +297,10 @@
 }
 
 .chat-mode-btn.active {
-  background: var(--color-g-600);
+  background: linear-gradient(155deg, var(--color-g-500), var(--color-g-700));
   border-color: var(--color-g-600);
   color: white;
+  box-shadow: 0 2px 8px rgba(19, 50, 32, 0.18);
 }
 
 .chat-input-wrapper {
@@ -250,12 +311,13 @@
   border: 1px solid var(--color-line);
   border-radius: var(--radius-lg);
   padding: 14px 18px;
+  box-shadow: 0 6px 24px rgba(15, 21, 16, 0.07);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .chat-input-wrapper:focus-within {
   border-color: var(--color-g-400);
-  box-shadow: 0 0 0 3px var(--color-g-50);
+  box-shadow: 0 6px 24px rgba(15, 21, 16, 0.07), 0 0 0 3px var(--color-g-50);
 }
 
 .chat-input {
@@ -276,24 +338,31 @@
 }
 
 .chat-send-btn {
-  padding: 10px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
   border: none;
-  background: var(--color-g-600);
+  background: linear-gradient(155deg, var(--color-g-500), var(--color-g-700));
   color: white;
-  border-radius: var(--radius);
+  border-radius: 50%;
   cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
+  transition: box-shadow 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(19, 50, 32, 0.24);
 }
 
 .chat-send-btn:hover:not(:disabled) {
-  background: var(--color-g-700);
+  box-shadow: 0 3px 12px rgba(19, 50, 32, 0.32);
+  transform: translateY(-1px);
 }
 
 .chat-send-btn:disabled {
-  opacity: 0.4;
+  background: var(--color-line-2);
+  box-shadow: none;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
@@ -302,6 +371,7 @@
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
+  gap: 22px;
 }
 
 /* Mobile */

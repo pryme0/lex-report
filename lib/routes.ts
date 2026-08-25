@@ -11,6 +11,13 @@ export const routes = {
   form: (id: string) => `/dashboard/practice/forms/${encodeURIComponent(id)}`,
   dictionaryEntry: (id: string) => `/dashboard/dictionary?entry=${encodeURIComponent(id)}`,
   reportBatch: (id: string) => `/dashboard/reports/${encodeURIComponent(id)}`,
+  research: (qs?: string) => (qs ? `/dashboard/research?${qs}` : "/dashboard/research"),
+  /** Jumps to the AI chat page and loads the given (already-answered) session there — see
+   * ChatPage's handling of the `chatId` param. Used by SearchAiAnswer's "Continue in AI chat":
+   * the search page's "AI overview" already asked the question and got a real answer over its
+   * own /lex/chat call, so this reopens that same session instead of asking Lex again from
+   * scratch, which would start a second, duplicate session. */
+  askAi: (chatId: string) => `/dashboard?chatId=${encodeURIComponent(chatId)}`,
 };
 
 const DETAIL_ROUTES = [

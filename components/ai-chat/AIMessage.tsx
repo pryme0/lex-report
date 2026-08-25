@@ -1,5 +1,8 @@
+import { useMemo } from "react";
 import type { ChatMessage, ChatAction } from "./types";
 import { SuggestedActions } from "./SuggestedActions";
+import { MarkdownBlocks } from "../MarkdownBlocks";
+import { parseSummaryMarkdown } from "@/lib/summary-markdown";
 
 interface AIMessageProps {
   message: ChatMessage;
@@ -7,12 +10,12 @@ interface AIMessageProps {
 }
 
 export function AIMessage({ message, onAction }: AIMessageProps) {
+  const blocks = useMemo(() => parseSummaryMarkdown(message.content), [message.content]);
   return (
     <>
-      <div
-        className="ai-chat-message-content"
-        dangerouslySetInnerHTML={{ __html: formatMarkdown(message.content) }}
-      />
+      <div className="ai-chat-message-content">
+        <MarkdownBlocks blocks={blocks} />
+      </div>
       {message.citations && message.citations.length > 0 && (
         <div className="ai-chat-citations">
           {message.citations.map((cite, i) => (
@@ -34,12 +37,4 @@ export function AIMessage({ message, onAction }: AIMessageProps) {
       )}
     </>
   );
-}
-
-function formatMarkdown(text: string): string {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.*?)\*/g, "<em>$1</em>")
-    .replace(/`(.*?)`/g, "<code>$1</code>")
-    .replace(/\n/g, "<br>");
 }
