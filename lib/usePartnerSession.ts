@@ -5,8 +5,6 @@ import { useEffect, useState } from "react";
 export interface PartnerSession {
   partnerName: string;
   access: string[];
-  caseId: string; // Most recent case (backwards compat)
-  caseIds?: string[]; // All cases the partner can access
 }
 
 export function usePartnerSession(): PartnerSession | null {
@@ -42,13 +40,7 @@ export function clearPartnerSession(): void {
 export function isRouteAllowedForPartner(pathname: string, partnerSession: PartnerSession | null): boolean {
   if (!partnerSession) return true; // Not a partner session, allow all
 
-  const { access, caseId, caseIds } = partnerSession;
-  const allCaseIds = caseIds ?? (caseId ? [caseId] : []);
-
-  // Allow any of the cases they've been granted access to
-  for (const id of allCaseIds) {
-    if (pathname.includes(`/cases/${id}`)) return true;
-  }
+  const { access } = partnerSession;
 
   // Check access permissions
   if (access.includes("research") && pathname.includes("/research")) return true;
