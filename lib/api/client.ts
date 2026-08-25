@@ -13,7 +13,8 @@ export class ApiError extends Error {
 
 function signOutAndRedirect() {
   clearTokens();
-  if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+  // Only redirect from protected routes, not public pages like landing
+  if (typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")) {
     window.location.href = "/login";
   }
 }
