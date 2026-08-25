@@ -241,29 +241,28 @@ export function ResearchFilters({
             </section>
           )}
 
-          {facetKeys.map((key) => {
-            const values = facetValues(archive, key);
-            return (
-              <section className="research-filter-group" key={key}>
-                <h4 className="research-filter-heading">{FACET_LABELS[key]}</h4>
-                <div className="research-filter-pills">
-                  {values.map(({ value, count }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      className={cn("filter-pill", filters[key] === value && "active")}
-                      aria-pressed={filters[key] === value}
-                      onClick={() => setFacet(key, value)}
-                      title={value}
-                    >
-                      <span className="filter-pill-label">{value}</span>
-                      <span className="filter-count">{count}</span>
-                    </button>
-                  ))}
+          <div className="research-filter-dropdowns">
+            {facetKeys.map((key) => {
+              const values = facetValues(archive, key);
+              return (
+                <div className="research-filter-dropdown" key={key}>
+                  <label className="research-filter-label">{FACET_LABELS[key]}</label>
+                  <select
+                    className="search-sort-select"
+                    value={filters[key] ?? ""}
+                    onChange={(e) => setFacet(key, e.target.value)}
+                  >
+                    <option value="">All {FACET_LABELS[key].toLowerCase()}s</option>
+                    {values.map(({ value, count }) => (
+                      <option key={value} value={value}>
+                        {value} ({count})
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              </section>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

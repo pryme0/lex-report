@@ -11,7 +11,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px 0;
+  padding: 10px 14px;
 }
 
 .research-filters-icon {
@@ -199,6 +199,32 @@
   margin: 0;
   font-size: 0.7rem;
   color: var(--color-faint);
+}
+
+.research-filter-dropdowns {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  grid-column: 1 / -1;
+}
+
+.research-filter-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.research-filter-label {
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+
+.research-filter-dropdown .search-sort-select {
+  height: 36px;
+  width: 100%;
 }
 
 .filter-pill-label {
