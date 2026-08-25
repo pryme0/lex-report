@@ -41,7 +41,7 @@ export type CaseSummary = {
   sourcePageCount?: number;
   /** Court-assigned citation, independent of any law reporter. */
   neutralCitation?: string | null;
-  /** Unique LexReport series placement assigned to this judgment. */
+  /** Unique LexTech Report series placement assigned to this judgment. */
   report?: ReportPlacement | null;
   /** Matched passage with `<b>` marks, present only on relevance-ranked search hits. */
   snippet?: string;

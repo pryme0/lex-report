@@ -30,7 +30,7 @@ export default function SignupPage() {
         <div className="login-form login-signin-form login-status-card">
           <CheckCircle size={42} />
           <AuthFormHeading eyebrow="One final step" title="Check your email." description={`We sent a verification link to ${email}.`} />
-          <p>Open the link in the email before signing in to your new LexReport workspace.</p>
+          <p>Open the link in the email before signing in to your new LexTech Report workspace.</p>
           <Link href="/login" className="btn btn-primary login-submit">Return to login <ArrowRight size={15} /></Link>
         </div>
       </AuthShell>
@@ -42,7 +42,7 @@ export default function SignupPage() {
   return (
     <AuthShell extended eyebrow="Create your workspace" title={<>Start with verified<br />authority.</>} deck="Build a secure research record around every matter, from first question to final bundle." statLabel="Archive coverage" statValue="50+ years of judgments" statNote="Continuously updated">
       <form className="login-form login-signin-form login-extended-form" onSubmit={submit}>
-        <AuthFormHeading eyebrow="Create account" title="Join LexReport." description="Set up your secure legal research workspace." />
+        <AuthFormHeading eyebrow="Create account" title="Join LexTech Report." description="Set up your secure legal research workspace." />
         {error && <div className="form-error">{error}</div>}
 
         <div className="form-field">

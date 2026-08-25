@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CaseEntry } from "./CaseEntry";
 import { ResearchFilters } from "./ResearchFilters";
+import { SearchAiAnswer } from "./SearchAiAnswer";
 import { SearchPagination } from "./SearchPagination";
 import { SearchSyntaxHelp } from "./SearchSyntaxHelp";
 import { AsyncSection, ErrorState } from "./AsyncState";
@@ -24,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { tcls } from "@/lib/types";
 import { routes } from "@/lib/routes";
 import { parsePinpointCitation } from "@/lib/search/pinpoint-citation";
+import { looksLikeQuestion } from "@/lib/search/is-question";
 
 const DRAFT_STORAGE_KEY = "lr-draft-id";
 const ARCHIVE_ID = /^[A-Z]{2,4}-\d+$/;
@@ -53,7 +55,10 @@ function ResearchContent() {
     parseResearchUrl(urlParams),
   );
   const [queryInput, setQueryInput] = useState(researchState.q);
-  const [filtersExpanded, setFiltersExpanded] = useState(true);
+  // Collapsed on every entry to the page — fresh visit or a query already in the URL
+  // (shared link, back/forward nav, reload) — so it never pushes results below the fold.
+  // The user can still expand it manually via ResearchFilters' toggle.
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
 
   const createDraft = useApiMutation(() => draftsApi.create({}));
   const resolveCitation = useApiMutation((elrNumber: number) =>
@@ -78,7 +83,10 @@ function ResearchContent() {
       const qs = serializeResearchUrl(state);
       if (qs === urlKey) return;
       lastSyncedUrl.current = qs;
-      router.replace(qs ? `/dashboard?${qs}` : "/dashboard", { scroll: false });
+      // Must stay on /dashboard/research — /dashboard is the AI chat page (ChatPage), and it
+      // doesn't read these params, so pointing here used to silently strand every search: the
+      // query and results both vanished the moment a search ran.
+      router.replace(routes.research(qs), { scroll: false });
     },
     [router, urlKey],
   );
@@ -155,6 +163,7 @@ function ResearchContent() {
       return;
     }
     patchState({ q: value, page: 1 });
+    setFiltersExpanded(false);
   }, [queryInput, patchState, resolveCitation, router]);
 
   const removeInterpretedFilter = useCallback(
@@ -293,6 +302,9 @@ function ResearchContent() {
 
       <div className="content-grid">
         <div ref={resultsRef} className="search-results-column">
+          {submittedQuery && looksLikeQuestion(submittedQuery) && (
+            <SearchAiAnswer query={submittedQuery} />
+          )}
           <div className="page-header" style={{ marginBottom: 10 }}>
             <div>
               <p className="label">
@@ -365,7 +377,7 @@ function ResearchContent() {
             <div className="authority-nodes">
               {authorityQuery.loading && authorityQuery.data === null ? (
                 <p className="insight-note">Loading authority map…</p>
-              ) : authorityQuery.error ? (
+              ) : authorityQuery.error && authorityQuery.data === null ? (
                 <ErrorState message={authorityQuery.error} onRetry={authorityQuery.refetch} />
               ) : authorityQuery.data ? (
                 authorityQuery.data.nodes.map((node, i) => {
@@ -432,7 +444,7 @@ function ResearchContent() {
                 <h3>Recently added</h3>
               </div>
               <Link
-                href="/dashboard?sort=recent"
+                href={routes.research("sort=recent")}
                 className="btn btn-link btn-sm"
               >
                 View all
@@ -440,7 +452,7 @@ function ResearchContent() {
             </div>
             {recentQuery.loading && recentQuery.data === null ? (
               <p className="insight-note">Loading recent additions…</p>
-            ) : recentQuery.error ? (
+            ) : recentQuery.error && recentQuery.data === null ? (
               <ErrorState message={recentQuery.error} onRetry={recentQuery.refetch} />
             ) : recentQuery.data && recentQuery.data.data.length > 0 ? (
               <div className="alert-feed">

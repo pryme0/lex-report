@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "./client";
+import { cacheGet, cacheSet } from "./query-cache";
+export { clearApiQueryCache } from "./query-cache";
 
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) return error.message;
@@ -24,12 +26,15 @@ export type QueryResult<T> = QueryState<T> & {
  * Runs `fetcher` whenever `key` changes. The key is what identifies the request, so callers can
  * build it from their filter state without having to memoise the fetcher itself. Passing a null
  * key disables the query.
+ *
+ * Stale-while-revalidate: a key seen before in this session renders its cached data immediately
+ * (no loading flash) while a fresh fetch runs quietly in the background and replaces it on
+ * success. A brand-new key still shows the normal loading state.
  */
 export function useApiQuery<T>(key: string | null, fetcher: () => Promise<T>): QueryResult<T> {
-  const [state, setState] = useState<QueryState<T>>({
-    data: null,
-    error: null,
-    loading: key !== null,
+  const [state, setState] = useState<QueryState<T>>(() => {
+    const cached = key !== null ? cacheGet<T>(key) : undefined;
+    return { data: cached ?? null, error: null, loading: key !== null && cached === undefined };
   });
   const [nonce, setNonce] = useState(0);
 
@@ -43,16 +48,23 @@ export function useApiQuery<T>(key: string | null, fetcher: () => Promise<T>): Q
     }
 
     let cancelled = false;
-    setState((prev) => ({ ...prev, loading: true, error: null }));
+    const hasCached = cacheGet<T>(key) !== undefined;
+    setState((prev) => ({
+      data: hasCached ? (cacheGet<T>(key) as T) : prev.data,
+      error: null,
+      loading: !hasCached,
+    }));
 
     fetcherRef
       .current()
       .then((data) => {
-        if (!cancelled) setState({ data, error: null, loading: false });
+        if (cancelled) return;
+        cacheSet(key, data);
+        setState({ data, error: null, loading: false });
       })
       .catch((error: unknown) => {
         if (!cancelled) {
-          setState({ data: null, error: errorMessage(error), loading: false });
+          setState((prev) => ({ data: prev.data, error: errorMessage(error), loading: false }));
         }
       });
 
@@ -63,8 +75,11 @@ export function useApiQuery<T>(key: string | null, fetcher: () => Promise<T>): Q
 
   const refetch = useCallback(() => setNonce((n) => n + 1), []);
   const setData = useCallback(
-    (data: T) => setState({ data, error: null, loading: false }),
-    [],
+    (data: T) => {
+      if (key !== null) cacheSet(key, data);
+      setState({ data, error: null, loading: false });
+    },
+    [key],
   );
 
   return { ...state, refetch, setData };

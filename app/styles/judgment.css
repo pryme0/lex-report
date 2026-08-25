@@ -1517,6 +1517,25 @@
   margin: 0;
 }
 
+/* Side cards reuse SummaryBlocks (see JudgmentSummaryView's extractSummarySection) to render an
+   extracted section of the main summary, so its .summary-para/.summary-list need to drop down
+   to the card's smaller text size here instead of the full-body size they use in .summary-body. */
+.summary-side-text .summary-para,
+.summary-side-text .summary-list {
+  font-size: inherit;
+  line-height: inherit;
+  margin: 0 0 0.85em;
+}
+
+.summary-side-text .summary-para:last-child,
+.summary-side-text .summary-list:last-child {
+  margin-bottom: 0;
+}
+
+.summary-side-text .summary-list {
+  padding-left: 1.2em;
+}
+
 .authority-link-static {
   display: block;
   font-size: 0.78rem;

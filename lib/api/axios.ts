@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { API_BASE_URL } from "./config";
+import { clearApiQueryCache } from "./query-cache";
 
 const TOKEN_KEY = "lr_access_token";
 const REFRESH_TOKEN_KEY = "lr_refresh_token";
@@ -80,6 +81,7 @@ export function setTokens(accessToken: string, refreshToken: string): void {
 }
 
 export function clearTokens(): void {
+  clearApiQueryCache();
   if (typeof window === "undefined") return;
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
