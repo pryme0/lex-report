@@ -8,6 +8,7 @@ import { catalogApi, usersApi } from "@/lib/api";
 import { useApiQuery } from "@/lib/api/hooks";
 import { clearTokens } from "@/lib/api/axios";
 import { cn } from "@/lib/utils";
+import { usePartnerSession, clearPartnerSession } from "@/lib/usePartnerSession";
 
 const navItems = [
   { label: "Chat",           href: "/dashboard",                icon: MessageSquare },
@@ -41,12 +42,21 @@ export function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const expanded = !collapsed || peeking;
+  const partnerSession = usePartnerSession();
+  const isPartner = !!partnerSession;
+
   const profileQuery = useApiQuery("users:profile", () => usersApi.profile());
   const profile = profileQuery.data;
   const filtersQuery = useApiQuery("catalog:filters", () => catalogApi.filters());
   const years = filtersQuery.data?.years;
   const coverageSpan =
     years?.min && years?.max ? `${years.min} – ${years.max}` : "—";
+
+  // Filter nav items for partner users - only show Chat and Research
+  const partnerAllowedHrefs = ["/dashboard", "/dashboard/research"];
+  const visibleNavItems = isPartner
+    ? navItems.filter(item => partnerAllowedHrefs.includes(item.href))
+    : navItems;
 
   async function logout() {
     try {
@@ -55,6 +65,7 @@ export function Sidebar({
       // Local credentials must still be cleared if the server is unavailable.
     }
     clearTokens();
+    clearPartnerSession();
     router.push("/login");
   }
 
@@ -95,7 +106,7 @@ export function Sidebar({
       </div>
 
       <nav className="sidebar-nav">
-        {navItems.map(({ label, href, icon: Icon }) => (
+        {visibleNavItems.map(({ label, href, icon: Icon }) => (
           <Link
             key={href}
             href={href}
@@ -107,9 +118,9 @@ export function Sidebar({
           </Link>
         ))}
 
-        <div className="nav-divider" />
+        {!isPartner && <div className="nav-divider" />}
 
-        {profile?.editor && (
+        {!isPartner && profile?.editor && (
           <>
             <Link
               href="/dashboard/reports"
@@ -130,31 +141,42 @@ export function Sidebar({
           </>
         )}
 
-        <Link
-          href="/dashboard/profile"
-          className={cn("nav-item", pathname === "/dashboard/profile" && "active")}
-          onClick={onClose}
-          title="Profile"
-        >
-          <BookMarked size={16} /> <span className="nav-label">Profile</span>
-        </Link>
+        {!isPartner && (
+          <Link
+            href="/dashboard/profile"
+            className={cn("nav-item", pathname === "/dashboard/profile" && "active")}
+            onClick={onClose}
+            title="Profile"
+          >
+            <BookMarked size={16} /> <span className="nav-label">Profile</span>
+          </Link>
+        )}
         <button className="nav-item" onClick={logout} title="Log out">
           <LogOut size={16} /> <span className="nav-label">Log out</span>
         </button>
       </nav>
 
       <div className="sidebar-footer">
-        <div className="coverage-chip">
-          <div className="coverage-label">Coverage span</div>
-          <div className="coverage-range">{coverageSpan}</div>
-        </div>
-        <Link href="/dashboard/profile" className="user-chip" onClick={onClose} title={profile?.name ?? "Profile"}>
-          <div className="user-avatar">{profile?.initials ?? "···"}</div>
-          <div className="user-chip-info">
-            <span className="user-name">{profile?.name ?? "Loading…"}</span>
-            <span className="user-role">{profile?.accountRole ?? "—"}</span>
+        {isPartner ? (
+          <div className="coverage-chip">
+            <div className="coverage-label">Partner access via</div>
+            <div className="coverage-range">{partnerSession?.partnerName}</div>
           </div>
-        </Link>
+        ) : (
+          <>
+            <div className="coverage-chip">
+              <div className="coverage-label">Coverage span</div>
+              <div className="coverage-range">{coverageSpan}</div>
+            </div>
+            <Link href="/dashboard/profile" className="user-chip" onClick={onClose} title={profile?.name ?? "Profile"}>
+              <div className="user-avatar">{profile?.initials ?? "···"}</div>
+              <div className="user-chip-info">
+                <span className="user-name">{profile?.name ?? "Loading…"}</span>
+                <span className="user-role">{profile?.accountRole ?? "—"}</span>
+              </div>
+            </Link>
+          </>
+        )}
       </div>
     </aside>
   );
