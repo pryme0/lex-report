@@ -145,15 +145,23 @@ function SummaryOutline({ blocks }: { blocks: SummaryBlock[] }) {
   if (entries.length === 0) return null;
 
   return (
-    <nav className="summary-outline judgment-no-print" aria-label="Summary sections">
-      {entries.map((entry) => {
-        const match = HEADING_NUMBER_RE.exec(entry.text);
-        return (
-          <a key={entry.id} href={`#${entry.id}`} className="summary-outline-link">
-            {match ? match[2] : entry.text}
-          </a>
-        );
-      })}
+    <nav className="summary-toc judgment-no-print" aria-label="Summary sections">
+      <div className="summary-toc-inner">
+        <div className="summary-outline-title">Contents</div>
+        <div className="summary-toc-list">
+          {entries.map((entry) => {
+            const match = HEADING_NUMBER_RE.exec(entry.text);
+            return (
+              <a key={entry.id} href={`#${entry.id}`} className="summary-outline-item">
+                <span className="summary-outline-num" aria-hidden="true">
+                  {match ? match[1] : ""}
+                </span>
+                <span className="summary-outline-label">{match ? match[2] : entry.text}</span>
+              </a>
+            );
+          })}
+        </div>
+      </div>
     </nav>
   );
 }
@@ -170,7 +178,7 @@ function SideCard({
   return (
     <div className="summary-card">
       <div className="summary-card-label">
-        {icon}
+        <span className="summary-card-icon">{icon}</span>
         <span>{label}</span>
       </div>
       {children}
@@ -290,14 +298,18 @@ export function JudgmentSummaryView({ item }: { item: CaseDetail }) {
   return (
     <div className="summary-view">
       <div className="summary-banner">
-        <div className="summary-banner-label">
-          <Sparkles size={13} aria-hidden="true" />
-          <span>AI-generated case summary</span>
+        <span className="summary-banner-icon" aria-hidden="true">
+          <Sparkles size={16} />
+        </span>
+        <div className="summary-banner-copy">
+          <div className="summary-banner-label">
+            <span>AI-generated case summary</span>
+          </div>
+          <p className="summary-banner-note">
+            Structured from the full judgment for quick review — verify against the reported text
+            before filing or relying on it.
+          </p>
         </div>
-        <p className="summary-banner-note">
-          Structured from the full judgment for quick review — verify against the reported text
-          before filing or relying on it.
-        </p>
         {hasSummary && (
           <button type="button" className="btn btn-ghost btn-sm summary-copy-btn judgment-no-print" onClick={handleCopy}>
             {copied ? <Check size={12} aria-hidden="true" /> : <CopyIcon size={12} aria-hidden="true" />}
@@ -306,18 +318,18 @@ export function JudgmentSummaryView({ item }: { item: CaseDetail }) {
         )}
       </div>
 
-      <div className="judgment-cols summary-cols">
+      <div className={`judgment-cols summary-cols${hasSummary ? " summary-cols--with-toc" : ""}`}>
+        {hasSummary && <SummaryOutline blocks={blocks} />}
         <div className="summary-body-col">
           {hasSummary ? (
-            <>
-              <SummaryOutline blocks={blocks} />
-              <div className="judgment-body summary-body">
-                <SummaryBlocks blocks={blocks} />
-              </div>
-            </>
+            <div className="judgment-body summary-body">
+              <SummaryBlocks blocks={blocks} />
+            </div>
           ) : (
             <div className="summary-empty">
-              <Sparkles size={18} aria-hidden="true" />
+              <span className="summary-empty-icon" aria-hidden="true">
+                <Sparkles size={18} />
+              </span>
               <p>No AI-generated summary has been produced for this judgment yet.</p>
             </div>
           )}
