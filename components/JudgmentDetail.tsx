@@ -10,7 +10,6 @@ import { casesApi } from "@/lib/api";
 import type { CaseDetail } from "@/lib/api";
 import { useApiQuery } from "@/lib/api/hooks";
 import { AsyncSection, EmptyState } from "./AsyncState";
-import { tcls } from "@/lib/types";
 import { CitationGraph } from "./CitationGraph";
 import { JudgmentSummaryView } from "./JudgmentSummaryView";
 import { JudgmentText } from "./JudgmentText";
@@ -177,9 +176,6 @@ export function JudgmentDetail({
                 </div>
                 <h1 className="judgment-title">{item.title}</h1>
                 <div className="judgment-cite">{judgmentCitation(item)}</div>
-              </div>
-              <div className="judgment-header-badges">
-                <span className={cn("treatment-pill", tcls[item.treatment])}>{item.treatment}</span>
               </div>
             </header>
 
