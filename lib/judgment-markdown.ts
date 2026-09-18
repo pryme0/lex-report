@@ -337,7 +337,7 @@ function walk(ctx: ParseContext, tokens: Token[]) {
 // block synthesised by the Gemini formatting pass (see gemini-judgment-formatter.service.ts rule
 // 8) — "IN THE ... COURT", "BEFORE THEIR LORDSHIPS:", "APPEAL NO.:"/"SUIT NO.:", "BETWEEN:", "AND".
 const FRONT_MATTER_LINE_RE =
-  /^(?:IN THE\b|BEFORE THEIR LORDSHIPS\b|(?:APPEAL|SUIT) NO\.?:|BETWEEN:?$|AND$)/i;
+  /^(?:IN THE (?:COURT|SUPREME|FEDERAL|HIGH|NATIONAL)\b|BEFORE THEIR LORDSHIPS\b|(?:APPEAL|SUIT) NO\.?:|BETWEEN:?$|AND$)/i;
 // A party line ending in its designation, e.g. "SHOOTING STARS SPORTS CLUB LTD (3SC) — APPELLANT".
 const FRONT_MATTER_PARTY_RE =
   /—\s*(APPELLANT|RESPONDENT|APPLICANT|DEFENDANT|CLAIMANT|PETITIONER|CROSS-APPELLANT|CROSS-RESPONDENT)S?\.?\s*$/i;
