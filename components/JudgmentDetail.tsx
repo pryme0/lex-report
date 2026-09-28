@@ -60,7 +60,7 @@ function JudgmentToolbar({
           <button
             className="btn btn-link btn-sm judgment-no-print"
             type="button"
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/dashboard/research")}
           >
             <ArrowLeft size={13} aria-hidden="true" /> Back to research
           </button>
