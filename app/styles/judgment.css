@@ -1607,39 +1607,65 @@
   align-self: start;
   max-height: calc(100vh - 32px);
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 0;
   padding: 0;
   background: transparent;
   border: none;
 }
 
-/* Stacking cards effect - each card sticks at a progressively lower position */
+/* Stacking cards - cards collapse to show just header when not expanded */
 .summary-aside .summary-card {
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  position: relative;
   cursor: pointer;
+  transition: all 0.25s ease;
+  margin-bottom: -1px;
+  flex-shrink: 0;
 }
 
-.summary-aside .summary-card:nth-child(1) { top: 0; z-index: 15; }
-.summary-aside .summary-card:nth-child(2) { top: 8px; z-index: 14; }
-.summary-aside .summary-card:nth-child(3) { top: 16px; z-index: 13; }
-.summary-aside .summary-card:nth-child(4) { top: 24px; z-index: 12; }
-.summary-aside .summary-card:nth-child(5) { top: 32px; z-index: 11; }
-
-/* When stacked, show just the header */
-.summary-aside .summary-card.stacked {
-  max-height: 52px;
+/* Collapsed state - show only header */
+.summary-aside .summary-card:not(.expanded) {
+  max-height: 56px;
   overflow: hidden;
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+}
+
+/* Visual stacking effect with shadows */
+.summary-aside .summary-card:not(.expanded):hover {
+  transform: translateY(-2px);
+  z-index: 5;
+  box-shadow: 0 4px 12px rgba(15, 21, 16, 0.12);
 }
 
 /* Expanded card shows full content */
 .summary-aside .summary-card.expanded {
-  max-height: none;
-  z-index: 20;
-  box-shadow: 0 4px 12px rgba(15, 21, 16, 0.15), 0 20px 40px -20px rgba(15, 21, 16, 0.4);
+  max-height: 600px;
+  overflow: hidden;
+  z-index: 10;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 16px rgba(15, 21, 16, 0.15), 0 20px 40px -20px rgba(15, 21, 16, 0.35);
+  border-color: var(--color-g-200);
+}
+
+/* Expand indicator */
+.summary-aside .summary-card::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 20px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--color-g-300);
+  border-bottom: 2px solid var(--color-g-300);
+  transform: rotate(45deg);
+  transition: transform 0.2s;
+}
+
+.summary-aside .summary-card.expanded::after {
+  transform: rotate(-135deg);
 }
 
 .summary-card {
