@@ -169,13 +169,23 @@ function SideCard({
   icon,
   label,
   children,
+  isExpanded,
+  onToggle,
 }: {
   icon: ReactNode;
   label: string;
   children: ReactNode;
+  isExpanded?: boolean;
+  onToggle?: () => void;
 }) {
   return (
-    <div className="summary-card">
+    <div
+      className={`summary-card${isExpanded ? " expanded" : ""}`}
+      onClick={onToggle}
+      role={onToggle ? "button" : undefined}
+      tabIndex={onToggle ? 0 : undefined}
+      onKeyDown={onToggle ? (e) => { if (e.key === "Enter" || e.key === " ") onToggle(); } : undefined}
+    >
       <div className="summary-card-label">
         <span className="summary-card-icon">{icon}</span>
         <span>{label}</span>
@@ -189,12 +199,27 @@ function SideCard({
 /** Applicable law, primarily as prose extracted from the summary's own "Applicable Law" section
  * (see extractSummarySection) — falling back to the structured cited-statutes list (with links
  * into the legislation library) only when the summary has no such section to draw from. */
-function ApplicableLawsCard({ item, sectionBlocks }: { item: CaseDetail; sectionBlocks: SummaryBlock[] }) {
+function ApplicableLawsCard({
+  item,
+  sectionBlocks,
+  isExpanded,
+  onToggle,
+}: {
+  item: CaseDetail;
+  sectionBlocks: SummaryBlock[];
+  isExpanded?: boolean;
+  onToggle?: () => void;
+}) {
   const router = useRouter();
 
   if (sectionBlocks.length > 0) {
     return (
-      <SideCard icon={<Landmark size={13} aria-hidden="true" />} label="Applicable laws">
+      <SideCard
+        icon={<Landmark size={13} aria-hidden="true" />}
+        label="Applicable laws"
+        isExpanded={isExpanded}
+        onToggle={onToggle}
+      >
         <div className="summary-side-text">
           <SummaryBlocks blocks={sectionBlocks} />
         </div>
@@ -203,7 +228,12 @@ function ApplicableLawsCard({ item, sectionBlocks }: { item: CaseDetail; section
   }
 
   return (
-    <SideCard icon={<Landmark size={13} aria-hidden="true" />} label="Applicable laws">
+    <SideCard
+      icon={<Landmark size={13} aria-hidden="true" />}
+      label="Applicable laws"
+      isExpanded={isExpanded}
+      onToggle={onToggle}
+    >
       {item.citedStatutes.length === 0 ? (
         <p className="citator-empty">None recorded.</p>
       ) : (
@@ -213,7 +243,7 @@ function ApplicableLawsCard({ item, sectionBlocks }: { item: CaseDetail; section
               <button
                 key={`${s.statuteId}-${s.section ?? ""}-${i}`}
                 className="authority-link-btn"
-                onClick={() => router.push(statuteHref(s.statuteId!, s.section))}
+                onClick={(e) => { e.stopPropagation(); router.push(statuteHref(s.statuteId!, s.section)); }}
               >
                 {s.title}
                 {s.section ? `, ${s.section}` : ""}
@@ -234,8 +264,13 @@ function ApplicableLawsCard({ item, sectionBlocks }: { item: CaseDetail; section
 export function JudgmentSummaryView({ item }: { item: CaseDetail }) {
   const { showToast } = useDashboard();
   const [copied, setCopied] = useState(false);
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const blocks = useMemo(() => parseSummaryMarkdown(item.summary), [item.summary]);
   const hasSummary = !!item.summary?.trim();
+
+  const toggleCard = (cardId: string) => {
+    setExpandedCard((prev) => (prev === cardId ? null : cardId));
+  };
 
   // Pulled from the summary's own headed sections (see extractSummarySection) rather than the
   // separate facts/holding/citedStatutes fields — those can be shorter or older than what the
@@ -310,21 +345,41 @@ export function JudgmentSummaryView({ item }: { item: CaseDetail }) {
         <aside className="judgment-aside summary-aside">
           {hasSummary && (
             <>
-              <SideCard icon={<FileText size={13} aria-hidden="true" />} label="Facts of the case">
+              <SideCard
+                icon={<FileText size={13} aria-hidden="true" />}
+                label="Facts of the case"
+                isExpanded={expandedCard === "facts"}
+                onToggle={() => toggleCard("facts")}
+              >
                 <ExtractedSection
                   blocks={factsSection}
                   fallback={item.facts || "Not expressly stated in the judgment."}
                 />
               </SideCard>
-              <ApplicableLawsCard item={item} sectionBlocks={lawSection} />
-              <SideCard icon={<Gavel size={13} aria-hidden="true" />} label="Decision / holding of the court">
+              <ApplicableLawsCard
+                item={item}
+                sectionBlocks={lawSection}
+                isExpanded={expandedCard === "laws"}
+                onToggle={() => toggleCard("laws")}
+              />
+              <SideCard
+                icon={<Gavel size={13} aria-hidden="true" />}
+                label="Decision / holding of the court"
+                isExpanded={expandedCard === "decision"}
+                onToggle={() => toggleCard("decision")}
+              >
                 <ExtractedSection
                   blocks={decisionSection}
                   fallback={item.holding || "Not expressly stated in the judgment."}
                 />
               </SideCard>
               {item.issuesDetermined.length > 0 && (
-                <SideCard icon={<ListChecks size={13} aria-hidden="true" />} label="Issues determined">
+                <SideCard
+                  icon={<ListChecks size={13} aria-hidden="true" />}
+                  label="Issues determined"
+                  isExpanded={expandedCard === "issues"}
+                  onToggle={() => toggleCard("issues")}
+                >
                   <ol className="judgment-issues-list">
                     {item.issuesDetermined.map((issue, i) => (
                       <li key={i}>{issue}</li>
