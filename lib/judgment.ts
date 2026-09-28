@@ -1,7 +1,7 @@
 import type { CaseDetail, Counsel } from "@/lib/api";
 
 export function judgmentCitation(item: Pick<CaseDetail, "report" | "neutralCitation" | "citation">): string {
-  return item.report?.seriesCitation ?? item.neutralCitation ?? item.citation;
+  return item.citation || item.report?.seriesCitation || item.neutralCitation || "";
 }
 
 export async function copyText(text: string): Promise<boolean> {
