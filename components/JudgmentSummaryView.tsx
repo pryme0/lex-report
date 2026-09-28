@@ -190,7 +190,9 @@ function SideCard({
         <span className="summary-card-icon">{icon}</span>
         <span>{label}</span>
       </div>
-      {children}
+      <div className="summary-card-content" onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -389,7 +391,11 @@ export function JudgmentSummaryView({ item }: { item: CaseDetail }) {
               )}
             </>
           )}
-          <SimilarCases caseId={item.id} />
+          <SimilarCases
+            caseId={item.id}
+            isExpanded={expandedCard === "similar"}
+            onToggle={() => setExpandedCard(expandedCard === "similar" ? null : "similar")}
+          />
         </aside>
       </div>
     </div>
